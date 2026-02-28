@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.so
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Claude Code — local/machine-specific settings (not for sharing)
+.claude/settings.local.json
+
+# VSCode — local/user-specific settings
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
