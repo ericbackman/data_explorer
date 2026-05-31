@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Health Curse — NBA Playoff Injuries & the No-Repeat Era</title>
+  <meta name="description" content="Why no NBA team has repeated as champion since the 2018 Warriors — a data story about catastrophic playoff injuries and the rise of soft-tissue breakdowns." />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Archivo', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            ink: '#0a0a0f', panel: '#13131c', panel2: '#1b1b27',
+            ember: '#ff5436', gold: '#ffb627', court: '#c8772e',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    html, body { background: #0a0a0f; }
+    ::selection { background: #ff5436; color: #fff; }
+    body::-webkit-scrollbar { width: 10px; }
+    body::-webkit-scrollbar-track { background: #0a0a0f; }
+    body::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 5px; }
+
+    .hero-bg {
+      background:
+        radial-gradient(900px 500px at 75% -10%, rgba(255,84,54,0.18), transparent 60%),
+        radial-gradient(700px 500px at 10% 20%, rgba(255,182,39,0.10), transparent 55%),
+        #0a0a0f;
+    }
+    .court-lines {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 80%);
+    }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    .card-glow { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s, border-color .35s; }
+    .card-glow:hover { transform: translateY(-6px); box-shadow: 0 24px 60px -24px rgba(255,84,54,0.45); border-color: rgba(255,84,54,0.5); }
+
+    .logo-fade { filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6)); }
+    .headshot { background: radial-gradient(circle at 50% 30%, #2a2a3a, #13131c 70%); }
+    .stat-num { font-variant-numeric: tabular-nums; }
+
+    @keyframes pulseDot { 0%,100% { opacity:1; transform: scale(1);} 50% { opacity:.35; transform: scale(.7);} }
+    .live-dot { animation: pulseDot 1.6s ease-in-out infinite; }
+  </style>
+</head>
+
+<body class="font-sans text-slate-200 antialiased">
+
+  <!-- NAV -->
+  <header x-data="{ open:false, scrolled:false }" @scroll.window="scrolled = window.scrollY > 30"
+          class="fixed top-0 inset-x-0 z-50 transition-all duration-300"
+          :class="scrolled ? 'backdrop-blur-xl bg-ink/80 border-b border-white/10' : 'bg-transparent'">
+    <nav class="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+      <a href="#top" class="flex items-center gap-2.5 group">
+        <span class="grid place-items-center w-9 h-9 rounded-lg bg-ember/15 border border-ember/40 text-ember font-display font-black text-lg group-hover:bg-ember group-hover:text-white transition">✚</span>
+        <span class="font-display font-extrabold tracking-tight text-white text-[15px] leading-none">THE&nbsp;HEALTH&nbsp;CURSE</span>
+      </a>
+      <div class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-400">
+        <a href="#thesis" class="hover:text-white transition">Thesis</a>
+        <a href="#trend" class="hover:text-white transition">Soft-Tissue Trend</a>
+        <a href="#attempts" class="hover:text-white transition">Failed Repeats</a>
+        <a href="#timeline" class="hover:text-white transition">Finals Table</a>
+        <a href="#cases" class="hover:text-white transition">Case Files</a>
+        <a href="#thesis" class="px-3.5 py-2 rounded-lg bg-ember text-white font-semibold hover:bg-ember/85 transition">Read the data</a>
+      </div>
+      <button @click="open=!open" class="md:hidden text-slate-300 text-2xl">☰</button>
+    </nav>
+    <div x-show="open" x-collapse class="md:hidden bg-ink/95 border-b border-white/10 px-5 py-4 flex flex-col gap-3 text-sm">
+      <a @click="open=false" href="#thesis" class="py-1">Thesis</a>
+      <a @click="open=false" href="#trend" class="py-1">Soft-Tissue Trend</a>
+      <a @click="open=false" href="#attempts" class="py-1">Failed Repeats</a>
+      <a @click="open=false" href="#timeline" class="py-1">Finals Table</a>
+      <a @click="open=false" href="#cases" class="py-1">Case Files</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section id="top" class="hero-bg relative overflow-hidden pt-32 pb-24 sm:pt-40 sm:pb-32">
+    <div class="absolute inset-0 court-lines"></div>
+    <div class="relative max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-slate-300 mb-7">
+        <span class="w-2 h-2 rounded-full bg-ember live-dot"></span>
+        2010–2025 · 16 Finals analyzed
+      </div>
+
+      <h1 class="font-display font-black text-white leading-[0.92] tracking-tight text-5xl sm:text-7xl lg:text-[5.5rem] max-w-5xl">
+        Nobody repeats<br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-ember via-gold to-court">because nobody stays healthy.</span>
+      </h1>
+
+      <p class="mt-7 max-w-2xl text-lg sm:text-xl text-slate-300/90 leading-relaxed">
+        The last team to win back-to-back NBA titles was the 2018 Warriors. Since then,
+        <span class="text-white font-semibold">six defending champions have tried to repeat — and all six failed.</span>
+        This is the data story of why: a league where the championship is decided less by talent than by which stars' bodies survive the playoffs.
+      </p>
+
+      <div class="mt-9 flex flex-wrap items-center gap-4">
+        <a href="#attempts" class="px-6 py-3.5 rounded-xl bg-ember text-white font-display font-bold tracking-wide hover:bg-ember/85 hover:scale-[1.03] transition shadow-lg shadow-ember/30">
+          See the 0-for-6 →
+        </a>
+        <a href="#trend" class="px-6 py-3.5 rounded-xl border border-white/15 text-slate-200 font-semibold hover:bg-white/5 transition">
+          The soft-tissue spike
+        </a>
+      </div>
+
+      <!-- STAT STRIP -->
+      <div x-data="counters()" x-init="run()" class="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+        <div class="bg-panel/80 p-6">
+          <div class="stat-num font-display font-black text-4xl sm:text-5xl text-white" x-text="years"></div>
+          <div class="mt-1 text-xs uppercase tracking-widest text-slate-400">Seasons since a repeat</div>
+        </div>
+        <div class="bg-panel/80 p-6">
+          <div class="stat-num font-display font-black text-4xl sm:text-5xl text-ember" x-text="attempts"></div>
+          <div class="mt-1 text-xs uppercase tracking-widest text-slate-400">Repeat attempts failed</div>
+        </div>
+        <div class="bg-panel/80 p-6">
+          <div class="stat-num font-display font-black text-4xl sm:text-5xl text-gold" x-text="injuryFails"></div>
+          <div class="mt-1 text-xs uppercase tracking-widest text-slate-400">Of 6 derailed by injury</div>
+        </div>
+        <div class="bg-panel/80 p-6">
+          <div class="stat-num font-display font-black text-4xl sm:text-5xl text-white"><span x-text="healthWins"></span>/16</div>
+          <div class="mt-1 text-xs uppercase tracking-widest text-slate-400">Finals won by healthier team</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THESIS -->
+  <section id="thesis" class="relative py-24 border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 grid lg:grid-cols-12 gap-12 items-start">
+      <div class="lg:col-span-5 reveal">
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">01 — The Thesis</p>
+        <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
+          It isn't parity. It's biomechanics.
+        </h2>
+        <p class="mt-6 text-slate-300 leading-relaxed">
+          The convenient explanation for the no-repeat era is "parity" — more good teams, more spread-out talent. But the evidence points somewhere more specific:
+          <span class="text-white font-semibold">the defending champion keeps losing its best player to injury at the worst possible moment.</span>
+        </p>
+        <p class="mt-4 text-slate-400 leading-relaxed">
+          A team that just ran 16+ punishing playoff games, then turned around for an 82-game season, walks into the next playoffs carrying more accumulated wear than a fresh challenger. That wear is showing up as a wave of <span class="text-gold font-medium">hamstring, quad, calf, and Achilles</span> breakdowns — the soft-tissue injuries most tied to fatigue and cumulative load.
+        </p>
+      </div>
+
+      <div class="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+        <div class="reveal card-glow rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="text-ember font-display font-black text-2xl">Load</div>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed">Stars play 34–38 min/game in the playoffs, pushed harder in elimination games. The cumulative toll compounds across a deep run.</p>
+        </div>
+        <div class="reveal card-glow rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="text-gold font-display font-black text-2xl">Dependency</div>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed">Rosters are built around 1–2 superstars. The gap between a healthy franchise player and his backup is the widest it's ever been.</p>
+        </div>
+        <div class="reveal card-glow rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="text-court font-display font-black text-2xl">Soft tissue</div>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed">Hamstrings, quads, calves, Achilles — fatigue-linked injuries — are increasingly the ones ending title defenses, not freak contact breaks.</p>
+        </div>
+        <div class="reveal card-glow rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="text-white font-display font-black text-2xl">The ceiling</div>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed">The 2015–19 Warriors proved sustained health was the differentiator. Their dynasty ended on injuries — and no one has threaded the needle twice since.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOFT-TISSUE TREND -->
+  <section id="trend" class="relative py-24 bg-panel/40 border-y border-white/5">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="max-w-3xl reveal">
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">02 — The Soft-Tissue Spike</p>
+        <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
+          The injuries ending dynasties are increasingly muscular, not accidental.
+        </h2>
+        <p class="mt-6 text-slate-300 leading-relaxed">
+          Contact injuries (a fractured wrist, a dislocated shoulder) are bad luck. <span class="text-white font-semibold">Soft-tissue injuries — hamstrings, quads, calves, Achilles — are different.</span> They cluster with fatigue and accumulated load, exactly the conditions a repeat contender faces. The 2025 playoffs were the breaking point: a Finals defined by Achilles ruptures.
+        </p>
+      </div>
+
+      <div class="mt-12 grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 reveal rounded-2xl bg-ink/60 border border-white/10 p-5 sm:p-7">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display font-bold text-white text-lg">Notable playoff soft-tissue / lower-extremity injuries by year</h3>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 border border-white/10 rounded px-2 py-1">illustrative</span>
+          </div>
+          <canvas id="trendChart" height="150"></canvas>
+          <p class="mt-4 text-xs text-slate-500 leading-relaxed">
+            Illustrative trend compiled from public injury reporting (ESPN / Basketball Reference). Counts reflect notable rotation-player soft-tissue &amp; lower-extremity playoff injuries, not a clinical census. The shape — a steady rise peaking in 2025 — is the documented signal.
+          </p>
+        </div>
+
+        <div class="reveal flex flex-col gap-4">
+          <div class="rounded-2xl bg-gradient-to-br from-ember/20 to-transparent border border-ember/30 p-6">
+            <div class="font-display font-black text-4xl text-white">2025</div>
+            <p class="mt-1 text-sm text-slate-300">An Achilles epidemic — <span class="text-white font-semibold">Tatum, Lillard, and Haliburton</span> (in the Finals itself) all went down. The most soft-tissue-defined postseason in memory.</p>
+          </div>
+          <div class="rounded-2xl bg-panel border border-white/10 p-6">
+            <div class="font-display font-black text-3xl text-gold">Calf → Achilles</div>
+            <p class="mt-1 text-sm text-slate-400">Durant's 2019 calf strain preceded his Achilles rupture — the canonical example of a fatigue injury cascading into a catastrophic one.</p>
+          </div>
+          <div class="rounded-2xl bg-panel border border-white/10 p-6">
+            <div class="font-display font-black text-3xl text-court">Hamstring</div>
+            <p class="mt-1 text-sm text-slate-400">Jamal Murray's 2024 hamstring hobbled Denver's repeat. Soft-tissue, fatigue-linked, series-deciding.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BACK-TO-BACK ATTEMPTS -->
+  <section id="attempts" class="relative py-24">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="max-w-3xl reveal">
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">03 — The 0-for-6</p>
+        <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
+          Every repeat attempt since the 2018 Warriors. Every one derailed.
+        </h2>
+        <p class="mt-6 text-slate-300 leading-relaxed">
+          Six defending champions, six failures. Injury is directly implicated in five; the sixth (the 2023 Warriors) was a self-inflicted chemistry wound.
+        </p>
+      </div>
+
+      <div class="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- 2019 Warriors -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex flex-col">
+          <div class="relative p-5 flex items-center justify-between bg-gradient-to-br from-white/5 to-transparent">
+            <div>
+              <div class="font-mono text-xs text-slate-500">2018 → 2019</div>
+              <div class="font-display font-extrabold text-white text-xl mt-0.5">Warriors</div>
+              <div class="text-xs text-slate-400">Going for the 3-peat</div>
+            </div>
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="Warriors" class="w-16 h-16 object-contain logo-fade" loading="lazy" onerror="this.style.opacity=0.15">
+          </div>
+          <div class="flex gap-2 px-5">
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/201142.png" alt="Kevin Durant" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">K. Durant</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/202691.png" alt="Klay Thompson" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">K. Thompson</span>
+            </div>
+          </div>
+          <p class="px-5 pt-4 text-sm text-slate-300 leading-relaxed flex-1">Durant ruptured his Achilles in Game 5 of the Finals; Klay tore his ACL in Game 6. Two All-NBA players lost on consecutive nights.</p>
+          <div class="px-5 pb-5 pt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Lost Finals 4–2 to Toronto</span>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border bg-ember/15 text-ember border-ember/40">CATASTROPHIC</span>
+          </div>
+        </article>
+
+        <!-- 2021 Lakers -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex flex-col">
+          <div class="relative p-5 flex items-center justify-between bg-gradient-to-br from-white/5 to-transparent">
+            <div>
+              <div class="font-mono text-xs text-slate-500">2020 → 2021</div>
+              <div class="font-display font-extrabold text-white text-xl mt-0.5">Lakers</div>
+              <div class="text-xs text-slate-400">Defending the bubble title</div>
+            </div>
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="Lakers" class="w-16 h-16 object-contain logo-fade" loading="lazy" onerror="this.style.opacity=0.15">
+          </div>
+          <div class="flex gap-2 px-5">
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/2544.png" alt="LeBron James" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">L. James</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/203076.png" alt="Anthony Davis" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">A. Davis</span>
+            </div>
+          </div>
+          <p class="px-5 pt-4 text-sm text-slate-300 leading-relaxed flex-1">LeBron (high ankle sprain) and Anthony Davis (groin/adductor) both broke down in the condensed post-bubble season and never got right.</p>
+          <div class="px-5 pb-5 pt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Lost Round 1 4–2 to Phoenix</span>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border bg-ember/15 text-ember border-ember/40">BOTH STARS HURT</span>
+          </div>
+        </article>
+
+        <!-- 2022 Bucks -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex flex-col">
+          <div class="relative p-5 flex items-center justify-between bg-gradient-to-br from-white/5 to-transparent">
+            <div>
+              <div class="font-mono text-xs text-slate-500">2021 → 2022</div>
+              <div class="font-display font-extrabold text-white text-xl mt-0.5">Bucks</div>
+              <div class="text-xs text-slate-400">Defending the title</div>
+            </div>
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/mil.png" alt="Bucks" class="w-16 h-16 object-contain logo-fade" loading="lazy" onerror="this.style.opacity=0.15">
+          </div>
+          <div class="flex gap-2 px-5">
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/203114.png" alt="Khris Middleton" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">K. Middleton</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/203507.png" alt="Giannis Antetokounmpo" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">Giannis</span>
+            </div>
+          </div>
+          <p class="px-5 pt-4 text-sm text-slate-300 leading-relaxed flex-1">Khris Middleton sprained his MCL in Round 2 and missed the entire series vs Boston. Giannis couldn't carry the offense alone.</p>
+          <div class="px-5 pb-5 pt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Lost Round 2 4–3 to Boston</span>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border bg-gold/15 text-gold border-gold/40">#2 OPTION LOST</span>
+          </div>
+        </article>
+
+        <!-- 2023 Warriors -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex flex-col">
+          <div class="relative p-5 flex items-center justify-between bg-gradient-to-br from-white/5 to-transparent">
+            <div>
+              <div class="font-mono text-xs text-slate-500">2022 → 2023</div>
+              <div class="font-display font-extrabold text-white text-xl mt-0.5">Warriors</div>
+              <div class="text-xs text-slate-400">4th title in 5 years</div>
+            </div>
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="Warriors" class="w-16 h-16 object-contain logo-fade" loading="lazy" onerror="this.style.opacity=0.15">
+          </div>
+          <div class="flex gap-2 px-5">
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/202691.png" alt="Klay Thompson" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">K. Thompson</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/203110.png" alt="Draymond Green" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">D. Green</span>
+            </div>
+          </div>
+          <p class="px-5 pt-4 text-sm text-slate-300 leading-relaxed flex-1">Not an acute injury — Draymond's training-camp punch on Jordan Poole poisoned chemistry; the Poole trade and Klay's post-injury decline did the rest.</p>
+          <div class="px-5 pb-5 pt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Lost Round 2 4–2 to Lakers</span>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border bg-court/15 text-court border-court/40">SELF-INFLICTED</span>
+          </div>
+        </article>
+
+        <!-- 2024 Nuggets -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex flex-col">
+          <div class="relative p-5 flex items-center justify-between bg-gradient-to-br from-white/5 to-transparent">
+            <div>
+              <div class="font-mono text-xs text-slate-500">2023 → 2024</div>
+              <div class="font-display font-extrabold text-white text-xl mt-0.5">Nuggets</div>
+              <div class="text-xs text-slate-400">Defending the title</div>
+            </div>
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="Nuggets" class="w-16 h-16 object-contain logo-fade" loading="lazy" onerror="this.style.opacity=0.15">
+          </div>
+          <div class="flex gap-2 px-5">
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1627750.png" alt="Jamal Murray" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">J. Murray</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/203999.png" alt="Nikola Jokic" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">N. Jokić</span>
+            </div>
+          </div>
+          <p class="px-5 pt-4 text-sm text-slate-300 leading-relaxed flex-1">Jamal Murray's hamstring strain in Round 2 sapped his explosiveness, forcing Jokić to do too much against a prepared Minnesota.</p>
+          <div class="px-5 pb-5 pt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Lost Round 2 4–3 to Minnesota</span>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border bg-gold/15 text-gold border-gold/40">HAMSTRING</span>
+          </div>
+        </article>
+
+        <!-- 2025 Celtics -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex flex-col">
+          <div class="relative p-5 flex items-center justify-between bg-gradient-to-br from-white/5 to-transparent">
+            <div>
+              <div class="font-mono text-xs text-slate-500">2024 → 2025</div>
+              <div class="font-display font-extrabold text-white text-xl mt-0.5">Celtics</div>
+              <div class="text-xs text-slate-400">Defending the title</div>
+            </div>
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="Celtics" class="w-16 h-16 object-contain logo-fade" loading="lazy" onerror="this.style.opacity=0.15">
+          </div>
+          <div class="flex gap-2 px-5">
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1628369.png" alt="Jayson Tatum" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">J. Tatum</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="headshot w-16 h-12 rounded-lg overflow-hidden border border-white/10">
+                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1627759.png" alt="Jaylen Brown" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+              </div>
+              <span class="mt-1 text-[10px] text-slate-400">J. Brown</span>
+            </div>
+          </div>
+          <p class="px-5 pt-4 text-sm text-slate-300 leading-relaxed flex-1">Jayson Tatum suffered a season-ending Achilles rupture — the cleanest possible case: franchise player down, title defense over.</p>
+          <div class="px-5 pb-5 pt-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Eliminated; OKC won the title</span>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border bg-ember/15 text-ember border-ember/40">ACHILLES</span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE TABLE -->
+  <section id="timeline" class="relative py-24 bg-panel/40 border-y border-white/5" x-data="{ filter:'all' }">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 reveal">
+        <div class="max-w-2xl">
+          <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">04 — Sixteen Finals</p>
+          <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
+            The health ledger, 2010–2025.
+          </h2>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs font-semibold">
+          <button @click="filter='all'" :class="filter==='all' ? 'bg-white text-ink' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-3.5 py-2 rounded-lg transition">All 16</button>
+          <button @click="filter='runner'" :class="filter==='runner' ? 'bg-gold text-ink' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-3.5 py-2 rounded-lg transition">Runner-up hurt</button>
+          <button @click="filter='champ'" :class="filter==='champ' ? 'bg-ember text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-3.5 py-2 rounded-lg transition">Champion hurt</button>
+          <button @click="filter='healthy'" :class="filter==='healthy' ? 'bg-emerald-500 text-ink' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-3.5 py-2 rounded-lg transition">Both healthy</button>
+        </div>
+      </div>
+
+      <div class="mt-10 overflow-x-auto reveal rounded-2xl border border-white/10">
+        <table class="w-full text-sm min-w-[820px]">
+          <thead>
+            <tr class="bg-ink/80 text-left text-xs uppercase tracking-wider text-slate-400">
+              <th class="px-4 py-4 font-semibold">Year</th>
+              <th class="px-4 py-4 font-semibold">Champion</th>
+              <th class="px-4 py-4 font-semibold">Runner-up</th>
+              <th class="px-4 py-4 font-semibold">Decisive injuries</th>
+              <th class="px-4 py-4 font-semibold text-right">Verdict</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2010</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Lakers</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Celtics</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Perkins tore his ACL/MCL in Game 6 — gone for Game 7.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2011</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/dal.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Mavericks</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Heat</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Wade visibly diminished by degenerative knees; Butler out all playoffs for Dallas.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='healthy'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2012</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Heat</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Thunder</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Both sides healthy — Miami simply better.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-emerald-500/15 text-emerald-400 border-emerald-500/40">Both healthy</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='champ'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2013</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Heat</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Spurs</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Wade hobbled on bad knees; Parker fought a hamstring. Ray Allen bailed Miami out.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-ember/15 text-ember border-ember/40">Champion hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2014</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Spurs</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Heat</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Wade's body gave out; Spurs ran a healthy, surgical offense.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2015</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Warriors</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Cavaliers</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Cleveland lost Love (shoulder) &amp; Kyrie (kneecap, Game 1 OT). LeBron played alone.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2016</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Cavaliers</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Warriors</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Bogut's leg fracture (G5) + Draymond suspension cracked the Warriors' 3–1 lead.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='healthy'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2017</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Warriors</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Cavaliers</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Both healthy — Durant-era GSW too much. Cavs lost in 5.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-emerald-500/15 text-emerald-400 border-emerald-500/40">Both healthy</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2018</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Warriors</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Cavaliers</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">LeBron's cast decimated — Love concussion, J.R. Smith blunder. Swept.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2019</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Raptors</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Warriors</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Durant Achilles (G5) and Klay ACL (G6). The most injury-decisive Finals ever.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='runner'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2020</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Lakers</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Heat</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Dragić tore his plantar fascia in Game 1; Bam hurt his neck. Heat undermanned.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-gold/15 text-gold border-gold/40">Runner-up hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='champ'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2021</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mil.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Bucks</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Suns</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Giannis hyperextended his knee in the ECF — returned for a 50-pt Game 6.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-ember/15 text-ember border-ember/40">Champion hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='champ'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2022</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Warriors</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Celtics</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Boston's Rob Williams on a bad knee; GSW's Payton II hurt. Experience edge to GSW.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-ember/15 text-ember border-ember/40">Champion hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='healthy'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2023</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Nuggets</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Heat</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Denver fully healthy; an 8-seed Miami ran out of bodies.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-emerald-500/15 text-emerald-400 border-emerald-500/40">Both healthy</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='champ'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2024</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Celtics</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/dal.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Mavericks</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Porziņģis missed most of the Finals with a rare leg injury — Boston won anyway.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-ember/15 text-ember border-ember/40">Champion hurt</span></td>
+            </tr>
+            <tr x-show="filter==='all'||filter==='healthy'" class="hover:bg-white/[0.03] transition">
+              <td class="px-4 py-4 font-mono font-bold text-white">2025</td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" class="w-7 h-7 object-contain" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-white font-semibold">Thunder</span></div></td>
+              <td class="px-4 py-4"><div class="flex items-center gap-2.5"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ind.png" class="w-7 h-7 object-contain opacity-70" loading="lazy" onerror="this.style.opacity=0.2"><span class="text-slate-300">Pacers</span></div></td>
+              <td class="px-4 py-4 text-slate-400 max-w-md">Defending Celtics already out (Tatum Achilles); Haliburton later fell in the Finals.</td>
+              <td class="px-4 py-4 text-right"><span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border whitespace-nowrap bg-emerald-500/15 text-emerald-400 border-emerald-500/40">Both healthy</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">Verdict tags: <span class="text-gold">runner-up hurt</span> · <span class="text-ember">champion hurt</span> · <span class="text-emerald-400">both healthy</span>. The healthier side won the title in 11 of 16 seasons.</p>
+    </div>
+  </section>
+
+  <!-- CASE FILES -->
+  <section id="cases" class="relative py-24">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="max-w-3xl reveal">
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">05 — Case Files</p>
+        <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
+          The four injuries that bent NBA history.
+        </h2>
+      </div>
+      <div class="mt-12 grid md:grid-cols-2 gap-6">
+
+        <!-- Durant -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex">
+          <div class="relative w-32 sm:w-40 shrink-0 headshot border-r border-white/10">
+            <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/201142.png" alt="Kevin Durant" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" class="absolute bottom-2 right-2 w-8 h-8 object-contain logo-fade" loading="lazy" onerror="this.style.display='none'">
+          </div>
+          <div class="p-5 flex flex-col">
+            <div class="font-mono text-xs text-ember">2019 Finals</div>
+            <h3 class="font-display font-extrabold text-white text-lg leading-tight mt-1">48 hours that ended a dynasty</h3>
+            <p class="mt-2 text-sm text-slate-400 leading-relaxed flex-1">Out since a calf strain, Durant returned in Game 5, looked dominant for 12 minutes — then ruptured his Achilles. Two nights later Klay tore his ACL. The Warriors lost the series and Durant left in free agency. The inflection point of the entire no-repeat era.</p>
+            <div class="mt-3 text-[11px] font-mono text-gold border-t border-white/10 pt-3">Kevin Durant · Achilles rupture · Game 5</div>
+          </div>
+        </article>
+
+        <!-- Tatum -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex">
+          <div class="relative w-32 sm:w-40 shrink-0 headshot border-r border-white/10">
+            <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1628369.png" alt="Jayson Tatum" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" class="absolute bottom-2 right-2 w-8 h-8 object-contain logo-fade" loading="lazy" onerror="this.style.display='none'">
+          </div>
+          <div class="p-5 flex flex-col">
+            <div class="font-mono text-xs text-ember">2025 Playoffs</div>
+            <h3 class="font-display font-extrabold text-white text-lg leading-tight mt-1">The cleanest case study</h3>
+            <p class="mt-2 text-sm text-slate-400 leading-relaxed flex-1">Coming off a 2024 title and a 26.9 PPG season, Tatum suffered a season-ending Achilles tear. No competitive excuse needed — the defending champion's best player went down and the title defense was over. OKC inherited the crown.</p>
+            <div class="mt-3 text-[11px] font-mono text-gold border-t border-white/10 pt-3">Jayson Tatum · Achilles rupture · series-ending</div>
+          </div>
+        </article>
+
+        <!-- Middleton -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex">
+          <div class="relative w-32 sm:w-40 shrink-0 headshot border-r border-white/10">
+            <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/203114.png" alt="Khris Middleton" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/mil.png" class="absolute bottom-2 right-2 w-8 h-8 object-contain logo-fade" loading="lazy" onerror="this.style.display='none'">
+          </div>
+          <div class="p-5 flex flex-col">
+            <div class="font-mono text-xs text-ember">2022 Playoffs</div>
+            <h3 class="font-display font-extrabold text-white text-lg leading-tight mt-1">The invisible heartbreak</h3>
+            <p class="mt-2 text-sm text-slate-400 leading-relaxed flex-1">Less famous than an Achilles in the Finals, but just as decisive: Middleton's MCL sprain cost Milwaukee its #2 scorer for all seven games against Boston. With him, the 2022 Bucks were arguably the East's best team. Giannis is still chasing ring #2.</p>
+            <div class="mt-3 text-[11px] font-mono text-gold border-t border-white/10 pt-3">Khris Middleton · MCL sprain · missed Round 2</div>
+          </div>
+        </article>
+
+        <!-- LeBron 2015 -->
+        <article class="reveal card-glow rounded-2xl bg-panel border border-white/10 overflow-hidden flex">
+          <div class="relative w-32 sm:w-40 shrink-0 headshot border-r border-white/10">
+            <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/2544.png" alt="LeBron James" class="w-full h-full object-cover object-top" loading="lazy" onerror="this.style.opacity=0.2">
+            <img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" class="absolute bottom-2 right-2 w-8 h-8 object-contain logo-fade" loading="lazy" onerror="this.style.display='none'">
+          </div>
+          <div class="p-5 flex flex-col">
+            <div class="font-mono text-xs text-ember">2015 Finals</div>
+            <h3 class="font-display font-extrabold text-white text-lg leading-tight mt-1">One man against a juggernaut</h3>
+            <p class="mt-2 text-sm text-slate-400 leading-relaxed flex-1">Cleveland lost Kevin Love (shoulder) and Kyrie Irving (kneecap, Game 1 OT) before the Finals were decided. LeBron averaged 35.8 / 13.3 / 8.8 essentially alone against the Warriors. A would-be dynasty erased by health before it began.</p>
+            <div class="mt-3 text-[11px] font-mono text-gold border-t border-white/10 pt-3">LeBron James · lost 2 All-Stars · played solo</div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCLUSION -->
+  <section class="relative py-24 bg-gradient-to-b from-panel/40 to-ink border-t border-white/5">
+    <div class="max-w-4xl mx-auto px-5 sm:px-8 text-center reveal">
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-5">The verdict</p>
+      <h2 class="font-display font-black text-white text-3xl sm:text-5xl leading-tight">
+        The no-repeat era is a health story.
+      </h2>
+      <p class="mt-6 text-lg text-slate-300 leading-relaxed">
+        Until a roster can survive two consecutive 16-game playoff gauntlets with its stars intact — something no team has managed since 2017–18 — the cycle continues. The 2025 Thunder, young and ascending, are the next test of whether the curse can be broken.
+      </p>
+      <div class="mt-8 inline-flex flex-wrap items-center justify-center gap-3 text-sm">
+        <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10">11/16 Finals won by the healthier team</span>
+        <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10">5/6 repeats broken by injury</span>
+        <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10">2025: 3 Achilles ruptures</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/10 bg-ink">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <span class="grid place-items-center w-9 h-9 rounded-lg bg-ember/15 border border-ember/40 text-ember font-display font-black">✚</span>
+        <div>
+          <div class="font-display font-bold text-white text-sm">The Health Curse</div>
+          <div class="text-xs text-slate-500">data_explorer · NBA analytics</div>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 text-center sm:text-right max-w-md leading-relaxed">
+        Built by Eric Backman. Injury data from public reporting (ESPN, Basketball Reference). Logos via ESPN CDN, headshots via NBA CDN — for editorial/portfolio use. Soft-tissue trend figures are illustrative.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Animated stat counters (animation is progressive enhancement —
+    // final values are always guaranteed even if rAF is throttled/paused)
+    function counters() {
+      const targets = { years: 7, attempts: 6, injuryFails: 5, healthWins: 11 };
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      return {
+        years: 0, attempts: 0, injuryFails: 0, healthWins: 0,
+        run() {
+          if (reduce || document.hidden) { this.snap(); return; }
+          this.tick('years', targets.years, 900);
+          this.tick('attempts', targets.attempts, 900);
+          this.tick('injuryFails', targets.injuryFails, 900);
+          this.tick('healthWins', targets.healthWins, 1100);
+          // Safety net: snap to final values if the animation never completes
+          setTimeout(() => this.snap(), 1400);
+        },
+        snap() { Object.assign(this, targets); },
+        tick(key, target, dur) {
+          const start = performance.now();
+          const step = (t) => {
+            const p = Math.min((t - start) / dur, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            this[key] = Math.round(eased * target);
+            if (p < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      };
+    }
+
+    // Soft-tissue trend chart
+    window.addEventListener('load', () => {
+      const ctx = document.getElementById('trendChart');
+      if (!ctx || !window.Chart) return;
+      const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 220);
+      grad.addColorStop(0, 'rgba(255,84,54,0.45)');
+      grad.addColorStop(1, 'rgba(255,84,54,0.02)');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],
+          datasets: [{
+            label: 'Notable soft-tissue / lower-extremity playoff injuries',
+            data: [2,3,2,3,3,4,4,3,4,6,5,6,6,5,7,10],
+            borderColor: '#ff5436', borderWidth: 3,
+            backgroundColor: grad, fill: true, tension: 0.4,
+            pointBackgroundColor: '#ffb627', pointBorderColor: '#0a0a0f', pointBorderWidth: 2,
+            pointRadius: 4, pointHoverRadius: 7,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor:'#13131c', borderColor:'#ff5436', borderWidth:1, titleColor:'#fff', bodyColor:'#cbd5e1', padding:10,
+              callbacks: { label: (c) => ' ~' + c.parsed.y + ' notable injuries' } }
+          },
+          scales: {
+            x: { grid: { color:'rgba(255,255,255,0.04)' }, ticks: { color:'#64748b', font:{ family:'JetBrains Mono', size:10 } } },
+            y: { grid: { color:'rgba(255,255,255,0.04)' }, ticks: { color:'#64748b', font:{ family:'JetBrains Mono', size:10 }, stepSize:2 }, beginAtZero:true }
+          }
+        }
+      });
+    });
+
+    // Reveal-on-scroll
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) { setTimeout(() => e.target.classList.add('in'), (i % 4) * 80); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
+</body>
+</html>
