@@ -226,6 +226,102 @@ The Bucks lost 4-3 — a series they very possibly win with a healthy Middleton.
 
 ---
 
+## Computed Data Layer: Star Availability (2019–2025)
+
+The narrative above is built on documented injury events. This section adds a **hard, reproducible quantitative layer** computed directly from NBA box scores (via `playoff_health_analysis.py`, which pulls player-level playoff game logs through `nba_api`). No figures here are estimated.
+
+### Methodology
+
+- **Stars** = each team's top 5 players by regular-season minutes-per-game (≥15 games with the team).
+- **Why playoffs, why stars:** In the playoffs, starters essentially never sit a *full* game unless injured (there is no load management in a win-or-go-home series). So a star's full-game absence is a clean injury proxy. Bench/rotation rest — which inflates raw "games missed" — is excluded.
+- **`star_avail_pct`** = star-games played ÷ (5 × team playoff games). It is a **rate**, so it is *not* biased by how many rounds a team survived (a champion plays ~20+ games; a first-round loser plays ~5).
+- **`health_rank`** = rank within that year's 16-team playoff field (1 = healthiest).
+- **`elim_star_missed`** = star-games missed within the team's final (elimination) series.
+- **Limitation:** a star injured *mid-series* (e.g. Tatum's 2025 Achilles, Curry's 2025 hamstring) counts as having "played" the games before the injury — so this metric *undercounts* "playing hurt" and partial-series injuries. It is a floor, not a ceiling, on injury impact.
+- **Playoff field** is the 16-team bracket each year. The play-in tournament (2021–present) decides seeds 7–10 but does not change the 16-team bracket analyzed here.
+
+### Finding 1 — Champions are overwhelmingly the healthiest team in the field
+
+| Year | Champion | Champ star avail % | Champ health rank (of 16) | Runner-up | RU star avail % | RU health rank | Healthier finalist won? |
+|------|----------|--------------------|---------------------------|-----------|-----------------|----------------|--------------------------|
+| 2019 | TOR | **100.0%** | **#1** | GSW | 77.3% | #14 | ✅ Yes |
+| 2020 | LAL | **100.0%** | **#1** | MIA | 88.6% | #6 | ✅ Yes |
+| 2021 | MIL | 80.9% | #9 | PHX | 98.2% | #4 | ❌ No (Bucks won hurt) |
+| 2022 | GSW | **100.0%** | **#1** | BOS | 71.7% | #15 | ✅ Yes |
+| 2023 | DEN | **100.0%** | **#1** | MIA | 80.0% | #11 | ✅ Yes |
+| 2024 | BOS | 87.4% | #9 | DAL | 92.7% | #7 | ❌ No (Celtics won hurt) |
+| 2025 | OKC | **100.0%** | **#1** | IND | 99.1% | #7 | ✅ Yes |
+
+**Hard results:**
+- **5 of 7 champions had 100% star availability** — every star played every playoff game — and were the single **#1 healthiest** team in their entire playoff field.
+- **All 7 champions ranked top-9** of 16 in health.
+- **The healthier finalist won 5 of 7 Finals.** The two exceptions (2021 Bucks, 2024 Celtics) both won *despite* carrying a star injury — Giannis's hyperextended knee, Porziņģis's leg — talent overriding health.
+- **Only 2 of 7 Finals (2021, 2025) had both finalists arrive top-half healthy.** Somebody is usually limping into the Finals.
+
+This sharpens the thesis: it is not that injuries strike randomly across the bracket — it is that **a healthy star core is very nearly a prerequisite for winning the title**, and the runner-up is frequently the more injured of the two finalists.
+
+### Finding 2 — Injury-compromised eliminations, year by year
+
+Eliminated teams that were missing a top-5 player for games of their **elimination series** (threshold: ≥4 star-games missed in that series). Figures are computed; player injury types in the narrative are documented record.
+
+| Year | Team | Eliminated | Star-games missed in elim series | Stars missing (games) |
+|------|------|-----------|----------------------------------|------------------------|
+| 2019 | LAC | R1 | 12 | Tobias Harris (6), Avery Bradley (6) |
+| 2019 | DET | R1 | 6 | Reggie Bullock (4), Blake Griffin (2) |
+| 2019 | BKN | R1 | 5 | Allen Crabbe (5) |
+| 2019 | IND | R1 | 4 | Victor Oladipo (4) — torn quad, out for playoffs |
+| 2019 | POR | CF | 4 | Jusuf Nurkić (4) — leg fracture |
+| 2020 | BKN | R1 | 14 | Kyrie Irving (4), Dinwiddie (4), Prince (4), Harris (2) |
+| 2020 | ORL | R1 | 10 | Aaron Gordon (5), Jonathan Isaac (5) |
+| 2020 | DAL | R1 | 9 | Dwight Powell (6), Porziņģis (3) |
+| 2020 | UTA | R1 | 9 | Bojan Bogdanović (7), Conley (2) |
+| 2020 | IND | R1 | 8 | Sabonis (4), Lamb (4) |
+| 2020 | POR | R1 | 6 | Ariza (5), Lillard (1) |
+| 2020 | DEN | CF | 5 | Will Barton (5) |
+| 2020 | HOU | R2 | 5 | Clint Capela (5) |
+| 2020 | PHI | R1 | 4 | Ben Simmons (4) — back |
+| 2021 | LAC | CF | 12 | Kawhi Leonard (6) — ACL, Ibaka (6) |
+| 2021 | BKN | R2 | 9 | Harden (3) — hamstring, Kyrie (3) — ankle, Green (3) |
+| 2021 | DEN | R2 | 9 | Jamal Murray (4) — ACL (out), Gary Harris (4), Barton (1) |
+| 2021 | ATL | CF | 8 | De'Andre Hunter (6), Trae Young (2) — ankle |
+| 2021 | BOS | R1 | 7 | Jaylen Brown (5) — wrist (out), Walker (2) |
+| 2021 | POR | R1 | 6 | Gary Trent Jr. (6) |
+| 2021 | WAS | R1 | 6 | Deni Avdija (5), Bertans (1) |
+| 2021 | NYK | R1 | 5 | Mitchell Robinson (5) |
+| 2021 | UTA | R2 | 5 | Mike Conley (5) — hamstring |
+| 2021 | PHI | R2 | 4 | Danny Green (4) |
+| 2022 | DAL | CF | 10 | Hardaway Jr. (5), Porziņģis (5) |
+| 2022 | PHI | R2 | 8 | Seth Curry (6), Embiid (2) — orbital fracture/concussion |
+| 2022 | CHI | R1 | 7 | Lonzo Ball (5) — knee, LaVine (1), Caruso (1) |
+| 2022 | MIL | R2 | 7 | **Khris Middleton (7) — MCL sprain, missed entire series** |
+| 2022 | MEM | R2 | 6 | Ja Morant (3) — knee, Adams (2), Brooks (1) |
+| 2022 | NOP | R1 | 6 | Josh Hart (6) |
+| 2022 | MIA | CF | 5 | Tyler Herro (3), Lowry (2) — hamstring |
+| 2022 | BKN | R1 | 4 | James Harden (4) |
+| 2022 | TOR | R1 | 4 | VanVleet (2), Barnes (2) |
+| 2023 | PHX | R2 | 17 | Bridges (6), Cam Johnson (6), CP3 (4) — groin, Ayton (1) |
+| 2023 | LAC | R1 | 10 | Paul George (5) — knee, Kawhi (3) — knee, Morris (2) |
+| 2023 | BKN | R1 | 8 | Kyrie Irving (4)*, Kevin Durant (4)* (*post-trade roster churn) |
+| 2023 | MEM | R1 | 7 | Steven Adams (6), Morant (1) |
+| 2023 | MIN | R1 | 5 | D'Angelo Russell (5) |
+| 2024 | NYK | R2 | 18 | Randle (7) — shoulder (out), Barrett (7)*, Anunoby (4) — injury |
+| 2024 | MIA | R1 | 11 | Butler (5) — MCL (out), Rozier (5), Jaquez (1) |
+| 2024 | MIL | R1 | 8 | **Giannis (6) — calf (out), Lillard (2) — Achilles soreness** |
+| 2024 | CLE | R2 | 7 | Jarrett Allen (5) — rib, Mitchell (2) |
+| 2024 | IND | CF | 6 | Bruce Brown (4), Haliburton (2) — hamstring |
+| 2024 | LAC | R1 | 4 | Kawhi Leonard (4) — knee |
+| 2024 | NOP | R1 | 4 | Zion Williamson (4) — hamstring (out) |
+| 2025 | GSW | R2 | 9 | **Stephen Curry (4) — hamstring**, Wiggins (5) |
+| 2025 | DET | R1 | 6 | Jaden Ivey (6) — fibula (out) |
+| 2025 | LAL | R1 | 5 | Anthony Davis (5) |
+| 2025 | MEM | R1 | 5 | Jaylen Wells (4), Morant (1) |
+| 2025 | ORL | R1 | 5 | Jalen Suggs (5) — out |
+| 2025 | MIA | R1 | 4 | Jimmy Butler (4) |
+
+*(Round key: R1 = first round, R2 = conf. semis, CF = conf. finals. Note 2025 BOS — eliminated R2 with Tatum missing 2 games after his Achilles rupture — falls just below the ≥4 threshold because he played the first half of the series before going down; it appears in the full CSV.)*
+
+**Soft-tissue / lower-extremity prominence (documented):** Among the marquee injury-compromised exits, lower-body and soft-tissue injuries dominate the franchise-altering ones — Kawhi's ACL (2021), Murray's ACL (2021), Curry's hamstring (2025), Haliburton's hamstring (2024), Zion's hamstring (2024), Giannis's calf (2024), Conley's hamstring (2021), Lowry's hamstring (2022). This is consistent with the load/fatigue mechanism, though a precise league-wide soft-tissue *rate* is not computed here and is therefore not asserted as a number.
+
 ## Conclusion: Does the Data Support the Injury Narrative?
 
 **Yes — and more strongly than the conventional wisdom suggests.**

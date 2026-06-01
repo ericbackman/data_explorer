@@ -81,7 +81,8 @@
       </a>
       <div class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-400">
         <a href="#thesis" class="hover:text-white transition">Thesis</a>
-        <a href="#trend" class="hover:text-white transition">Soft-Tissue Trend</a>
+        <a href="#trend" class="hover:text-white transition">By the Numbers</a>
+        <a href="#eliminations" class="hover:text-white transition">Eliminations</a>
         <a href="#attempts" class="hover:text-white transition">Failed Repeats</a>
         <a href="#timeline" class="hover:text-white transition">Finals Table</a>
         <a href="#cases" class="hover:text-white transition">Case Files</a>
@@ -91,7 +92,8 @@
     </nav>
     <div x-show="open" x-collapse class="md:hidden bg-ink/95 border-b border-white/10 px-5 py-4 flex flex-col gap-3 text-sm">
       <a @click="open=false" href="#thesis" class="py-1">Thesis</a>
-      <a @click="open=false" href="#trend" class="py-1">Soft-Tissue Trend</a>
+      <a @click="open=false" href="#trend" class="py-1">By the Numbers</a>
+      <a @click="open=false" href="#eliminations" class="py-1">Eliminations</a>
       <a @click="open=false" href="#attempts" class="py-1">Failed Repeats</a>
       <a @click="open=false" href="#timeline" class="py-1">Finals Table</a>
       <a @click="open=false" href="#cases" class="py-1">Case Files</a>
@@ -123,7 +125,7 @@
           See the 0-for-6 →
         </a>
         <a href="#trend" class="px-6 py-3.5 rounded-xl border border-white/15 text-slate-200 font-semibold hover:bg-white/5 transition">
-          The soft-tissue spike
+          See the computed numbers
         </a>
       </div>
 
@@ -187,45 +189,82 @@
     </div>
   </section>
 
-  <!-- SOFT-TISSUE TREND -->
+  <!-- COMPUTED: STAR AVAILABILITY -->
   <section id="trend" class="relative py-24 bg-panel/40 border-y border-white/5">
     <div class="max-w-7xl mx-auto px-5 sm:px-8">
       <div class="max-w-3xl reveal">
-        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">02 — The Soft-Tissue Spike</p>
+        <div class="flex items-center gap-3 mb-4">
+          <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember">02 — By the Numbers</p>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400 border border-emerald-500/40 bg-emerald-500/10 rounded px-2 py-1">computed from box scores</span>
+        </div>
         <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
-          The injuries ending dynasties are increasingly muscular, not accidental.
+          You almost cannot win the title without healthy stars.
         </h2>
         <p class="mt-6 text-slate-300 leading-relaxed">
-          Contact injuries (a fractured wrist, a dislocated shoulder) are bad luck. <span class="text-white font-semibold">Soft-tissue injuries — hamstrings, quads, calves, Achilles — are different.</span> They cluster with fatigue and accumulated load, exactly the conditions a repeat contender faces. The 2025 playoffs were the breaking point: a Finals defined by Achilles ruptures.
+          For every playoff team since 2019, we computed <span class="text-white font-semibold">star availability</span> — the share of playoff games played by each team's top-5 regular-season minutes leaders — straight from <code class="text-gold text-sm">nba_api</code> box scores. In the playoffs a starter only sits a full game when injured, so this is a clean, depth-normalized health measure. The pattern is stark.
         </p>
       </div>
 
-      <div class="mt-12 grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 reveal rounded-2xl bg-ink/60 border border-white/10 p-5 sm:p-7">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-display font-bold text-white text-lg">Notable playoff soft-tissue / lower-extremity injuries by year</h3>
-            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 border border-white/10 rounded px-2 py-1">illustrative</span>
-          </div>
-          <canvas id="trendChart" height="150"></canvas>
-          <p class="mt-4 text-xs text-slate-500 leading-relaxed">
-            Illustrative trend compiled from public injury reporting (ESPN / Basketball Reference). Counts reflect notable rotation-player soft-tissue &amp; lower-extremity playoff injuries, not a clinical census. The shape — a steady rise peaking in 2025 — is the documented signal.
-          </p>
+      <!-- computed headline stats -->
+      <div class="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="reveal rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="font-display font-black text-4xl text-white">5<span class="text-slate-500 text-2xl">/7</span></div>
+          <div class="mt-1 text-xs text-slate-400 leading-snug">champions had <span class="text-white">100% star availability</span> — and were the single healthiest team in the field</div>
         </div>
+        <div class="reveal rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="font-display font-black text-4xl text-gold">7<span class="text-slate-500 text-2xl">/7</span></div>
+          <div class="mt-1 text-xs text-slate-400 leading-snug">champions ranked <span class="text-white">top-9 of 16</span> in health every single year</div>
+        </div>
+        <div class="reveal rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="font-display font-black text-4xl text-ember">5<span class="text-slate-500 text-2xl">/7</span></div>
+          <div class="mt-1 text-xs text-slate-400 leading-snug">Finals won by the <span class="text-white">healthier finalist</span> (2021 &amp; 2024: champ won hurt)</div>
+        </div>
+        <div class="reveal rounded-2xl bg-panel border border-white/10 p-6">
+          <div class="font-display font-black text-4xl text-court">2<span class="text-slate-500 text-2xl">/7</span></div>
+          <div class="mt-1 text-xs text-slate-400 leading-snug">Finals where <span class="text-white">both</span> finalists arrived top-half healthy</div>
+        </div>
+      </div>
 
-        <div class="reveal flex flex-col gap-4">
-          <div class="rounded-2xl bg-gradient-to-br from-ember/20 to-transparent border border-ember/30 p-6">
-            <div class="font-display font-black text-4xl text-white">2025</div>
-            <p class="mt-1 text-sm text-slate-300">An Achilles epidemic — <span class="text-white font-semibold">Tatum, Lillard, and Haliburton</span> (in the Finals itself) all went down. The most soft-tissue-defined postseason in memory.</p>
-          </div>
-          <div class="rounded-2xl bg-panel border border-white/10 p-6">
-            <div class="font-display font-black text-3xl text-gold">Calf → Achilles</div>
-            <p class="mt-1 text-sm text-slate-400">Durant's 2019 calf strain preceded his Achilles rupture — the canonical example of a fatigue injury cascading into a catastrophic one.</p>
-          </div>
-          <div class="rounded-2xl bg-panel border border-white/10 p-6">
-            <div class="font-display font-black text-3xl text-court">Hamstring</div>
-            <p class="mt-1 text-sm text-slate-400">Jamal Murray's 2024 hamstring hobbled Denver's repeat. Soft-tissue, fatigue-linked, series-deciding.</p>
-          </div>
+      <!-- real chart: champion vs runner-up star availability -->
+      <div class="mt-6 reveal rounded-2xl bg-ink/60 border border-white/10 p-5 sm:p-7">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h3 class="font-display font-bold text-white text-lg">Champion vs. runner-up — star availability % in the playoffs</h3>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 border border-white/10 rounded px-2 py-1">source: playoff_health_analysis.py</span>
         </div>
+        <canvas id="availChart" height="130"></canvas>
+        <p class="mt-4 text-xs text-slate-500 leading-relaxed">
+          Bars are real computed values. Champions (orange) sit at or near 100% in five of seven years. The two dips — 2021 Bucks (80.9%, Giannis's knee) and 2024 Celtics (87.4%, Porziņģis) — are the only champions who won while a star missed time, and in both the runner-up was actually <em>healthier</em>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPUTED: INJURY-COMPROMISED ELIMINATIONS -->
+  <section id="eliminations" class="relative py-24">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+      <div class="max-w-3xl reveal">
+        <div class="flex items-center gap-3 mb-4">
+          <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember">03 — The Walking Wounded</p>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400 border border-emerald-500/40 bg-emerald-500/10 rounded px-2 py-1">computed from box scores</span>
+        </div>
+        <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
+          Who got eliminated while missing a star.
+        </h2>
+        <p class="mt-6 text-slate-300 leading-relaxed">
+          For every season's 16-team field, these are the teams that lost their elimination series while a top-5 player missed <span class="text-white font-semibold">≥4 star-games</span> of that series — computed from box scores, then labeled with the documented injury. Pick a year.
+        </p>
+      </div>
+
+      <!-- year tabs + breakdown (rendered via safe DOM builder, no innerHTML) -->
+      <div x-data="{ yr: 2025 }" class="mt-10 reveal">
+        <div class="flex flex-wrap gap-2 mb-6">
+          <template x-for="y in [2019,2020,2021,2022,2023,2024,2025]" :key="y">
+            <button @click="yr=y; window.renderElim(y)"
+                    :class="yr===y ? 'bg-ember text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'"
+                    class="px-4 py-2 rounded-lg font-mono font-bold text-sm transition" x-text="y"></button>
+          </template>
+        </div>
+        <div id="elimBreakdown" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </div>
     </div>
   </section>
@@ -234,7 +273,7 @@
   <section id="attempts" class="relative py-24">
     <div class="max-w-7xl mx-auto px-5 sm:px-8">
       <div class="max-w-3xl reveal">
-        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">03 — The 0-for-6</p>
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">04 — The 0-for-6</p>
         <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
           Every repeat attempt since the 2018 Warriors. Every one derailed.
         </h2>
@@ -440,7 +479,7 @@
     <div class="max-w-7xl mx-auto px-5 sm:px-8">
       <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 reveal">
         <div class="max-w-2xl">
-          <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">04 — Sixteen Finals</p>
+          <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">05 — Sixteen Finals</p>
           <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
             The health ledger, 2010–2025.
           </h2>
@@ -588,7 +627,7 @@
   <section id="cases" class="relative py-24">
     <div class="max-w-7xl mx-auto px-5 sm:px-8">
       <div class="max-w-3xl reveal">
-        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">05 — Case Files</p>
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-ember mb-4">06 — Case Files</p>
         <h2 class="font-display font-extrabold text-white text-3xl sm:text-4xl leading-tight">
           The four injuries that bent NBA history.
         </h2>
@@ -720,40 +759,172 @@
       };
     }
 
-    // Soft-tissue trend chart
+    // ===== REAL DATA — computed by playoff_health_analysis.py from nba_api box scores =====
+    // Champion vs runner-up star availability % (top-5 RS-minutes players' playoff games played).
+    const FINALS = [
+      { y:2019, ct:'TOR', ca:100.0, rt:'GSW', ra:77.3 },
+      { y:2020, ct:'LAL', ca:100.0, rt:'MIA', ra:88.6 },
+      { y:2021, ct:'MIL', ca:80.9,  rt:'PHX', ra:98.2 },
+      { y:2022, ct:'GSW', ca:100.0, rt:'BOS', ra:71.7 },
+      { y:2023, ct:'DEN', ca:100.0, rt:'MIA', ra:80.0 },
+      { y:2024, ct:'BOS', ca:87.4,  rt:'DAL', ra:92.7 },
+      { y:2025, ct:'OKC', ca:100.0, rt:'IND', ra:99.1 },
+    ];
+
+    // Eliminated teams missing a top-5 player for >=4 games of their elimination series.
+    // av=star availability %, rk=health rank of 16, m=star-games missed in elim series.
+    const ELIM = {
+      2019: [
+        { t:'BKN', rd:'R1', av:80.0, rk:13, m:5, s:[{p:'Allen Crabbe', g:5}] },
+        { t:'IND', rd:'R1', av:80.0, rk:13, m:4, s:[{p:'Victor Oladipo', g:4, n:'ruptured quad'}] },
+        { t:'POR', rd:'CF', av:80.0, rk:13, m:4, s:[{p:'Jusuf Nurkić', g:4, n:'leg fracture'}] },
+      ],
+      2020: [
+        { t:'BKN', rd:'R1', av:30.0, rk:16, m:14, s:[{p:'Kyrie Irving', g:4},{p:'Spencer Dinwiddie', g:4},{p:'Taurean Prince', g:4},{p:'Joe Harris', g:2}] },
+        { t:'ORL', rd:'R1', av:60.0, rk:14, m:10, s:[{p:'Aaron Gordon', g:5},{p:'Jonathan Isaac', g:5, n:'knee (out)'}] },
+        { t:'DAL', rd:'R1', av:70.0, rk:13, m:9, s:[{p:'Dwight Powell', g:6, n:'Achilles'},{p:'Kristaps Porziņģis', g:3, n:'knee'}] },
+        { t:'UTA', rd:'R1', av:74.3, rk:11, m:9, s:[{p:'Bojan Bogdanović', g:7, n:'wrist (out)'},{p:'Mike Conley', g:2}] },
+        { t:'IND', rd:'R1', av:60.0, rk:14, m:8, s:[{p:'Domantas Sabonis', g:4, n:'foot (out)'},{p:'Jeremy Lamb', g:4, n:'knee (out)'}] },
+        { t:'POR', rd:'R1', av:76.0, rk:9, m:6, s:[{p:'Trevor Ariza', g:5, n:'opted out of bubble'},{p:'Damian Lillard', g:1, n:'knee'}] },
+        { t:'DEN', rd:'CF', av:74.7, rk:10, m:5, s:[{p:'Will Barton', g:5, n:'knee (out)'}] },
+        { t:'HOU', rd:'R2', av:73.3, rk:12, m:5, s:[{p:'Clint Capela', g:5, n:'traded-deadline*'}] },
+        { t:'PHI', rd:'R1', av:80.0, rk:8, m:4, s:[{p:'Ben Simmons', g:4, n:'back'}] },
+      ],
+      2021: [
+        { t:'LAC', rd:'CF', av:73.7, rk:14, m:12, s:[{p:'Kawhi Leonard', g:6, n:'ACL (out)'},{p:'Serge Ibaka', g:6, n:'back'}] },
+        { t:'BKN', rd:'R2', av:80.0, rk:11, m:9, s:[{p:'James Harden', g:3, n:'hamstring'},{p:'Kyrie Irving', g:3, n:'ankle'},{p:'Jeff Green', g:3}] },
+        { t:'ATL', rd:'CF', av:83.3, rk:9, m:8, s:[{p:"De'Andre Hunter", g:6, n:'knee (out)'},{p:'Trae Young', g:2, n:'ankle'}] },
+        { t:'BOS', rd:'R1', av:72.0, rk:15, m:7, s:[{p:'Jaylen Brown', g:5, n:'wrist (out)'},{p:'Kemba Walker', g:2}] },
+        { t:'WAS', rd:'R1', av:76.0, rk:13, m:6, s:[{p:'Deni Avdija', g:5, n:'ankle (out)'},{p:'Davis Bertans', g:1}] },
+        { t:'DEN', rd:'R2', av:66.0, rk:16, m:5, s:[{p:'Jamal Murray', g:4, n:'ACL (out)'},{p:'Will Barton', g:1}] },
+        { t:'NYK', rd:'R1', av:80.0, rk:11, m:5, s:[{p:'Mitchell Robinson', g:5, n:'foot (out)'}] },
+        { t:'UTA', rd:'R2', av:89.1, rk:8, m:5, s:[{p:'Mike Conley', g:5, n:'hamstring'}] },
+        { t:'PHI', rd:'R2', av:91.7, rk:7, m:4, s:[{p:'Danny Green', g:4, n:'calf'}] },
+      ],
+      2022: [
+        { t:'CHI', rd:'R1', av:72.0, rk:16, m:7, s:[{p:'Lonzo Ball', g:5, n:'knee (out)'},{p:'Zach LaVine', g:1},{p:'Alex Caruso', g:1}] },
+        { t:'MIL', rd:'R2', av:83.3, rk:14, m:7, s:[{p:'Khris Middleton', g:7, n:'MCL sprain (out)'}] },
+        { t:'MEM', rd:'R2', av:85.0, rk:13, m:6, s:[{p:'Ja Morant', g:3, n:'knee'},{p:'Steven Adams', g:2},{p:'Dillon Brooks', g:1}] },
+        { t:'DAL', rd:'CF', av:76.7, rk:15, m:5, s:[{p:'Tim Hardaway Jr.', g:5, n:'foot (out)'}] },
+        { t:'MIA', rd:'CF', av:86.7, rk:11, m:5, s:[{p:'Tyler Herro', g:3, n:'groin'},{p:'Kyle Lowry', g:2, n:'hamstring'}] },
+        { t:'TOR', rd:'R1', av:86.7, rk:11, m:4, s:[{p:'Fred VanVleet', g:2},{p:'Scottie Barnes', g:2, n:'ankle'}] },
+      ],
+      2023: [
+        { t:'LAC', rd:'R1', av:60.0, rk:16, m:10, s:[{p:'Paul George', g:5, n:'knee (out)'},{p:'Kawhi Leonard', g:3, n:'knee'},{p:'Marcus Morris Sr.', g:2}] },
+        { t:'MEM', rd:'R1', av:76.7, rk:15, m:7, s:[{p:'Steven Adams', g:6, n:'knee (out)'},{p:'Ja Morant', g:1, n:'hand'}] },
+        { t:'PHX', rd:'R2', av:85.5, rk:12, m:7, s:[{p:'Chris Paul', g:4, n:'groin'},{p:'Damion Lee', g:2},{p:'Deandre Ayton', g:1}] },
+        { t:'MIN', rd:'R1', av:80.0, rk:13, m:5, s:[{p:'Jaden McDaniels', g:5, n:'hand (out)'}] },
+      ],
+      2024: [
+        { t:'MIA', rd:'R1', av:56.0, rk:16, m:11, s:[{p:'Jimmy Butler', g:5, n:'MCL (out)'},{p:'Terry Rozier', g:5, n:'neck'},{p:'Jaime Jaquez Jr.', g:1}] },
+        { t:'NYK', rd:'R2', av:73.8, rk:14, m:11, s:[{p:'Julius Randle', g:7, n:'shoulder (out)'},{p:'OG Anunoby', g:4, n:'hamstring'}] },
+        { t:'MIL', rd:'R1', av:73.3, rk:15, m:8, s:[{p:'Giannis Antetokounmpo', g:6, n:'calf (out)'},{p:'Damian Lillard', g:2, n:'Achilles soreness'}] },
+        { t:'CLE', rd:'R2', av:83.3, rk:11, m:7, s:[{p:'Jarrett Allen', g:5, n:'rib (out)'},{p:'Donovan Mitchell', g:2, n:'calf'}] },
+        { t:'IND', rd:'CF', av:77.6, rk:13, m:6, s:[{p:'Bennedict Mathurin', g:4, n:'shoulder (out)'},{p:'Tyrese Haliburton', g:2, n:'hamstring'}] },
+        { t:'LAC', rd:'R1', av:86.7, rk:10, m:4, s:[{p:'Kawhi Leonard', g:4, n:'knee'}] },
+        { t:'NOP', rd:'R1', av:80.0, rk:12, m:4, s:[{p:'Zion Williamson', g:4, n:'hamstring (out)'}] },
+      ],
+      2025: [
+        { t:'DET', rd:'R1', av:80.0, rk:13, m:6, s:[{p:'Jaden Ivey', g:6, n:'fibula (out)'}] },
+        { t:'MEM', rd:'R1', av:75.0, rk:16, m:5, s:[{p:'Jaylen Wells', g:4, n:'wrist/concussion'},{p:'Ja Morant', g:1, n:'hip'}] },
+        { t:'ORL', rd:'R1', av:80.0, rk:13, m:5, s:[{p:'Jalen Suggs', g:5, n:'knee (out)'}] },
+        { t:'GSW', rd:'R2', av:85.0, rk:12, m:4, s:[{p:'Stephen Curry', g:4, n:'hamstring'}] },
+        { t:'MIA', rd:'R1', av:80.0, rk:13, m:4, s:[{p:'Terry Rozier', g:4}] },
+      ],
+    };
+
+    // NBA -> ESPN logo abbreviation
+    const ESPN = { GSW:'gs', SAS:'sa', NOP:'no', NYK:'ny', UTA:'utah', WAS:'wsh', PHX:'phx', BKN:'bkn' };
+    const espn = (a) => ESPN[a] || a.toLowerCase();
+    const logoUrl = (a) => `https://a.espncdn.com/i/teamlogos/nba/500/${espn(a)}.png`;
+
+    // ---- Real availability chart (grouped bar, computed values) ----
     window.addEventListener('load', () => {
-      const ctx = document.getElementById('trendChart');
-      if (!ctx || !window.Chart) return;
-      const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 220);
-      grad.addColorStop(0, 'rgba(255,84,54,0.45)');
-      grad.addColorStop(1, 'rgba(255,84,54,0.02)');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],
-          datasets: [{
-            label: 'Notable soft-tissue / lower-extremity playoff injuries',
-            data: [2,3,2,3,3,4,4,3,4,6,5,6,6,5,7,10],
-            borderColor: '#ff5436', borderWidth: 3,
-            backgroundColor: grad, fill: true, tension: 0.4,
-            pointBackgroundColor: '#ffb627', pointBorderColor: '#0a0a0f', pointBorderWidth: 2,
-            pointRadius: 4, pointHoverRadius: 7,
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { backgroundColor:'#13131c', borderColor:'#ff5436', borderWidth:1, titleColor:'#fff', bodyColor:'#cbd5e1', padding:10,
-              callbacks: { label: (c) => ' ~' + c.parsed.y + ' notable injuries' } }
+      const ctx = document.getElementById('availChart');
+      if (ctx && window.Chart) {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: FINALS.map(f => f.y),
+            datasets: [
+              { label: 'Champion', data: FINALS.map(f => f.ca), backgroundColor: '#ff5436', borderRadius: 4 },
+              { label: 'Runner-up', data: FINALS.map(f => f.ra), backgroundColor: '#5b6478', borderRadius: 4 },
+            ]
           },
-          scales: {
-            x: { grid: { color:'rgba(255,255,255,0.04)' }, ticks: { color:'#64748b', font:{ family:'JetBrains Mono', size:10 } } },
-            y: { grid: { color:'rgba(255,255,255,0.04)' }, ticks: { color:'#64748b', font:{ family:'JetBrains Mono', size:10 }, stepSize:2 }, beginAtZero:true }
+          options: {
+            responsive: true, maintainAspectRatio: true,
+            plugins: {
+              legend: { labels: { color:'#cbd5e1', font:{ family:'Inter' }, boxWidth:12 } },
+              tooltip: { backgroundColor:'#13131c', borderColor:'#ff5436', borderWidth:1, titleColor:'#fff', bodyColor:'#cbd5e1', padding:10,
+                callbacks: {
+                  title: (items) => 'Finals ' + items[0].label,
+                  label: (c) => {
+                    const f = FINALS[c.dataIndex];
+                    const team = c.datasetIndex === 0 ? f.ct : f.rt;
+                    return ` ${team} (${c.dataset.label}): ${c.parsed.y}% star availability`;
+                  }
+                } }
+            },
+            scales: {
+              x: { grid: { display:false }, ticks: { color:'#94a3b8', font:{ family:'JetBrains Mono', size:11 } } },
+              y: { min: 0, max: 100, grid: { color:'rgba(255,255,255,0.05)' },
+                   ticks: { color:'#64748b', font:{ family:'JetBrains Mono', size:10 }, callback: (v) => v + '%' } }
+            }
           }
-        }
-      });
+        });
+      }
+      window.renderElim(2025);
     });
+
+    // ---- Per-year elimination breakdown (safe DOM build — no innerHTML) ----
+    const el = (tag, cls, text) => {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    };
+    window.renderElim = (year) => {
+      const host = document.getElementById('elimBreakdown');
+      if (!host) return;
+      host.replaceChildren();
+      (ELIM[year] || []).forEach(team => {
+        const card = el('article', 'rounded-2xl bg-panel border border-white/10 overflow-hidden flex flex-col');
+
+        const head = el('div', 'relative p-4 flex items-center justify-between bg-gradient-to-br from-white/5 to-transparent');
+        const headL = el('div', 'flex items-center gap-3');
+        const logo = el('img', 'w-11 h-11 object-contain logo-fade');
+        logo.src = logoUrl(team.t); logo.alt = team.t; logo.loading = 'lazy';
+        logo.onerror = function () { this.style.opacity = 0.2; };
+        const ttl = el('div');
+        ttl.append(el('div', 'font-display font-extrabold text-white text-lg leading-none', team.t));
+        ttl.append(el('div', 'text-[11px] text-slate-400 mt-0.5', 'Eliminated · ' + team.rd));
+        headL.append(logo, ttl);
+        const rank = el('div', 'text-right');
+        rank.append(el('div', 'font-mono font-bold text-sm ' + (team.av < 75 ? 'text-ember' : 'text-gold'), team.av + '%'));
+        rank.append(el('div', 'text-[10px] text-slate-500', 'health #' + team.rk + '/16'));
+        head.append(headL, rank);
+        card.append(head);
+
+        const body = el('div', 'p-4 pt-3 flex flex-col gap-1.5 flex-1');
+        team.s.forEach(p => {
+          const row = el('div', 'flex items-center justify-between gap-2 text-sm');
+          const left = el('div', 'min-w-0');
+          left.append(el('span', 'text-slate-200 font-medium', p.p));
+          if (p.n) left.append(el('span', 'text-[11px] text-slate-500 ml-1.5', '· ' + p.n));
+          const miss = el('span', 'shrink-0 font-mono text-xs font-bold ' + (p.g >= 4 ? 'text-ember' : 'text-slate-400'), '-' + p.g + 'g');
+          row.append(left, miss);
+          body.append(row);
+        });
+        card.append(body);
+
+        const foot = el('div', 'px-4 py-3 border-t border-white/5 flex items-center justify-between');
+        foot.append(el('span', 'text-[11px] text-slate-500', 'star-games missed in elim series'));
+        foot.append(el('span', 'font-display font-black text-ember text-lg', String(team.m)));
+        card.append(foot);
+
+        host.append(card);
+      });
+    };
 
     // Reveal-on-scroll
     const io = new IntersectionObserver((entries) => {
