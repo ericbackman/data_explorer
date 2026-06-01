@@ -20,6 +20,10 @@ env/
 # VSCode — local/user-specific settings
 .vscode/
 
+# Cached API data
+.cache/
+mitchell_top10/.cache.json
+
 # OS
 .DS_Store
 Thumbs.db
