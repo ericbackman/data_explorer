@@ -29,6 +29,7 @@ OUTPUT_PATH = "mitchell_top10/data.js"
 # Players in the "is Mitchell top-15?" debate range — let data pick the winners
 TARGETS = [
     "Donovan Mitchell",
+    "Cade Cunningham",
     "Bam Adebayo",
     "Pascal Siakam",
     "Tyrese Haliburton",
