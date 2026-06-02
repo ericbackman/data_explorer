@@ -4,6 +4,11 @@ A manifest-driven hub for NBA data investigations. The landing page (`index.html
 renders itself from `investigations.js` — each investigation is a self-contained
 folder under `investigations/`.
 
+**Live:** https://ericbackman.github.io/nba-data-lab/
+
+Source lives here in the private `data_explorer` repo; `deploy.py` publishes
+just this folder to the public `nba-data-lab` repo (GitHub Pages).
+
 ## Structure
 
 ```
@@ -62,4 +67,23 @@ That's it — the hub picks it up automatically and sorts newest-first.
 ```powershell
 python -m http.server 8766 --directory nba_site
 # open http://localhost:8766
+```
+
+## Publishing
+
+Push the current `nba_site/` to the live public site:
+
+```powershell
+python nba_site/deploy.py -m "add clutch-kings investigation"
+```
+
+This mirrors the folder into the public `nba-data-lab` repo and pushes; GitHub
+Pages rebuilds in ~1 minute. Cache files (`.cache.json`) are never published.
+Typical full workflow for a new investigation:
+
+```powershell
+python nba_site/new_investigation.py clutch-kings-2025 "Clutch Kings"
+# ...build a data script that writes investigations/clutch-kings-2025/data.js
+# ...paste the manifest snippet into investigations.js, flip status to "live"
+python nba_site/deploy.py -m "add clutch-kings"
 ```
