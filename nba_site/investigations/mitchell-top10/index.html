@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Case for Donovan Mitchell — Top 10, No Debate</title>
+  <meta name="description" content="A data-driven argument that Donovan Mitchell is a top-10 NBA player.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <style>
+    :root {
+      --bg:       #0f1117;
+      --bg2:      #1a1d27;
+      --bg3:      #242836;
+      --text:     #e4e6ed;
+      --text2:    #8b90a0;
+      --gold:     #f0b429;
+      --gold-dim: rgba(240,180,41,0.1);
+      --blue:     #4f8ff7;
+      --green:    #34d399;
+      --border:   #2a2e3a;
+      --mono: 'JetBrains Mono','Fira Code',Consolas,monospace;
+      --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+    a{color:var(--gold);text-decoration:none}
+
+    /* Hero */
+    .hero{min-height:72vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:5rem 2rem 2.5rem;position:relative;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(240,180,41,0.06) 0%,transparent 70%),var(--bg)}
+    .hero__grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.25}
+    .hero__content{position:relative;z-index:1;max-width:820px}
+    .hero__eyebrow{display:inline-block;font-family:var(--mono);font-size:.75rem;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-bottom:1.5rem;padding:.35rem .9rem;border:1px solid rgba(240,180,41,.3);border-radius:100px}
+    .hero__title{font-size:clamp(2.6rem,8vw,5.5rem);font-weight:800;line-height:1.05;letter-spacing:-.03em;margin-bottom:.6rem}
+    .hero__title .accent{color:var(--gold)}
+    .hero__subtitle{font-family:var(--mono);font-size:clamp(.9rem,2.5vw,1.2rem);color:var(--text2);letter-spacing:.12em;margin-bottom:3.5rem}
+    .hero__stats{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+    .hero__stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.75rem;min-width:130px}
+    .hero__stat--gold{border-color:rgba(240,180,41,.5);background:var(--gold-dim)}
+    .hero__stat-val{font-family:var(--mono);font-size:2.1rem;font-weight:500;color:var(--gold);line-height:1;margin-bottom:.45rem}
+    .hero__stat-lbl{font-size:.72rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+
+    /* Sections */
+    .section{max-width:1100px;margin:0 auto;padding:5.5rem 2rem}
+    .section__head{margin-bottom:2.5rem}
+    .section__tag{font-family:var(--mono);font-size:.72rem;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;margin-bottom:.5rem}
+    .section__title{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:700;letter-spacing:-.02em;margin-bottom:.6rem}
+    .section__desc{color:var(--text2);font-size:.95rem;max-width:600px;line-height:1.7}
+    .divider{border:none;border-top:1px solid var(--border)}
+
+    /* Table */
+    .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+    table{width:100%;border-collapse:collapse}
+    thead{background:var(--bg2)}
+    th{font-family:var(--mono);font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;padding:1rem 1.1rem;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+    th:first-child{text-align:left}
+    td{padding:.8rem 1.1rem;text-align:right;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.85rem;color:var(--text2)}
+    td:first-child{text-align:left;font-family:var(--sans);font-size:.9rem;color:var(--text)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .row-mitchell{background:var(--gold-dim)!important}
+    .row-mitchell td{color:var(--text)}
+    .row-mitchell td:first-child{color:var(--gold);font-weight:700}
+    .val-top{color:var(--gold);font-weight:600}
+    .val-win{color:var(--green)}
+    .val-na{color:#3a3e4a}
+
+    /* Charts */
+    .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+    @media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
+    .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;min-width:0}
+    .chart-card canvas{max-width:100%!important}
+    .chart-label{font-family:var(--mono);font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.25rem}
+    .chart-note{font-family:var(--mono);font-size:.62rem;color:#3a3e4a;margin-top:.75rem}
+    .chart-wrap{position:relative;height:290px}
+
+    /* Matchup cards */
+    .matchup-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem}
+    @media(max-width:700px){.matchup-grid{grid-template-columns:1fr}}
+    .matchup-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.4rem}
+    .matchup-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
+    .matchup-names{display:flex;align-items:center;gap:.6rem}
+    .mn-mitchell{color:var(--gold);font-weight:700;font-size:.95rem}
+    .mn-vs{color:var(--text2);font-family:var(--mono);font-size:.72rem}
+    .mn-opp{color:var(--text);font-weight:600;font-size:.95rem}
+    .matchup-badge{font-family:var(--mono);font-size:.75rem;padding:.2rem .55rem;border-radius:6px;background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.2)}
+    .metric-row{display:grid;grid-template-columns:90px 1fr 1fr;gap:.5rem;padding:.55rem 0;border-bottom:1px solid var(--border);align-items:center}
+    .metric-row:last-child{border-bottom:none}
+    .m-lbl{font-family:var(--mono);font-size:.64rem;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+    .m-val{font-family:var(--mono);font-size:.82rem;text-align:right}
+    .m-val.win{color:var(--gold);font-weight:600}
+    .m-val.loss{color:var(--text2)}
+    .matchup-col-hd{display:grid;grid-template-columns:90px 1fr 1fr;padding:0 0 .4rem;gap:.5rem}
+    .matchup-col-hd span{font-family:var(--mono);font-size:.62rem;color:#3a3e4a;text-align:right;letter-spacing:.06em}
+
+    /* Verdict */
+    .verdict-box{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:2.25rem 2.5rem}
+    .verdict-text{font-size:clamp(1rem,2.2vw,1.2rem);line-height:1.85;margin-bottom:2rem;color:var(--text)}
+    .verdict-text .hl{color:var(--gold);font-weight:600}
+    .verdict-nums{display:flex;gap:2.5rem;flex-wrap:wrap;padding-top:1.5rem;border-top:1px solid var(--border)}
+    .vn-item{font-family:var(--mono)}
+    .vn-val{font-size:2rem;font-weight:500;color:var(--gold);line-height:1;margin-bottom:.3rem}
+    .vn-lbl{font-size:.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+
+    footer{text-align:center;padding:2rem;font-family:var(--mono);font-size:.7rem;color:#3a3e4a;border-top:1px solid var(--border)}
+
+    /* Cade rebuttal */
+    .cade-intro{font-size:clamp(1rem,2.2vw,1.15rem);color:var(--text2);line-height:1.8;margin-bottom:2rem;max-width:700px}
+    .cade-intro strong{color:var(--text)}
+    .cade-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+    @media(max-width:600px){.cade-grid{grid-template-columns:1fr}}
+    .cade-col{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+    .cade-col--mitchell{border-color:rgba(240,180,41,.4)}
+    .cade-col-title{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:1.25rem}
+    .cade-col--cade .cade-col-title{color:var(--text2)}
+    .cade-col--mitchell .cade-col-title{color:var(--gold)}
+    .cade-stat{display:flex;justify-content:space-between;align-items:baseline;padding:.5rem 0;border-bottom:1px solid var(--border)}
+    .cade-stat:last-child{border-bottom:none}
+    .cade-stat-lbl{font-family:var(--mono);font-size:.68rem;color:var(--text2);text-transform:uppercase}
+    .cade-stat-val{font-family:var(--mono);font-size:.9rem;font-weight:600}
+    .cade-col--mitchell .cade-stat-val{color:var(--gold)}
+    .cade-col--cade    .cade-stat-val{color:var(--text)}
+    .cade-win{color:var(--green)!important}
+    .cade-bottom{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:1.5rem 2rem}
+    .cade-bottom-title{font-family:var(--mono);font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.75rem}
+    .cade-bottom-text{font-size:.95rem;color:var(--text);line-height:1.75}
+    .cade-bottom-text .hl{color:var(--gold);font-weight:600}
+
+    /* Back-to-hub link */
+    .backlink{position:fixed;top:1.1rem;left:1.25rem;z-index:200;font-family:var(--mono);font-size:.72rem;color:var(--text2);background:rgba(15,17,23,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:100px;padding:.4rem .85rem;transition:color .18s,border-color .18s}
+    .backlink:hover{color:var(--gold);border-color:var(--gold)}
+
+    /* ── Top-20 ladder ─────────────────────────── */
+    .ladder{display:flex;flex-direction:column;gap:.5rem;max-width:620px;margin:0 auto}
+    .tier-label{font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text2);margin:1.4rem 0 .35rem;padding-left:.2rem}
+    .tier-label:first-child{margin-top:0}
+
+    .rung{display:flex;align-items:center;gap:.85rem;background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:.7rem .85rem;position:relative}
+    .rung__rank{font-family:var(--mono);font-size:1.15rem;font-weight:500;color:var(--text2);min-width:1.9rem;text-align:center;flex-shrink:0}
+    .rung__body{flex:1;min-width:0}
+    .rung__name{font-weight:600;font-size:.95rem;line-height:1.2}
+    .rung__name .team{color:var(--text2);font-weight:400;font-family:var(--mono);font-size:.7rem;margin-left:.4rem}
+    .rung__stats{font-family:var(--mono);font-size:.66rem;color:var(--text2);margin-top:.2rem;line-height:1.5}
+    .rung__stats b{color:#b9bdca;font-weight:500}
+    .rung__score{font-family:var(--mono);font-size:1.05rem;font-weight:500;color:var(--text2);flex-shrink:0;text-align:right}
+    .rung__barwrap{height:4px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:.5rem;overflow:hidden}
+    .rung__bar{height:100%;border-radius:2px;transition:width .4s}
+
+    .rung--lock{border-left:3px solid var(--blue)}
+    .rung--tier{border-left:3px solid #6b7280}
+    .rung--chase{border-left:3px solid #3a3e4a}
+
+    /* Mitchell's promoted rung */
+    .rung--me{border:1px solid var(--gold);border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(240,180,41,.13),rgba(240,180,41,.04));padding:.95rem .9rem;box-shadow:0 6px 24px rgba(240,180,41,.08)}
+    .rung--me .rung__rank{color:var(--gold);font-size:1.5rem;font-weight:600}
+    .rung--me .rung__name{font-size:1.1rem;color:var(--gold)}
+    .rung--me .rung__score{color:var(--gold);font-size:1.2rem}
+    .rung--me .rung__stats b{color:var(--text)}
+
+    .verdict-cmp{margin-top:.6rem;display:flex;flex-direction:column;gap:.4rem}
+    .cmp{display:flex;align-items:flex-start;gap:.5rem;font-size:.8rem;line-height:1.45}
+    .cmp__ico{font-family:var(--mono);font-size:.8rem;flex-shrink:0;margin-top:.05rem}
+    .cmp--up .cmp__ico{color:var(--green)}
+    .cmp--dn .cmp__ico{color:#e0566b}
+    .cmp b{color:var(--gold);font-weight:600}
+    .cmp .nm{color:var(--text);font-weight:600}
+
+    .ladder-note{max-width:620px;margin:1.5rem auto 0;font-family:var(--mono);font-size:.66rem;line-height:1.7;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem}
+    .ladder-note .hd{color:#b9bdca;text-transform:uppercase;letter-spacing:.1em;font-size:.62rem;margin-bottom:.45rem}
+    .ladder-note .dnq{color:#e0566b}
+    .formula{max-width:620px;margin:1rem auto 0;font-family:var(--mono);font-size:.64rem;color:#3a3e4a;text-align:center;line-height:1.6}
+  </style>
+</head>
+<body>
+
+<a class="backlink" href="../../">← NBA Data Lab</a>
+
+<section class="hero">
+  <div class="hero__grid"></div>
+  <div class="hero__content">
+    <div class="hero__eyebrow">NBA Analytics Brief · 2025-26 Season</div>
+    <h1 class="hero__title">The Case for<br><span class="accent">Donovan Mitchell</span></h1>
+    <p class="hero__subtitle">// Top 10. No Debate.</p>
+    <div id="hero-stats" class="hero__stats"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section__head">
+    <p class="section__tag">01 / The Ladder</p>
+    <h2 class="section__title" id="ladder-title">Where He Ranks</h2>
+    <p class="section__desc" id="ladder-desc">Ranked by Lab Score — 2025-26 production + playoff resume + availability.</p>
+  </div>
+  <div class="ladder" id="ladder"></div>
+  <div class="ladder-note" id="ladder-dnq"></div>
+  <p class="formula" id="ladder-formula"></p>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section__head">
+    <p class="section__tag">02 / Playoff Elevation</p>
+    <h2 class="section__title">Who Actually Shows Up</h2>
+    <p class="section__desc">Playoff PPG minus regular-season PPG. Positive = rises when it matters.</p>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <p class="chart-label">Playoff Elevation — Career PO PPG minus Career RS PPG</p>
+      <div class="chart-wrap"><canvas id="elevationChart"></canvas></div>
+      <p class="chart-note">* fewer than 25 career playoff games (small sample)</p>
+    </div>
+    <div class="chart-card">
+      <p class="chart-label">Five Dimensions — Mitchell vs. Cade vs. LaMelo</p>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+      <p class="chart-note">Normalized 0–100. Playoff PPG ceiling = 30; PO Experience ceiling = 100 games.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section__head">
+    <p class="section__tag">03 / Head-to-Head</p>
+    <h2 class="section__title">Four Matchups. One Winner.</h2>
+    <p class="section__desc">Five metrics, head to head. Gold = Mitchell wins it.</p>
+  </div>
+  <div class="matchup-grid" id="matchup-grid"></div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section__head">
+    <p class="section__tag">04 / The Cade Question</p>
+    <h2 class="section__title">The Cade Cunningham Comparison</h2>
+    <p class="section__desc">The trendy young pick to pass him. Here's where the data lands.</p>
+  </div>
+  <div id="cade-section"></div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section__head">
+    <p class="section__tag">05 / The Verdict</p>
+    <h2 class="section__title">Top 10. Settled.</h2>
+  </div>
+  <div class="verdict-box" id="verdict"></div>
+</div>
+
+<footer>Data: nba_api → NBA.com · 2025-26 regular season + career playoff totals</footer>
+
+<script>
+/* All DOM construction uses createElement/textContent — no innerHTML with dynamic data */
+
+if (typeof MITCHELL_DATA === 'undefined') {
+  const msg = document.createElement('div');
+  msg.style.cssText = 'text-align:center;padding:5rem 2rem;font-family:monospace;color:#8b90a0';
+  const warn = document.createElement('p');
+  warn.style.cssText = 'font-size:2rem;margin-bottom:1rem';
+  warn.textContent = '⚠';
+  const inst = document.createElement('p');
+  inst.textContent = 'data.js not found — run mitchell_profile.py first';
+  msg.appendChild(warn);
+  msg.appendChild(inst);
+  document.body.replaceChildren(msg);
+  throw new Error('MITCHELL_DATA missing');
+}
+
+/* ── Process data ────────────────────────────────────────────── */
+const players = MITCHELL_DATA.ordered.map(name => {
+  const p  = MITCHELL_DATA.players[name];
+  const rs = p.career && p.career.rs_career      ? p.career.rs_career      : null;
+  const po = p.career && p.career.playoff_career ? p.career.playoff_career : null;
+  return {
+    name,
+    gp:     p.gp,   ppg:    p.ppg,
+    rpg:    p.rpg,  apg:    p.apg,  spg: p.spg,
+    ts_pct: p.ts_pct, usg_pct: p.usg_pct, pie: p.pie,
+    rs_career_ppg: rs ? rs.PPG : null,
+    po_ppg:   po ? po.PPG : null,
+    po_gp:    po ? po.GP  : 0,
+    elevation: (po && po.PPG != null && rs && rs.PPG != null)
+      ? +((po.PPG - rs.PPG).toFixed(1)) : null,
+  };
+});
+
+const byName   = {};
+players.forEach(p => { byName[p.name] = p; });
+// Look Mitchell up by NAME — the player pool is no longer Mitchell-first
+// (the ranking sorts the elite tier above him), so players[0] is not him.
+const mitchell = byName['Donovan Mitchell'];
+
+/* ── Tiny DOM helpers ────────────────────────────────────────── */
+const el = (tag, cls, txt) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = String(txt);
+  return e;
+};
+const app = (parent, ...kids) => { kids.forEach(k => parent.appendChild(k)); return parent; };
+
+/* ── Hero stats ──────────────────────────────────────────────── */
+const heroEl = document.getElementById('hero-stats');
+[
+  { val: mitchell.ppg.toFixed(1),    lbl: 'PPG · 2025-26',       gold: false },
+  { val: (MITCHELL_DATA.mitchell_rank != null ? '#' + MITCHELL_DATA.mitchell_rank : '—'), lbl: 'Lab Score Rank', gold: true },
+  { val: mitchell.po_ppg.toFixed(1), lbl: 'Career Playoff PPG',       gold: false },
+  { val: mitchell.ts_pct + '%',      lbl: 'True Shooting %',          gold: false },
+].forEach(({ val, lbl, gold }) => {
+  const stat = el('div', 'hero__stat' + (gold ? ' hero__stat--gold' : ''));
+  app(stat, el('div', 'hero__stat-val', val), el('div', 'hero__stat-lbl', lbl));
+  heroEl.appendChild(stat);
+});
+
+/* ── Top-20 ladder ───────────────────────────────────────────── */
+const ranking = (MITCHELL_DATA.ranking || []).slice(0, 20);
+const myRank  = MITCHELL_DATA.mitchell_rank;
+
+const TIER_LABELS = {
+  lock:  'The Elite · 1–6',
+  tier:  'The Pack · 7–12',
+  chase: 'The Chase · 13–20',
+};
+
+// Build the "why ahead / why behind" callout for Mitchell vs an adjacent player.
+// Returns the single most decisive stat edge as a short data phrase.
+function edgePhrase(me, them, direction) {
+  // direction: 'up' = Mitchell ahead of `them`; 'dn' = Mitchell behind `them`
+  const diffs = [
+    { k: 'pie',    lbl: 'impact (PIE)', d: (me.pie ?? 0)    - (them.pie ?? 0),    fmt: v => v.toFixed(1) },
+    { k: 'ppg',    lbl: 'PPG',          d: (me.ppg ?? 0)    - (them.ppg ?? 0),    fmt: v => v.toFixed(1) },
+    { k: 'ts_pct', lbl: 'TS%',          d: (me.ts_pct ?? 0) - (them.ts_pct ?? 0), fmt: v => v.toFixed(1) + '%' },
+    { k: 'po_ppg', lbl: 'playoff PPG',  d: (me.po_ppg ?? 0) - (them.po_ppg ?? 0), fmt: v => v.toFixed(1) },
+    { k: 'gp',     lbl: 'games played', d: (me.gp ?? 0)     - (them.gp ?? 0),     fmt: v => String(Math.round(v)) },
+  ];
+  // For 'up' we want where Mitchell wins (d>0); for 'dn' where he loses (d<0)
+  const pick = diffs
+    .filter(x => direction === 'up' ? x.d > 0 : x.d < 0)
+    .sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0];
+  if (!pick) return null;
+  const sign = pick.d >= 0 ? '+' : '−';
+  return { lbl: pick.lbl, mine: me[pick.k], theirs: them[pick.k], delta: `${sign}${pick.fmt(Math.abs(pick.d))}` };
+}
+
+const ladderEl = document.getElementById('ladder');
+let lastTier = null;
+
+// Min–max normalize scores across the visible 20 so the bars fill the width.
+const scores  = ranking.map(r => r.score ?? 0);
+const sMin    = Math.min(...scores), sMax = Math.max(...scores);
+const barPct  = s => 12 + 88 * ((s - sMin) / Math.max(sMax - sMin, 1)); // 12–100%
+const TIER_BAR = { lock: 'var(--blue)', tier: '#6b7280', chase: '#3a3e4a' };
+
+ranking.forEach((r, i) => {
+  if (r.tier !== lastTier) {
+    ladderEl.appendChild(el('div', 'tier-label', TIER_LABELS[r.tier] || ''));
+    lastTier = r.tier;
+  }
+
+  const rung = el('div', 'rung rung--' + r.tier + (r.is_mitchell ? ' rung--me' : ''));
+
+  rung.appendChild(el('div', 'rung__rank', r.rank));
+
+  const body = el('div', 'rung__body');
+  const name = el('div', 'rung__name');
+  name.appendChild(document.createTextNode(r.name));
+  if (r.team) name.appendChild(el('span', 'team', r.team));
+  body.appendChild(name);
+
+  // Compact stat line: PPG · TS% · PIE · PO
+  const stats = el('div', 'rung__stats');
+  const poTxt = r.po_ppg ? r.po_ppg.toFixed(1) : '—';
+  stats.append(
+    el('b', null, r.ppg.toFixed(1)), document.createTextNode(' PPG · '),
+    el('b', null, (r.ts_pct ?? 0).toFixed(1) + '%'), document.createTextNode(' TS · '),
+    el('b', null, (r.pie ?? 0).toFixed(1)), document.createTextNode(' PIE · '),
+    el('b', null, poTxt), document.createTextNode(' PO'),
+  );
+  body.appendChild(stats);
+
+  // Visual Lab Score bar
+  const barWrap = el('div', 'rung__barwrap');
+  const bar     = el('div', 'rung__bar');
+  bar.style.width = barPct(r.score ?? 0).toFixed(1) + '%';
+  bar.style.background = r.is_mitchell ? 'var(--gold)' : (TIER_BAR[r.tier] || '#3a3e4a');
+  barWrap.appendChild(bar);
+  body.appendChild(barWrap);
+
+  // Mitchell's promoted callout: ahead of the rung below, behind the rung above
+  if (r.is_mitchell) {
+    const above = ranking[i - 1];   // higher-ranked neighbor
+    const below = ranking[i + 1];   // lower-ranked neighbor
+    const cmpWrap = el('div', 'verdict-cmp');
+
+    if (below) {
+      const e = edgePhrase(r, below, 'up');
+      const row = el('div', 'cmp cmp--up');
+      row.appendChild(el('span', 'cmp__ico', '▲'));
+      const txt = el('span');
+      txt.append(
+        document.createTextNode('Ahead of '),
+        el('span', 'nm', below.name.split(' ').pop()),
+        document.createTextNode(e ? ` — ${e.lbl} ` : ' on the model'),
+      );
+      if (e) txt.appendChild(el('b', null, e.delta));
+      row.appendChild(txt);
+      cmpWrap.appendChild(row);
+    }
+    if (above) {
+      const e = edgePhrase(r, above, 'dn');
+      const row = el('div', 'cmp cmp--dn');
+      row.appendChild(el('span', 'cmp__ico', '▼'));
+      const txt = el('span');
+      txt.append(
+        document.createTextNode('Behind '),
+        el('span', 'nm', above.name.split(' ').pop()),
+        document.createTextNode(e ? ` — ${e.lbl} ` : ' on the model'),
+      );
+      if (e) txt.appendChild(el('b', null, e.delta));
+      row.appendChild(txt);
+      cmpWrap.appendChild(row);
+    }
+    body.appendChild(cmpWrap);
+  }
+
+  rung.appendChild(body);
+  rung.appendChild(el('div', 'rung__score', (r.score ?? 0).toFixed(1)));
+  ladderEl.appendChild(rung);
+});
+
+// "Did not qualify" footnote — players pulled but excluded from the ladder
+// (under the games-played floor). Reinforces the availability story.
+const rankedNames = new Set((MITCHELL_DATA.ranking || []).map(r => r.name));
+const dnq = Object.entries(MITCHELL_DATA.players)
+  .filter(([n]) => !rankedNames.has(n))
+  .map(([n, p]) => ({ name: n, gp: p.gp, ppg: p.ppg }))
+  .sort((a, b) => b.ppg - a.ppg);
+
+const dnqEl = document.getElementById('ladder-dnq');
+dnqEl.appendChild(el('div', 'hd', 'Did not qualify — injury / games played'));
+const dnqLine = el('div');
+dnqLine.appendChild(document.createTextNode(
+  'Stars below the games-played floor this season, so they don’t rank: '));
+dnq.forEach((p, i) => {
+  const span = el('span', 'dnq', p.name.split(' ').pop() + ' (' + p.gp + ' GP)');
+  dnqLine.appendChild(span);
+  if (i < dnq.length - 1) dnqLine.appendChild(document.createTextNode(', '));
+});
+dnqLine.appendChild(document.createTextNode(
+  '. Availability is part of value — the NBA itself requires 65 games for award eligibility.'));
+dnqEl.appendChild(dnqLine);
+
+// Transparent formula footnote
+const w = MITCHELL_DATA.lab_weights || {};
+const pct = x => Math.round((x || 0) * 100);
+document.getElementById('ladder-formula').textContent =
+  `Lab Score = ${pct(w.impact)}% impact (PIE) · ${pct(w.scoring)}% scoring (PPG) · ` +
+  `${pct(w.efficiency)}% efficiency (TS%) · ${pct(w.playoffs)}% playoff resume · ` +
+  `${pct(w.availability)}% availability. Inputs are sourced stats; weights are the model.`;
+
+// Headline + subtitle reflect where the data actually placed him
+if (myRank != null) {
+  document.getElementById('ladder-title').textContent =
+    myRank <= 10 ? `He's #${myRank}. The Math Agrees.` : `He Lands at #${myRank}.`;
+}
+
+/* ── Elevation chart ─────────────────────────────────────────── */
+// Keep it to the top of the ladder (+ Mitchell) so the chart stays readable.
+const elevNames = new Set((MITCHELL_DATA.ranking || []).slice(0, 12).map(r => r.name));
+elevNames.add('Donovan Mitchell');
+const elevData = players
+  .filter(p => p.elevation !== null && p.po_gp >= 10 && elevNames.has(p.name))
+  .sort((a, b) => b.elevation - a.elevation);
+
+new Chart(document.getElementById('elevationChart'), {
+  type: 'bar',
+  data: {
+    labels: elevData.map(p => {
+      const last = p.name.split(' ').pop();
+      return last + (p.po_gp < 25 ? ' *' : '');
+    }),
+    datasets: [{
+      data: elevData.map(p => p.elevation),
+      backgroundColor: elevData.map(p =>
+        p.name === 'Donovan Mitchell' ? 'rgba(240,180,41,0.85)' :
+        p.elevation > 0 ? 'rgba(79,143,247,0.45)' : 'rgba(139,144,160,0.25)'
+      ),
+      borderColor: elevData.map(p =>
+        p.name === 'Donovan Mitchell' ? '#f0b429' :
+        p.elevation > 0 ? 'rgba(79,143,247,0.7)' : 'rgba(139,144,160,0.4)'
+      ),
+      borderWidth: 1, borderRadius: 4,
+    }],
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const p  = elevData[ctx.dataIndex];
+            const s  = ctx.parsed.x >= 0 ? '+' : '';
+            return ' ' + s + ctx.parsed.x.toFixed(1) + ' PPG vs regular season (' + p.po_gp + ' playoff games)';
+          },
+        },
+        backgroundColor: '#1a1d27', borderColor: '#2a2e3a', borderWidth: 1,
+        titleColor: '#e4e6ed', bodyColor: '#8b90a0',
+      },
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(42,46,58,0.7)' },
+        ticks: {
+          color: '#8b90a0', font: { family: 'JetBrains Mono', size: 10 },
+          callback: v => (v >= 0 ? '+' : '') + v,
+        },
+      },
+      y: {
+        grid: { display: false },
+        ticks: { color: '#e4e6ed', font: { family: 'JetBrains Mono', size: 10 } },
+      },
+    },
+  },
+});
+
+/* ── Radar chart ─────────────────────────────────────────────── */
+const norm = p => [
+  +((p.ppg              / 30)  * 100).toFixed(1),
+  +((p.ts_pct           / 70)  * 100).toFixed(1),
+  +((p.pie              / 20)  * 100).toFixed(1),
+  +(((p.po_ppg || 0)    / 30)  * 100).toFixed(1),
+  +((Math.min(p.po_gp, 100) / 100) * 100).toFixed(1),
+];
+const radarPlayers = [mitchell, byName['Cade Cunningham'], byName['LaMelo Ball']].filter(Boolean);
+const rc = ['#f0b429','#4f8ff7','#8b90a0'];
+const rb = ['rgba(240,180,41,0.12)','rgba(79,143,247,0.06)','rgba(139,144,160,0.04)'];
+
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Scoring','Efficiency','Impact (PIE)','Playoff PPG','PO Experience'],
+    datasets: radarPlayers.map((p, i) => ({
+      label: p.name.split(' ').pop(),
+      data: norm(p),
+      backgroundColor: rb[i], borderColor: rc[i],
+      borderWidth: i === 0 ? 2 : 1.5,
+      pointBackgroundColor: rc[i], pointRadius: 3,
+    })),
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#8b90a0', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 10, padding: 12 } },
+      tooltip: { backgroundColor: '#1a1d27', borderColor: '#2a2e3a', borderWidth: 1, titleColor: '#e4e6ed', bodyColor: '#8b90a0' },
+    },
+    scales: {
+      r: {
+        min: 0, max: 100,
+        grid: { color: 'rgba(42,46,58,0.7)' },
+        ticks: { display: false },
+        pointLabels: { color: '#8b90a0', font: { family: 'JetBrains Mono', size: 9 } },
+      },
+    },
+  },
+});
+
+/* ── Matchup cards ───────────────────────────────────────────── */
+const METRICS = [
+  { key: 'ppg',    label: 'PPG',         fmt: v => v != null ? v.toFixed(1) : '0.0', higher: true },
+  { key: 'ts_pct', label: 'True Shot %', fmt: v => v != null ? v.toFixed(1) + '%' : '—', higher: true },
+  { key: 'pie',    label: 'PIE',         fmt: v => v != null ? v.toFixed(1) + '%' : '—', higher: true },
+  { key: 'po_ppg', label: 'Playoff PPG', fmt: v => v != null ? v.toFixed(1) : '0.0', higher: true },
+  { key: 'po_gp',  label: 'PO Games',   fmt: v => String(v), higher: true },
+];
+
+['Darius Garland','LaMelo Ball','Julius Randle','Cade Cunningham'].forEach(oppName => {
+  const opp = byName[oppName];
+  if (!opp) return;
+
+  const rows = METRICS.map(m => {
+    const mv = mitchell[m.key] != null ? mitchell[m.key] : 0;
+    const ov = opp[m.key]     != null ? opp[m.key]     : 0;
+    return { ...m, mv, ov, mitchWins: m.higher ? mv > ov : mv < ov };
+  });
+  const wins    = rows.filter(r => r.mitchWins).length;
+  const oppLast = oppName.split(' ').pop();
+
+  const card = el('div', 'matchup-card');
+
+  // Header
+  const hd    = el('div', 'matchup-hd');
+  const names = el('div', 'matchup-names');
+  app(names,
+    el('span', 'mn-mitchell', 'Mitchell'),
+    el('span', 'mn-vs', 'vs'),
+    el('span', 'mn-opp', oppLast)
+  );
+  const badge = el('span', 'matchup-badge', 'Mitchell ' + wins + '–' + (METRICS.length - wins));
+  app(hd, names, badge);
+  card.appendChild(hd);
+
+  // Column headers
+  const colHd = el('div', 'matchup-col-hd');
+  app(colHd, el('span', null, ''), el('span', null, 'Mitchell'), el('span', null, oppLast));
+  card.appendChild(colHd);
+
+  // Metric rows
+  rows.forEach(r => {
+    const row     = el('div', 'metric-row');
+    const lbl     = el('span', 'm-lbl', r.label);
+    const mVal    = el('span', 'm-val ' + (r.mitchWins ? 'win' : 'loss'), r.fmt(r.mv));
+    const oVal    = el('span', 'm-val ' + (!r.mitchWins ? 'win' : 'loss'), r.fmt(r.ov));
+    app(row, lbl, mVal, oVal);
+    card.appendChild(row);
+  });
+
+  document.getElementById('matchup-grid').appendChild(card);
+});
+
+/* ── Cade rebuttal section ───────────────────────────────────── */
+const cade = byName['Cade Cunningham'];
+if (cade) {
+  const cadeSec = document.getElementById('cade-section');
+
+  const t = txt => document.createTextNode(txt);
+  const b = txt => { const s = el('strong'); s.textContent = txt; return s; };
+
+  // Shared metric set — winners computed from data, so it's always correct.
+  const cadeMetrics = [
+    { lbl: '2025-26 PPG',     m: mitchell.ppg,    c: cade.ppg,    fmt: v => v.toFixed(1) },
+    { lbl: '2025-26 TS%',     m: mitchell.ts_pct, c: cade.ts_pct, fmt: v => v.toFixed(1) + '%' },
+    { lbl: '2025-26 PIE',     m: mitchell.pie,    c: cade.pie,    fmt: v => v.toFixed(1) + '%' },
+    { lbl: 'Career PO PPG',   m: mitchell.po_ppg, c: cade.po_ppg, fmt: v => (v ?? 0).toFixed(1) },
+    { lbl: 'Career PO Games', m: mitchell.po_gp,  c: cade.po_gp,  fmt: v => String(v ?? 0) },
+  ];
+  const mitchWins = cadeMetrics.filter(x => (x.m ?? 0) > (x.c ?? 0)).length;
+  const dPPG = (mitchell.ppg - cade.ppg);
+
+  // Intro — one punch
+  const intro = el('p', 'cade-intro');
+  intro.append(
+    t('In 2025-26 Mitchell '),
+    b(dPPG >= 0 ? `outscored Cade by ${dPPG.toFixed(1)} a night` : `trailed Cade by ${Math.abs(dPPG).toFixed(1)} a night`),
+    t(' and wins '),
+    b(`${mitchWins} of ${cadeMetrics.length}`),
+    t('. Rising star — not past Mitchell yet.')
+  );
+  cadeSec.appendChild(intro);
+
+  // Two columns, rendered from the shared metric set
+  const grid = el('div', 'cade-grid');
+
+  const cadeCol = el('div', 'cade-col cade-col--cade');
+  app(cadeCol, el('p', 'cade-col-title', 'Cade Cunningham'));
+  cadeMetrics.forEach(x => {
+    const row = el('div', 'cade-stat');
+    const cWin = (x.c ?? 0) > (x.m ?? 0);
+    app(row, el('span', 'cade-stat-lbl', x.lbl),
+             el('span', 'cade-stat-val' + (cWin ? ' cade-win' : ''), x.fmt(x.c)));
+    cadeCol.appendChild(row);
+  });
+
+  const mitchCol = el('div', 'cade-col cade-col--mitchell');
+  app(mitchCol, el('p', 'cade-col-title', 'Donovan Mitchell'));
+  cadeMetrics.forEach(x => {
+    const row = el('div', 'cade-stat');
+    app(row, el('span', 'cade-stat-lbl', x.lbl),
+             el('span', 'cade-stat-val', x.fmt(x.m)));
+    mitchCol.appendChild(row);
+  });
+
+  app(grid, cadeCol, mitchCol);
+  cadeSec.appendChild(grid);
+
+  // Bottom — the career playoff gap (data-driven, still the knockout point)
+  const bottom   = el('div', 'cade-bottom');
+  const btmText  = el('p', 'cade-bottom-text');
+  const hl = txt => el('span', 'hl', txt);
+  btmText.append(
+    hl(`${(mitchell.po_ppg ?? 0).toFixed(1)} PPG in ${mitchell.po_gp} playoff games`),
+    t(` vs Cade's ${(cade.po_ppg ?? 0).toFixed(1)} in ${cade.po_gp} — `),
+    hl(`${Math.round(mitchell.po_gp / Math.max(cade.po_gp, 1))}× the sample`),
+    t(', higher rate. One series doesn’t outweigh a decade.')
+  );
+  app(bottom, el('p', 'cade-bottom-title', 'The Knockout Stat'), btmText);
+  cadeSec.appendChild(bottom);
+}
+
+/* ── Verdict ─────────────────────────────────────────────────── */
+const elevSign = mitchell.elevation >= 0 ? '+' : '';
+const verdictEl = document.getElementById('verdict');
+
+// Build verdict paragraph using text nodes + highlighted spans
+const vP = el('p', 'verdict-text');
+const hl = txt => { const s = el('span', 'hl', txt); return s; };
+const t  = txt => document.createTextNode(txt);
+
+const rk      = MITCHELL_DATA.mitchell_rank;
+const aheadOf = Math.max(0, (MITCHELL_DATA.ranking || []).length - rk);
+// Names ranked directly above Mitchell — the only company ahead of him
+const above   = (MITCHELL_DATA.ranking || []).filter(r => r.rank < rk).map(r => r.name.split(' ').pop());
+
+vP.append(
+  t('The math ranks Mitchell '),
+  hl('#' + rk),
+  t('. The only names above him — '),
+  hl(above.join(', ')),
+  t(' — are the MVP tier. Top 10 isn’t generous. It undersells him.')
+);
+verdictEl.appendChild(vP);
+
+// Verdict stat row
+const nums = el('div', 'verdict-nums');
+[
+  { val: '#' + rk,                   lbl: 'Lab Score Rank' },
+  { val: mitchell.ppg.toFixed(1),    lbl: 'PPG · 2025-26' },
+  { val: mitchell.po_ppg.toFixed(1), lbl: 'Career Playoff PPG' },
+  { val: elevSign + mitchell.elevation.toFixed(1), lbl: 'Playoff Elevation' },
+].forEach(({ val, lbl }) => {
+  const item = el('div', 'vn-item');
+  app(item, el('div', 'vn-val', val), el('div', 'vn-lbl', lbl));
+  nums.appendChild(item);
+});
+verdictEl.appendChild(nums);
+</script>
+</body>
+</html>
