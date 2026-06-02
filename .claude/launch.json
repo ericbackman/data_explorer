@@ -8,9 +8,9 @@
       "port": 8765
     },
     {
-      "name": "mitchell-top10",
+      "name": "nba-site",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8766", "--directory", "mitchell_top10"],
+      "runtimeArgs": ["-m", "http.server", "8766", "--directory", "nba_site"],
       "port": 8766
     }
   ]

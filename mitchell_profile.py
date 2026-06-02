@@ -3,7 +3,8 @@
 mitchell_profile.py — Pull NBA stats to support the Donovan Mitchell top-10 case.
 
 Fetches 2024-25 regular season stats + career playoff totals for Mitchell and
-9 comparison players in the 7-25 ranking range, then writes mitchell_top10/data.js
+9 comparison players in the 7-25 ranking range, then writes
+nba_site/investigations/mitchell-top10/data.js
 for the one-page website.
 
 Usage:
@@ -23,8 +24,9 @@ from nba_api.stats.endpoints import (
 
 SLEEP       = 0.6
 SEASON      = "2024-25"
-CACHE_PATH  = "mitchell_top10/.cache.json"
-OUTPUT_PATH = "mitchell_top10/data.js"
+OUT_DIR     = "nba_site/investigations/mitchell-top10"
+CACHE_PATH  = f"{OUT_DIR}/.cache.json"
+OUTPUT_PATH = f"{OUT_DIR}/data.js"
 
 # Players in the "is Mitchell top-15?" debate range — let data pick the winners
 TARGETS = [
@@ -168,7 +170,7 @@ def pull_clutch(pid, cache):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    os.makedirs("mitchell_top10", exist_ok=True)
+    os.makedirs(OUT_DIR, exist_ok=True)
     cache = load_cache()
 
     print(f"\nBuilding Mitchell top-10 profile — {SEASON}\n")

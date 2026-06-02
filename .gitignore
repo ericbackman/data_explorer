@@ -22,7 +22,7 @@ env/
 
 # Cached API data
 .cache/
-mitchell_top10/.cache.json
+nba_site/investigations/*/.cache.json
 
 # OS
 .DS_Store

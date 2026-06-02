@@ -127,9 +127,15 @@
     .cade-bottom-title{font-family:var(--mono);font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.75rem}
     .cade-bottom-text{font-size:.95rem;color:var(--text);line-height:1.75}
     .cade-bottom-text .hl{color:var(--gold);font-weight:600}
+
+    /* Back-to-hub link */
+    .backlink{position:fixed;top:1.1rem;left:1.25rem;z-index:200;font-family:var(--mono);font-size:.72rem;color:var(--text2);background:rgba(15,17,23,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:100px;padding:.4rem .85rem;transition:color .18s,border-color .18s}
+    .backlink:hover{color:var(--gold);border-color:var(--gold)}
   </style>
 </head>
 <body>
+
+<a class="backlink" href="../../">← NBA Data Lab</a>
 
 <section class="hero">
   <div class="hero__grid"></div>

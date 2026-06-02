@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NBA Data Lab — Investigations</title>
+  <meta name="description" content="Data-driven NBA investigations and arguments, settled with hard numbers from the NBA API.">
+  <meta property="og:title" content="NBA Data Lab">
+  <meta property="og:description" content="Data-driven NBA investigations, settled with hard numbers.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="investigations.js"></script>
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --bg2:       #1a1d27;
+      --bg3:       #242836;
+      --text:      #e4e6ed;
+      --text2:     #8b90a0;
+      --accent:    #4f8ff7;
+      --accent2:   #f0b429;
+      --border:    #2a2e3a;
+      --mono: 'JetBrains Mono','Fira Code',Consolas,monospace;
+      --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+    a{color:var(--accent);text-decoration:none}
+
+    /* Nav */
+    .nav{position:sticky;top:0;z-index:100;background:rgba(15,17,23,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+    .nav__inner{max-width:1100px;margin:0 auto;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+    .nav__logo{font-family:var(--mono);font-weight:500;font-size:1rem;color:var(--text);letter-spacing:-.01em}
+    .nav__logo .dot{color:var(--accent2)}
+    .nav__meta{font-family:var(--mono);font-size:.72rem;color:var(--text2)}
+
+    /* Hero */
+    .hero{max-width:1100px;margin:0 auto;padding:4.5rem 2rem 2.5rem;position:relative}
+    .hero__eyebrow{font-family:var(--mono);font-size:.72rem;color:var(--accent2);letter-spacing:.16em;text-transform:uppercase;margin-bottom:1rem}
+    .hero__title{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:800;line-height:1.05;letter-spacing:-.03em;margin-bottom:1rem}
+    .hero__title .accent{color:var(--accent2)}
+    .hero__tagline{font-size:clamp(1rem,2.2vw,1.2rem);color:var(--text2);max-width:620px;line-height:1.7}
+    .hero__tagline code{font-family:var(--mono);font-size:.85em;color:var(--accent);background:var(--bg2);padding:.1rem .4rem;border-radius:5px}
+
+    /* Filter bar */
+    .filters{max-width:1100px;margin:0 auto;padding:1.5rem 2rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+    .filters__label{font-family:var(--mono);font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-right:.4rem}
+    .pill{font-family:var(--mono);font-size:.74rem;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:100px;padding:.35rem .9rem;cursor:pointer;transition:all .18s;white-space:nowrap}
+    .pill:hover{color:var(--text);border-color:var(--text2)}
+    .pill.active{color:var(--bg);background:var(--accent2);border-color:var(--accent2);font-weight:500}
+
+    /* Investigation grid */
+    .grid{max-width:1100px;margin:0 auto;padding:1rem 2rem 5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem}
+
+    .card{position:relative;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent2);border-radius:12px;padding:1.6rem;transition:transform .18s,border-color .18s,box-shadow .18s;cursor:pointer;text-decoration:none;color:inherit;min-height:230px}
+    .card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.3)}
+    .card.is-hidden{display:none}
+    .card.is-draft{opacity:.55}
+
+    .card__top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.9rem}
+    .card__titles{flex:1}
+    .card__subtitle{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.35rem}
+    .card__title{font-size:1.25rem;font-weight:700;line-height:1.2;letter-spacing:-.01em;color:var(--text)}
+    .card__headline{text-align:right;flex-shrink:0}
+    .card__headline-stat{font-family:var(--mono);font-size:1.7rem;font-weight:500;line-height:1}
+    .card__headline-lbl{font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;max-width:90px}
+    .card__desc{font-size:.88rem;color:var(--text2);line-height:1.6;margin-bottom:1.1rem;flex:1}
+    .card__tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+    .card__tag{font-family:var(--mono);font-size:.62rem;color:var(--text2);background:var(--bg3);border-radius:5px;padding:.2rem .5rem}
+    .card__foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.7rem;color:var(--text2);border-top:1px solid var(--border);padding-top:.85rem}
+    .card__cta{color:var(--accent2);font-weight:500}
+    .card__draft-badge{font-family:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);border:1px solid var(--border);border-radius:5px;padding:.15rem .45rem}
+
+    .empty{max-width:1100px;margin:0 auto;padding:3rem 2rem;font-family:var(--mono);font-size:.85rem;color:var(--text2);text-align:center}
+
+    footer{text-align:center;padding:2rem;font-family:var(--mono);font-size:.7rem;color:#3a3e4a;border-top:1px solid var(--border)}
+    footer a{color:var(--text2)}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <span class="nav__logo">NBA Data Lab<span class="dot">.</span></span>
+    <span class="nav__meta" id="nav-count"></span>
+  </div>
+</nav>
+
+<header class="hero">
+  <p class="hero__eyebrow">Powered by nba_api → NBA.com</p>
+  <h1 class="hero__title">NBA arguments,<br><span class="accent">settled with data.</span></h1>
+  <p class="hero__tagline">
+    A growing collection of NBA investigations. Each one pulls real numbers from the
+    NBA API, caches them locally, and renders a self-contained brief. Pick a fight,
+    let the data finish it.
+  </p>
+</header>
+
+<div class="filters" id="filters"></div>
+
+<main class="grid" id="grid"></main>
+<div class="empty" id="empty" style="display:none">No investigations match that filter.</div>
+
+<footer>
+  Built in <a href="https://github.com/ericbackman/data_explorer">data_explorer</a> ·
+  Data sourced live from NBA.com via nba_api · <span id="foot-year"></span>
+</footer>
+
+<script>
+/* ── DOM helpers (no innerHTML with dynamic content) ──────────── */
+const el = (tag, cls, txt) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = String(txt);
+  return e;
+};
+const app = (parent, ...kids) => { kids.forEach(k => parent.appendChild(k)); return parent; };
+
+const data = (window.INVESTIGATIONS || [])
+  .slice()
+  .sort((a, b) => (b.date || '').localeCompare(a.date || ''));  // newest first
+
+document.getElementById('foot-year').textContent = new Date().getFullYear();
+
+/* ── Date formatter ───────────────────────────────────────────── */
+const fmtDate = iso => {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+/* ── Build a single investigation card ────────────────────────── */
+function buildCard(inv) {
+  const accent = inv.accent || '#f0b429';
+  const href   = 'investigations/' + inv.slug + '/';
+
+  const card = el('a', 'card' + (inv.status === 'draft' ? ' is-draft' : ''));
+  card.style.borderLeftColor = accent;
+  card.dataset.tags = (inv.tags || []).join('||');
+  if (inv.status !== 'draft') card.href = href;
+
+  // Top: titles + optional headline stat
+  const top    = el('div', 'card__top');
+  const titles = el('div', 'card__titles');
+  if (inv.subtitle) {
+    const sub = el('p', 'card__subtitle', inv.subtitle);
+    sub.style.color = accent;
+    titles.appendChild(sub);
+  }
+  titles.appendChild(el('h2', 'card__title', inv.title));
+  top.appendChild(titles);
+
+  if (inv.headline && inv.headline.stat) {
+    const hl   = el('div', 'card__headline');
+    const stat = el('div', 'card__headline-stat', inv.headline.stat);
+    stat.style.color = accent;
+    hl.appendChild(stat);
+    if (inv.headline.label) hl.appendChild(el('div', 'card__headline-lbl', inv.headline.label));
+    top.appendChild(hl);
+  }
+  card.appendChild(top);
+
+  // Description
+  if (inv.description) card.appendChild(el('p', 'card__desc', inv.description));
+
+  // Tags
+  if (inv.tags && inv.tags.length) {
+    const tagWrap = el('div', 'card__tags');
+    inv.tags.forEach(t => tagWrap.appendChild(el('span', 'card__tag', t)));
+    card.appendChild(tagWrap);
+  }
+
+  // Footer: date + CTA (or draft badge)
+  const foot = el('div', 'card__foot');
+  foot.appendChild(el('span', null, fmtDate(inv.date)));
+  if (inv.status === 'draft') {
+    foot.appendChild(el('span', 'card__draft-badge', 'Draft'));
+  } else {
+    const cta = el('span', 'card__cta', 'View investigation →');
+    cta.style.color = accent;
+    foot.appendChild(cta);
+  }
+  card.appendChild(foot);
+
+  return card;
+}
+
+/* ── Render grid ──────────────────────────────────────────────── */
+const grid    = document.getElementById('grid');
+const emptyEl = document.getElementById('empty');
+const cards   = data.map(inv => { const c = buildCard(inv); grid.appendChild(c); return c; });
+
+document.getElementById('nav-count').textContent =
+  data.length + (data.length === 1 ? ' investigation' : ' investigations');
+
+/* ── Tag filter bar ───────────────────────────────────────────── */
+const allTags = [...new Set(data.flatMap(inv => inv.tags || []))].sort();
+const filterBar = document.getElementById('filters');
+filterBar.appendChild(el('span', 'filters__label', 'Filter'));
+
+let activeTag = null;
+
+function applyFilter() {
+  let visible = 0;
+  cards.forEach((card, i) => {
+    const tags = data[i].tags || [];
+    const show = !activeTag || tags.includes(activeTag);
+    card.classList.toggle('is-hidden', !show);
+    if (show) visible++;
+  });
+  emptyEl.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function makePill(label, tag) {
+  const pill = el('button', 'pill', label);
+  if (tag === activeTag || (tag === null && activeTag === null)) pill.classList.add('active');
+  pill.addEventListener('click', () => {
+    activeTag = tag;
+    filterBar.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    applyFilter();
+  });
+  return pill;
+}
+
+filterBar.appendChild(makePill('All', null));
+allTags.forEach(tag => filterBar.appendChild(makePill(tag, tag)));
+</script>
+</body>
+</html>
