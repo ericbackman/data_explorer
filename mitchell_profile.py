@@ -11,7 +11,7 @@ Usage:
     python mitchell_profile.py
 """
 
-import sys, json, time, os
+import sys, json, time, os, unicodedata
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import pandas as pd
@@ -22,26 +22,36 @@ from nba_api.stats.endpoints import (
     playerdashboardbyclutch,
 )
 
-SLEEP       = 0.6
-SEASON      = "2024-25"
-OUT_DIR     = "nba_site/investigations/mitchell-top10"
-CACHE_PATH  = f"{OUT_DIR}/.cache.json"
-OUTPUT_PATH = f"{OUT_DIR}/data.js"
+SLEEP        = 0.6
+SEASON       = "2025-26"
+OUT_DIR      = "nba_site/investigations/mitchell-top10"
+CACHE_PATH   = f"{OUT_DIR}/.cache.json"
+OUTPUT_PATH  = f"{OUT_DIR}/data.js"
+MIN_GP_RANK  = 45    # players below this GP are pulled but excluded from the ladder
 
-# Players in the "is Mitchell top-15?" debate range — let data pick the winners
+# The pool for the top-20 ladder: consensus stars + the original debate set.
+# The Lab Score (below) sorts them; we don't hand-rank.
 TARGETS = [
+    # Elite tier
+    "Nikola Jokic", "Shai Gilgeous-Alexander", "Giannis Antetokounmpo",
+    "Luka Doncic", "Jayson Tatum", "Victor Wembanyama",
+    # Stars / veterans
+    "Anthony Edwards", "Stephen Curry", "Kevin Durant", "LeBron James",
+    "Anthony Davis", "Jalen Brunson", "Damian Lillard", "Jaylen Brown",
+    "Tyrese Maxey", "Karl-Anthony Towns", "De'Aaron Fox",
+    # The man himself + the 7–25 debate set
     "Donovan Mitchell",
-    "Cade Cunningham",
-    "Bam Adebayo",
-    "Pascal Siakam",
-    "Tyrese Haliburton",
-    "LaMelo Ball",
-    "Zach LaVine",
-    "Devin Booker",
-    "Julius Randle",
-    "Paolo Banchero",
-    "Darius Garland",
+    "Cade Cunningham", "Bam Adebayo", "Pascal Siakam", "Tyrese Haliburton",
+    "LaMelo Ball", "Zach LaVine", "Devin Booker", "Julius Randle",
+    "Paolo Banchero", "Darius Garland",
 ]
+
+
+def _norm_name(s: str) -> str:
+    """Diacritic- and punctuation-insensitive key so 'Jokić' == 'Jokic'."""
+    s = unicodedata.normalize("NFKD", str(s))
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return s.lower().replace(".", "").replace("'", "").replace("-", " ").strip()
 
 
 # ── Cache helpers ─────────────────────────────────────────────────────────────
@@ -63,9 +73,10 @@ def save_cache(c):
 
 def pull_league_stats(cache):
     """Return (df_base, df_adv) for the full league, SEASON regular season, per-game."""
-    if "base" in cache and "adv" in cache:
+    base_key, adv_key = f"base_{SEASON}", f"adv_{SEASON}"
+    if base_key in cache and adv_key in cache:
         print("  [cache] league base + advanced")
-        return pd.DataFrame(cache["base"]), pd.DataFrame(cache["adv"])
+        return pd.DataFrame(cache[base_key]), pd.DataFrame(cache[adv_key])
 
     print("  [api] LeagueDashPlayerStats base ...")
     df_base = leaguedashplayerstats.LeagueDashPlayerStats(
@@ -85,8 +96,8 @@ def pull_league_stats(cache):
     ).get_data_frames()[0]
     time.sleep(SLEEP)
 
-    cache["base"] = df_base.to_dict("records")
-    cache["adv"]  = df_adv.to_dict("records")
+    cache[base_key] = df_base.to_dict("records")
+    cache[adv_key]  = df_adv.to_dict("records")
     save_cache(cache)  # persist immediately — these calls are the most expensive
     return df_base, df_adv
 
@@ -99,7 +110,7 @@ def pull_career(pid, name, cache):
       [0] SeasonTotalsRegularSeason   [1] CareerTotalsRegularSeason
       [2] SeasonTotalsPostSeason      [3] CareerTotalsPostSeason
     """
-    key = f"career_{pid}"
+    key = f"career_{pid}_{SEASON}"
     if key in cache:
         return cache[key]
 
@@ -133,7 +144,7 @@ def pull_career(pid, name, cache):
 
 def pull_clutch(pid, cache):
     """Mitchell's clutch situational stats (last 5 min, within 5 pts)."""
-    key = f"clutch_{pid}"
+    key = f"clutch_{pid}_{SEASON}"
     if key in cache:
         return cache[key]
 
@@ -167,6 +178,85 @@ def pull_clutch(pid, cache):
     return result
 
 
+# ── Ranking model ─────────────────────────────────────────────────────────────
+#
+# "Lab Score" — a transparent 0–100 blend of 2024-25 production, playoff resume,
+# and availability. Every input is a sourced stat; only the WEIGHTS are an
+# opinion (and they're shown on the page).
+#
+#   35%  Impact        PIE (NBA's catch-all box metric), ceiling 20%
+#   18%  Scoring       PPG, ceiling 32
+#   12%  Efficiency    TS%, mapped 50%→0 … 65%→1
+#   20%  Playoffs      career PO PPG (ceiling 30) + experience (ceiling 120 games)
+#   15%  Availability  GP vs the NBA's own 65-game award-eligibility rule
+#
+# Availability is anchored to the league's actual 65-game minimum for MVP /
+# All-NBA eligibility — not an arbitrary cutoff. A player who can't stay on the
+# floor can't be a top-10 player, by the NBA's own standard.
+
+LAB_WEIGHTS = {
+    "impact":       0.35,
+    "scoring":      0.18,
+    "efficiency":   0.12,
+    "playoffs":     0.20,
+    "availability": 0.15,
+}
+AWARD_GP = 65   # NBA award-eligibility threshold (2023-24 onward)
+
+
+def lab_score(p: dict) -> float:
+    pie = p.get("pie")    or 0.0
+    ppg = p.get("ppg")    or 0.0
+    ts  = p.get("ts_pct") or 0.0
+    gp  = p.get("gp")     or 0
+    po  = (p.get("career") or {}).get("playoff_career") or {}
+    po_ppg = po.get("PPG") or 0.0
+    po_gp  = po.get("GP")  or 0
+
+    impact       = min(pie / 20.0, 1.0)
+    scoring      = min(ppg / 32.0, 1.0)
+    efficiency   = max(0.0, min((ts - 50.0) / 15.0, 1.0))
+    playoffs     = (min(po_ppg / 30.0, 1.0) * 0.6 +
+                    min(po_gp, 120) / 120.0 * 0.4) if po_gp > 0 else 0.0
+    availability = min(gp / float(AWARD_GP), 1.0)
+
+    score = (LAB_WEIGHTS["impact"]       * impact +
+             LAB_WEIGHTS["scoring"]      * scoring +
+             LAB_WEIGHTS["efficiency"]   * efficiency +
+             LAB_WEIGHTS["playoffs"]     * playoffs +
+             LAB_WEIGHTS["availability"] * availability)
+    return round(score * 100, 1)
+
+
+def build_ranking(out_players: dict) -> list:
+    """Sort eligible players by Lab Score, assign ranks + tiers."""
+    eligible = [
+        {"name": n, **p, "score": lab_score(p)}
+        for n, p in out_players.items()
+        if (p.get("gp") or 0) >= MIN_GP_RANK
+    ]
+    eligible.sort(key=lambda x: x["score"], reverse=True)
+
+    ranking = []
+    for i, p in enumerate(eligible, start=1):
+        tier = "lock" if i <= 6 else "tier" if i <= 12 else "chase"
+        po   = (p.get("career") or {}).get("playoff_career") or {}
+        ranking.append({
+            "rank":   i,
+            "name":   p["name"],
+            "team":   p.get("team", ""),
+            "tier":   tier,
+            "score":  p["score"],
+            "ppg":    p.get("ppg"),
+            "ts_pct": p.get("ts_pct"),
+            "pie":    p.get("pie"),
+            "po_ppg": po.get("PPG"),
+            "po_gp":  po.get("GP") or 0,
+            "is_mitchell": p["name"] == "Donovan Mitchell",
+        })
+    return ranking
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -176,12 +266,12 @@ def main():
     print(f"\nBuilding Mitchell top-10 profile — {SEASON}\n")
     df_base, df_adv = pull_league_stats(cache)
 
-    # Index by player name (keeps first row if somehow duplicated)
-    base_idx = {r["PLAYER_NAME"]: r for r in reversed(df_base.to_dict("records"))}
-    adv_idx  = {r["PLAYER_NAME"]: r for r in reversed(df_adv.to_dict("records"))}
+    # Index by NORMALIZED name so diacritics (Jokić, Dončić) still match
+    base_idx = {_norm_name(r["PLAYER_NAME"]): r for r in reversed(df_base.to_dict("records"))}
+    adv_idx  = {_norm_name(r["PLAYER_NAME"]): r for r in reversed(df_adv.to_dict("records"))}
 
-    found   = [n for n in TARGETS if n in base_idx]
-    missing = [n for n in TARGETS if n not in base_idx]
+    found   = [n for n in TARGETS if _norm_name(n) in base_idx]
+    missing = [n for n in TARGETS if _norm_name(n) not in base_idx]
     if missing:
         print(f"  [warn] Not found in {SEASON} data: {missing}")
 
@@ -195,14 +285,16 @@ def main():
 
     out_players = {}
     for name in found:
-        b   = base_idx[name]
-        a   = adv_idx.get(name, {})
+        key = _norm_name(name)
+        b   = base_idx[key]
+        a   = adv_idx.get(key, {})
         pid = int(b["PLAYER_ID"])
 
         career = pull_career(pid, name, cache)
 
         out_players[name] = {
             "player_id": pid,
+            "team":    b.get("TEAM_ABBREVIATION", ""),
             "gp":      int(b["GP"]),
             "ppg":     round(float(b["PTS"]),    1),
             "rpg":     round(float(b["REB"]),    1),
@@ -228,10 +320,16 @@ def main():
 
     save_cache(cache)
 
+    ranking       = build_ranking(out_players)
+    mitchell_rank = next((r["rank"] for r in ranking if r["is_mitchell"]), None)
+
     output = {
-        "season":  SEASON,
-        "ordered": [n for n in TARGETS if n in out_players],
-        "players": out_players,
+        "season":        SEASON,
+        "ordered":       [n for n in TARGETS if n in out_players],
+        "players":       out_players,
+        "ranking":       ranking,
+        "mitchell_rank": mitchell_rank,
+        "lab_weights":   LAB_WEIGHTS,
     }
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
@@ -256,13 +354,12 @@ def main():
             sign      = "+" if elevation >= 0 else ""
             print(f"  Career RS: {rs_c.get('PPG')} PPG | Playoffs: {po['PPG']} PPG ({po['GP']} games) | Elevation: {sign}{elevation}")
 
-    print("\nComparison players:")
-    for name in found:
-        if name == "Donovan Mitchell":
-            continue
-        p  = out_players[name]
-        po = (p.get("career") or {}).get("playoff_career") or {}
-        print(f"  {name:<22} {p['ppg']:5.1f} PPG | {str(p.get('ts_pct','?')):>5}% TS | PO: {po.get('PPG', 'N/A')}")
+    print(f"\nLab Score ranking (Mitchell = #{mitchell_rank}):")
+    for r in ranking:
+        mark = "  <<< MITCHELL" if r["is_mitchell"] else ""
+        po   = f"{r['po_ppg']:.1f}/{r['po_gp']}g" if r["po_ppg"] else "—"
+        print(f"  {r['rank']:>2}. {r['name']:<26} score={r['score']:>5} | "
+              f"{r['ppg']:>4.1f}p {str(r['ts_pct']):>4}ts {str(r['pie']):>4}pie | PO {po}{mark}")
 
 
 if __name__ == "__main__":

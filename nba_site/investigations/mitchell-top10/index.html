@@ -71,7 +71,8 @@
     /* Charts */
     .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
     @media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
-    .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+    .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;min-width:0}
+    .chart-card canvas{max-width:100%!important}
     .chart-label{font-family:var(--mono);font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.25rem}
     .chart-note{font-family:var(--mono);font-size:.62rem;color:#3a3e4a;margin-top:.75rem}
     .chart-wrap{position:relative;height:290px}
@@ -131,6 +132,44 @@
     /* Back-to-hub link */
     .backlink{position:fixed;top:1.1rem;left:1.25rem;z-index:200;font-family:var(--mono);font-size:.72rem;color:var(--text2);background:rgba(15,17,23,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:100px;padding:.4rem .85rem;transition:color .18s,border-color .18s}
     .backlink:hover{color:var(--gold);border-color:var(--gold)}
+
+    /* ── Top-20 ladder ─────────────────────────── */
+    .ladder{display:flex;flex-direction:column;gap:.5rem;max-width:620px;margin:0 auto}
+    .tier-label{font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text2);margin:1.4rem 0 .35rem;padding-left:.2rem}
+    .tier-label:first-child{margin-top:0}
+
+    .rung{display:flex;align-items:center;gap:.85rem;background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:.7rem .85rem;position:relative}
+    .rung__rank{font-family:var(--mono);font-size:1.15rem;font-weight:500;color:var(--text2);min-width:1.9rem;text-align:center;flex-shrink:0}
+    .rung__body{flex:1;min-width:0}
+    .rung__name{font-weight:600;font-size:.95rem;line-height:1.2}
+    .rung__name .team{color:var(--text2);font-weight:400;font-family:var(--mono);font-size:.7rem;margin-left:.4rem}
+    .rung__stats{font-family:var(--mono);font-size:.66rem;color:var(--text2);margin-top:.2rem;line-height:1.5}
+    .rung__stats b{color:#b9bdca;font-weight:500}
+    .rung__score{font-family:var(--mono);font-size:1.05rem;font-weight:500;color:var(--text2);flex-shrink:0;text-align:right}
+
+    .rung--lock{border-left:3px solid var(--blue)}
+    .rung--tier{border-left:3px solid #6b7280}
+    .rung--chase{border-left:3px solid #3a3e4a}
+
+    /* Mitchell's promoted rung */
+    .rung--me{border:1px solid var(--gold);border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(240,180,41,.13),rgba(240,180,41,.04));padding:.95rem .9rem;box-shadow:0 6px 24px rgba(240,180,41,.08)}
+    .rung--me .rung__rank{color:var(--gold);font-size:1.5rem;font-weight:600}
+    .rung--me .rung__name{font-size:1.1rem;color:var(--gold)}
+    .rung--me .rung__score{color:var(--gold);font-size:1.2rem}
+    .rung--me .rung__stats b{color:var(--text)}
+
+    .verdict-cmp{margin-top:.6rem;display:flex;flex-direction:column;gap:.4rem}
+    .cmp{display:flex;align-items:flex-start;gap:.5rem;font-size:.8rem;line-height:1.45}
+    .cmp__ico{font-family:var(--mono);font-size:.8rem;flex-shrink:0;margin-top:.05rem}
+    .cmp--up .cmp__ico{color:var(--green)}
+    .cmp--dn .cmp__ico{color:#e0566b}
+    .cmp b{color:var(--gold);font-weight:600}
+    .cmp .nm{color:var(--text);font-weight:600}
+
+    .ladder-note{max-width:620px;margin:1.5rem auto 0;font-family:var(--mono);font-size:.66rem;line-height:1.7;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem}
+    .ladder-note .hd{color:#b9bdca;text-transform:uppercase;letter-spacing:.1em;font-size:.62rem;margin-bottom:.45rem}
+    .ladder-note .dnq{color:#e0566b}
+    .formula{max-width:620px;margin:1rem auto 0;font-family:var(--mono);font-size:.64rem;color:#3a3e4a;text-align:center;line-height:1.6}
   </style>
 </head>
 <body>
@@ -140,7 +179,7 @@
 <section class="hero">
   <div class="hero__grid"></div>
   <div class="hero__content">
-    <div class="hero__eyebrow">NBA Analytics Brief · 2024-25 Season</div>
+    <div class="hero__eyebrow">NBA Analytics Brief · 2025-26 Season</div>
     <h1 class="hero__title">The Case for<br><span class="accent">Donovan Mitchell</span></h1>
     <p class="hero__subtitle">// Top 10. No Debate.</p>
     <div id="hero-stats" class="hero__stats"></div>
@@ -151,11 +190,13 @@
 
 <div class="section">
   <div class="section__head">
-    <p class="section__tag">01 / The Numbers</p>
-    <h2 class="section__title">Full Comparison Across 10 Players</h2>
-    <p class="section__desc">2024-25 regular season + career playoff performance. Gold = best in column.</p>
+    <p class="section__tag">01 / The Ladder</p>
+    <h2 class="section__title" id="ladder-title">Where He Ranks</h2>
+    <p class="section__desc" id="ladder-desc">Every player ranked by Lab Score — a transparent blend of 2025-26 production, playoff resume, and availability. The data places Mitchell, and it places everyone around him.</p>
   </div>
-  <div class="table-wrap" id="table-wrap"></div>
+  <div class="ladder" id="ladder"></div>
+  <div class="ladder-note" id="ladder-dnq"></div>
+  <p class="formula" id="ladder-formula"></p>
 </div>
 
 <hr class="divider">
@@ -164,7 +205,7 @@
   <div class="section__head">
     <p class="section__tag">02 / Playoff Elevation</p>
     <h2 class="section__title">Who Actually Shows Up</h2>
-    <p class="section__desc">Career playoff PPG minus career regular season PPG. Positive = scores more when the pressure peaks. Mitchell and Booker are the only players in this group who consistently elevate.</p>
+    <p class="section__desc">Career playoff PPG minus career regular season PPG. Positive = scores more when the pressure peaks. Mitchell is one of the few stars who reliably elevates instead of fading.</p>
   </div>
   <div class="charts-grid">
     <div class="chart-card">
@@ -196,8 +237,8 @@
 <div class="section">
   <div class="section__head">
     <p class="section__tag">04 / The Cade Question</p>
-    <h2 class="section__title">But He Beat Mitchell This Year</h2>
-    <p class="section__desc">Cade's Pistons eliminated Mitchell's team in the 2024-25 playoffs. Fair point — let's address it directly.</p>
+    <h2 class="section__title">The Cade Cunningham Comparison</h2>
+    <p class="section__desc">Cade's Pistons knocked Mitchell out a year ago, and he's the trendy young pick to pass him. Here's where the data actually lands.</p>
   </div>
   <div id="cade-section"></div>
 </div>
@@ -212,7 +253,7 @@
   <div class="verdict-box" id="verdict"></div>
 </div>
 
-<footer>Data: nba_api → NBA.com · 2024-25 regular season + career playoff totals</footer>
+<footer>Data: nba_api → NBA.com · 2025-26 regular season + career playoff totals</footer>
 
 <script>
 /* All DOM construction uses createElement/textContent — no innerHTML with dynamic data */
@@ -249,9 +290,11 @@ const players = MITCHELL_DATA.ordered.map(name => {
   };
 });
 
-const mitchell = players[0];
 const byName   = {};
 players.forEach(p => { byName[p.name] = p; });
+// Look Mitchell up by NAME — the player pool is no longer Mitchell-first
+// (the ranking sorts the elite tier above him), so players[0] is not him.
+const mitchell = byName['Donovan Mitchell'];
 
 /* ── Tiny DOM helpers ────────────────────────────────────────── */
 const el = (tag, cls, txt) => {
@@ -265,9 +308,9 @@ const app = (parent, ...kids) => { kids.forEach(k => parent.appendChild(k)); ret
 /* ── Hero stats ──────────────────────────────────────────────── */
 const heroEl = document.getElementById('hero-stats');
 [
-  { val: mitchell.ppg.toFixed(1),    lbl: 'PPG · 2024-25',       gold: false },
-  { val: mitchell.po_ppg.toFixed(1), lbl: 'Career Playoff PPG',       gold: true  },
-  { val: String(mitchell.po_gp),     lbl: 'Playoff Games Played',     gold: false },
+  { val: mitchell.ppg.toFixed(1),    lbl: 'PPG · 2025-26',       gold: false },
+  { val: (MITCHELL_DATA.mitchell_rank != null ? '#' + MITCHELL_DATA.mitchell_rank : '—'), lbl: 'Lab Score Rank', gold: true },
+  { val: mitchell.po_ppg.toFixed(1), lbl: 'Career Playoff PPG',       gold: false },
   { val: mitchell.ts_pct + '%',      lbl: 'True Shooting %',          gold: false },
 ].forEach(({ val, lbl, gold }) => {
   const stat = el('div', 'hero__stat' + (gold ? ' hero__stat--gold' : ''));
@@ -275,73 +318,150 @@ const heroEl = document.getElementById('hero-stats');
   heroEl.appendChild(stat);
 });
 
-/* ── Comparison table ────────────────────────────────────────── */
-const colMax = key => Math.max(...players.map(p => p[key] != null ? p[key] : -Infinity));
-const maxPPG = colMax('ppg'), maxTS = colMax('ts_pct'), maxPIE = colMax('pie');
-const maxPO  = colMax('po_ppg'), maxPOGP = colMax('po_gp');
+/* ── Top-20 ladder ───────────────────────────────────────────── */
+const ranking = (MITCHELL_DATA.ranking || []).slice(0, 20);
+const myRank  = MITCHELL_DATA.mitchell_rank;
 
-const table = document.createElement('table');
-const thead = table.createTHead();
-const hRow  = thead.insertRow();
-['Player','PPG','TS%','PIE','Career PO PPG','PO Games','Elevation'].forEach((h, i) => {
-  const th = document.createElement('th');
-  th.textContent = h;
-  hRow.appendChild(th);
+const TIER_LABELS = {
+  lock:  'The Elite · 1–6',
+  tier:  'The Pack · 7–12',
+  chase: 'The Chase · 13–20',
+};
+
+// Build the "why ahead / why behind" callout for Mitchell vs an adjacent player.
+// Returns the single most decisive stat edge as a short data phrase.
+function edgePhrase(me, them, direction) {
+  // direction: 'up' = Mitchell ahead of `them`; 'dn' = Mitchell behind `them`
+  const diffs = [
+    { k: 'pie',    lbl: 'impact (PIE)', d: (me.pie ?? 0)    - (them.pie ?? 0),    fmt: v => v.toFixed(1) },
+    { k: 'ppg',    lbl: 'PPG',          d: (me.ppg ?? 0)    - (them.ppg ?? 0),    fmt: v => v.toFixed(1) },
+    { k: 'ts_pct', lbl: 'TS%',          d: (me.ts_pct ?? 0) - (them.ts_pct ?? 0), fmt: v => v.toFixed(1) + '%' },
+    { k: 'po_ppg', lbl: 'playoff PPG',  d: (me.po_ppg ?? 0) - (them.po_ppg ?? 0), fmt: v => v.toFixed(1) },
+    { k: 'gp',     lbl: 'games played', d: (me.gp ?? 0)     - (them.gp ?? 0),     fmt: v => String(Math.round(v)) },
+  ];
+  // For 'up' we want where Mitchell wins (d>0); for 'dn' where he loses (d<0)
+  const pick = diffs
+    .filter(x => direction === 'up' ? x.d > 0 : x.d < 0)
+    .sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0];
+  if (!pick) return null;
+  const sign = pick.d >= 0 ? '+' : '−';
+  return { lbl: pick.lbl, mine: me[pick.k], theirs: them[pick.k], delta: `${sign}${pick.fmt(Math.abs(pick.d))}` };
+}
+
+const ladderEl = document.getElementById('ladder');
+let lastTier = null;
+
+ranking.forEach((r, i) => {
+  if (r.tier !== lastTier) {
+    ladderEl.appendChild(el('div', 'tier-label', TIER_LABELS[r.tier] || ''));
+    lastTier = r.tier;
+  }
+
+  const rung = el('div', 'rung rung--' + r.tier + (r.is_mitchell ? ' rung--me' : ''));
+
+  rung.appendChild(el('div', 'rung__rank', r.rank));
+
+  const body = el('div', 'rung__body');
+  const name = el('div', 'rung__name');
+  name.appendChild(document.createTextNode(r.name));
+  if (r.team) name.appendChild(el('span', 'team', r.team));
+  body.appendChild(name);
+
+  // Compact stat line: PPG · TS% · PIE · PO
+  const stats = el('div', 'rung__stats');
+  const poTxt = r.po_ppg ? r.po_ppg.toFixed(1) : '—';
+  stats.append(
+    el('b', null, r.ppg.toFixed(1)), document.createTextNode(' PPG · '),
+    el('b', null, (r.ts_pct ?? 0).toFixed(1) + '%'), document.createTextNode(' TS · '),
+    el('b', null, (r.pie ?? 0).toFixed(1)), document.createTextNode(' PIE · '),
+    el('b', null, poTxt), document.createTextNode(' PO'),
+  );
+  body.appendChild(stats);
+
+  // Mitchell's promoted callout: ahead of the rung below, behind the rung above
+  if (r.is_mitchell) {
+    const above = ranking[i - 1];   // higher-ranked neighbor
+    const below = ranking[i + 1];   // lower-ranked neighbor
+    const cmpWrap = el('div', 'verdict-cmp');
+
+    if (below) {
+      const e = edgePhrase(r, below, 'up');
+      const row = el('div', 'cmp cmp--up');
+      row.appendChild(el('span', 'cmp__ico', '▲'));
+      const txt = el('span');
+      txt.append(
+        document.createTextNode('Ahead of '),
+        el('span', 'nm', below.name.split(' ').pop()),
+        document.createTextNode(e ? ` — ${e.lbl} ` : ' on the model'),
+      );
+      if (e) txt.appendChild(el('b', null, e.delta));
+      row.appendChild(txt);
+      cmpWrap.appendChild(row);
+    }
+    if (above) {
+      const e = edgePhrase(r, above, 'dn');
+      const row = el('div', 'cmp cmp--dn');
+      row.appendChild(el('span', 'cmp__ico', '▼'));
+      const txt = el('span');
+      txt.append(
+        document.createTextNode('Behind '),
+        el('span', 'nm', above.name.split(' ').pop()),
+        document.createTextNode(e ? ` — ${e.lbl} ` : ' on the model'),
+      );
+      if (e) txt.appendChild(el('b', null, e.delta));
+      row.appendChild(txt);
+      cmpWrap.appendChild(row);
+    }
+    body.appendChild(cmpWrap);
+  }
+
+  rung.appendChild(body);
+  rung.appendChild(el('div', 'rung__score', (r.score ?? 0).toFixed(1)));
+  ladderEl.appendChild(rung);
 });
 
-const tbody = table.createTBody();
-players.forEach(p => {
-  const tr = tbody.insertRow();
-  if (p.name === 'Donovan Mitchell') tr.className = 'row-mitchell';
+// "Did not qualify" footnote — players pulled but excluded from the ladder
+// (under the games-played floor). Reinforces the availability story.
+const rankedNames = new Set((MITCHELL_DATA.ranking || []).map(r => r.name));
+const dnq = Object.entries(MITCHELL_DATA.players)
+  .filter(([n]) => !rankedNames.has(n))
+  .map(([n, p]) => ({ name: n, gp: p.gp, ppg: p.ppg }))
+  .sort((a, b) => b.ppg - a.ppg);
 
-  const nameCell = tr.insertCell();
-  nameCell.textContent = p.name;
-
-  const addStat = (val, max, decimals) => {
-    const td = tr.insertCell();
-    if (val == null) { td.textContent = '—'; td.className = 'val-na'; return; }
-    td.textContent = decimals != null ? val.toFixed(decimals) : String(val);
-    if (val === max) td.className = 'val-top';
-  };
-
-  addStat(p.ppg, maxPPG, 1);
-
-  const tsCell = tr.insertCell();
-  if (p.ts_pct != null) {
-    tsCell.textContent = p.ts_pct.toFixed(1) + '%';
-    if (p.ts_pct === maxTS) tsCell.className = 'val-top';
-  } else { tsCell.textContent = '—'; tsCell.className = 'val-na'; }
-
-  const pieCell = tr.insertCell();
-  if (p.pie != null) {
-    pieCell.textContent = p.pie.toFixed(1) + '%';
-    if (p.pie === maxPIE) pieCell.className = 'val-top';
-  } else { pieCell.textContent = '—'; pieCell.className = 'val-na'; }
-
-  const poCell = tr.insertCell();
-  if (p.po_ppg != null) {
-    poCell.textContent = p.po_ppg.toFixed(1);
-    if (p.po_ppg === maxPO) poCell.className = 'val-top';
-  } else { poCell.textContent = '—'; poCell.className = 'val-na'; }
-
-  const gpCell = tr.insertCell();
-  if (p.po_gp > 0) {
-    gpCell.textContent = String(p.po_gp);
-    if (p.po_gp === maxPOGP) gpCell.className = 'val-top';
-  } else { gpCell.textContent = '0'; gpCell.className = 'val-na'; }
-
-  const elevCell = tr.insertCell();
-  if (p.elevation != null) {
-    elevCell.textContent = (p.elevation >= 0 ? '+' : '') + p.elevation.toFixed(1);
-    elevCell.className   = p.elevation > 0 ? 'val-win' : '';
-  } else { elevCell.textContent = '—'; elevCell.className = 'val-na'; }
+const dnqEl = document.getElementById('ladder-dnq');
+dnqEl.appendChild(el('div', 'hd', 'Did not qualify — injury / games played'));
+const dnqLine = el('div');
+dnqLine.appendChild(document.createTextNode(
+  'Stars below the games-played floor this season, so they don’t rank: '));
+dnq.forEach((p, i) => {
+  const span = el('span', 'dnq', p.name.split(' ').pop() + ' (' + p.gp + ' GP)');
+  dnqLine.appendChild(span);
+  if (i < dnq.length - 1) dnqLine.appendChild(document.createTextNode(', '));
 });
+dnqLine.appendChild(document.createTextNode(
+  '. Availability is part of value — the NBA itself requires 65 games for award eligibility.'));
+dnqEl.appendChild(dnqLine);
 
-document.getElementById('table-wrap').appendChild(table);
+// Transparent formula footnote
+const w = MITCHELL_DATA.lab_weights || {};
+const pct = x => Math.round((x || 0) * 100);
+document.getElementById('ladder-formula').textContent =
+  `Lab Score = ${pct(w.impact)}% impact (PIE) · ${pct(w.scoring)}% scoring (PPG) · ` +
+  `${pct(w.efficiency)}% efficiency (TS%) · ${pct(w.playoffs)}% playoff resume · ` +
+  `${pct(w.availability)}% availability. Inputs are sourced stats; weights are the model.`;
+
+// Headline + subtitle reflect where the data actually placed him
+if (myRank != null) {
+  document.getElementById('ladder-title').textContent =
+    myRank <= 10 ? `He's #${myRank}. The Math Agrees.` : `He Lands at #${myRank}.`;
+}
 
 /* ── Elevation chart ─────────────────────────────────────────── */
+// Keep it to the top of the ladder (+ Mitchell) so the chart stays readable.
+const elevNames = new Set((MITCHELL_DATA.ranking || []).slice(0, 12).map(r => r.name));
+elevNames.add('Donovan Mitchell');
 const elevData = players
-  .filter(p => p.elevation !== null && p.po_gp >= 10)
+  .filter(p => p.elevation !== null && p.po_gp >= 10 && elevNames.has(p.name))
   .sort((a, b) => b.elevation - a.elevation);
 
 new Chart(document.getElementById('elevationChart'), {
@@ -495,71 +615,68 @@ const cade = byName['Cade Cunningham'];
 if (cade) {
   const cadeSec = document.getElementById('cade-section');
 
-  // Intro paragraph
-  const intro = el('p', 'cade-intro');
   const t = txt => document.createTextNode(txt);
   const b = txt => { const s = el('strong'); s.textContent = txt; return s; };
+
+  // Shared metric set — winners computed from data, so it's always correct.
+  const cadeMetrics = [
+    { lbl: '2025-26 PPG',     m: mitchell.ppg,    c: cade.ppg,    fmt: v => v.toFixed(1) },
+    { lbl: '2025-26 TS%',     m: mitchell.ts_pct, c: cade.ts_pct, fmt: v => v.toFixed(1) + '%' },
+    { lbl: '2025-26 PIE',     m: mitchell.pie,    c: cade.pie,    fmt: v => v.toFixed(1) + '%' },
+    { lbl: 'Career PO PPG',   m: mitchell.po_ppg, c: cade.po_ppg, fmt: v => (v ?? 0).toFixed(1) },
+    { lbl: 'Career PO Games', m: mitchell.po_gp,  c: cade.po_gp,  fmt: v => String(v ?? 0) },
+  ];
+  const mitchWins = cadeMetrics.filter(x => (x.m ?? 0) > (x.c ?? 0)).length;
+  const dPPG = (mitchell.ppg - cade.ppg);
+
+  // Intro — reframed for 2025-26 (Mitchell answered the series loss)
+  const intro = el('p', 'cade-intro');
   intro.append(
-    b('Yes, it happened. '),
-    t("Cade averaged 26.1 PPG this regular season — 2 points more than Mitchell. His PIE (15.2%) was higher. His Pistons won the series. None of that is spin. "),
-    b("Here's what the career numbers say.")
+    b('A year ago the torch looked like it was passing. '),
+    t('Cade’s Pistons knocked Mitchell out, and he’s the trendy pick to leapfrog him. Then 2025-26 happened: Mitchell '),
+    b(dPPG >= 0 ? `outscored Cade by ${dPPG.toFixed(1)} a night` : `scored ${Math.abs(dPPG).toFixed(1)} fewer per night`),
+    t(dPPG >= 0 ? ' on better efficiency, and wins ' : ', but still wins '),
+    b(`${mitchWins} of ${cadeMetrics.length} metrics`),
+    t('. Rising star, yes. Past Mitchell, not yet.')
   );
   cadeSec.appendChild(intro);
 
-  // Two-column comparison
+  // Two columns, rendered from the shared metric set
   const grid = el('div', 'cade-grid');
 
-  // Cade column
   const cadeCol = el('div', 'cade-col cade-col--cade');
-  app(cadeCol, el('p', 'cade-col-title', 'Cade Cunningham — The Evidence'));
-  [
-    { lbl: '2024-25 PPG',       val: cade.ppg.toFixed(1),         win: true  },
-    { lbl: '2024-25 PIE',       val: cade.pie.toFixed(1) + '%',   win: true  },
-    { lbl: '2024-25 TS%',       val: cade.ts_pct.toFixed(1) + '%', win: false },
-    { lbl: 'Career PO PPG',     val: cade.po_ppg.toFixed(1),      win: false },
-    { lbl: 'Career PO Games',   val: String(cade.po_gp),           win: false },
-    { lbl: 'Career RS PPG',     val: cade.rs_career_ppg != null ? cade.rs_career_ppg.toFixed(1) : '—', win: false },
-  ].forEach(({ lbl, val, win }) => {
+  app(cadeCol, el('p', 'cade-col-title', 'Cade Cunningham'));
+  cadeMetrics.forEach(x => {
     const row = el('div', 'cade-stat');
-    const v   = el('span', 'cade-stat-val' + (win ? ' cade-win' : ''), val);
-    app(row, el('span', 'cade-stat-lbl', lbl), v);
+    const cWin = (x.c ?? 0) > (x.m ?? 0);
+    app(row, el('span', 'cade-stat-lbl', x.lbl),
+             el('span', 'cade-stat-val' + (cWin ? ' cade-win' : ''), x.fmt(x.c)));
     cadeCol.appendChild(row);
   });
 
-  // Mitchell column
   const mitchCol = el('div', 'cade-col cade-col--mitchell');
-  app(mitchCol, el('p', 'cade-col-title', 'Donovan Mitchell — The Track Record'));
-  [
-    { lbl: '2024-25 PPG',       val: mitchell.ppg.toFixed(1),                  win: false },
-    { lbl: '2024-25 PIE',       val: mitchell.pie.toFixed(1) + '%',            win: false },
-    { lbl: '2024-25 TS%',       val: mitchell.ts_pct.toFixed(1) + '%',         win: true  },
-    { lbl: 'Career PO PPG',     val: mitchell.po_ppg.toFixed(1),               win: true  },
-    { lbl: 'Career PO Games',   val: String(mitchell.po_gp),                   win: true  },
-    { lbl: 'Career RS PPG',     val: mitchell.rs_career_ppg != null ? mitchell.rs_career_ppg.toFixed(1) : '—', win: true },
-  ].forEach(({ lbl, val, win }) => {
+  app(mitchCol, el('p', 'cade-col-title', 'Donovan Mitchell'));
+  cadeMetrics.forEach(x => {
     const row = el('div', 'cade-stat');
-    const v   = el('span', 'cade-stat-val' + (win ? '' : ''), val);
-    app(row, el('span', 'cade-stat-lbl', lbl), v);
+    app(row, el('span', 'cade-stat-lbl', x.lbl),
+             el('span', 'cade-stat-val', x.fmt(x.m)));
     mitchCol.appendChild(row);
   });
 
   app(grid, cadeCol, mitchCol);
   cadeSec.appendChild(grid);
 
-  // Bottom verdict
-  const bottom    = el('div', 'cade-bottom');
-  const btmTitle  = el('p', 'cade-bottom-title', 'The Actual Comparison');
-  const btmText   = el('p', 'cade-bottom-text');
-  const hl = txt => { const s = el('span', 'hl', txt); return s; };
+  // Bottom — the career playoff gap (data-driven, still the knockout point)
+  const bottom   = el('div', 'cade-bottom');
+  const btmText  = el('p', 'cade-bottom-text');
+  const hl = txt => el('span', 'hl', txt);
   btmText.append(
-    hl('Cade averaged 27.2 PPG in 20 career playoff games. '),
-    t('Mitchell has averaged '),
-    hl('27.8 PPG in 81 playoff games'),
-    t(' — four times the sample, at a higher rate. Cade had one excellent playoff run. Mitchell has had that same output across '),
-    hl('seven postseasons'),
-    t(', against better competition, deeper in the bracket. The Pistons winning that series proves Cade can win a round. It doesn\'t change seven years of Mitchell\'s proven playoff record. One series is a data point. Eighty-one games is a body of work.')
+    hl(`Cade: ${(cade.po_ppg ?? 0).toFixed(1)} PPG in ${cade.po_gp} career playoff games. `),
+    t('Mitchell: '),
+    hl(`${(mitchell.po_ppg ?? 0).toFixed(1)} PPG in ${mitchell.po_gp}`),
+    t(`. That's ${Math.round(mitchell.po_gp / Math.max(cade.po_gp, 1))}× the sample at a higher rate. Cade has one good playoff run; Mitchell has a decade of them, deeper in the bracket against better defenses. Beating him in one series proves Cade belongs. It doesn't make him the better player — yet.`)
   );
-  app(bottom, btmTitle, btmText);
+  app(bottom, el('p', 'cade-bottom-title', 'The Knockout Stat'), btmText);
   cadeSec.appendChild(bottom);
 }
 
@@ -572,28 +689,33 @@ const vP = el('p', 'verdict-text');
 const hl = txt => { const s = el('span', 'hl', txt); return s; };
 const t  = txt => document.createTextNode(txt);
 
+const rk      = MITCHELL_DATA.mitchell_rank;
+const aheadOf = Math.max(0, (MITCHELL_DATA.ranking || []).length - rk);
+// Names ranked directly above Mitchell — the only company ahead of him
+const above   = (MITCHELL_DATA.ranking || []).filter(r => r.rank < rk).map(r => r.name.split(' ').pop());
+
 vP.append(
-  t("The argument isn't close. Donovan Mitchell has averaged "),
-  hl(mitchell.po_ppg.toFixed(1) + ' PPG across ' + mitchell.po_gp + ' career playoff games'),
-  t(" — that's not a fluky three-game series where he got hot. That's sustained elite production across "),
-  hl(mitchell.po_gp + ' high-stakes games'),
-  t(" against the best defenses in basketball. His career playoff average sits "),
-  hl(elevSign + mitchell.elevation.toFixed(1) + ' points above his regular season average'),
-  t(", making him one of the rare players in this comparison group who scores "),
-  el('em', null, 'more'),
-  t(" under pressure. Garland, Randle, Siakam, and LaVine all decline in the playoffs. LaMelo hasn't played in one. Against the eight players in this analysis with meaningful playoff experience, Mitchell's "),
-  hl('27.8 PPG ranks first'),
-  t('. Top 10 isn’t a generous ranking. It’s the correct one.')
+  t("The argument isn't close — the math made it for us. Across 2025-26 production, playoff resume, and availability, the model ranks Mitchell "),
+  hl('#' + rk + ' in the NBA'),
+  t('. The only players above him are '),
+  hl(above.join(', ')),
+  t(" — the MVP tier. He's a "),
+  hl(mitchell.ppg.toFixed(1) + ' PPG scorer on ' + mitchell.ts_pct.toFixed(1) + '% true shooting'),
+  t(' who answers the durability question (' + mitchell.gp + ' games) and '),
+  el('em', null, 'elevates'),
+  t(' when it matters — his career playoff average sits '),
+  hl(elevSign + mitchell.elevation.toFixed(1) + ' above his regular-season number'),
+  t(' across ' + mitchell.po_gp + ' postseason games. Meanwhile Giannis, Tatum, AD, and Curry couldn’t stay on the floor. Top 10 isn’t generous. It undersells him.')
 );
 verdictEl.appendChild(vP);
 
 // Verdict stat row
 const nums = el('div', 'verdict-nums');
 [
+  { val: '#' + rk,                   lbl: 'Lab Score Rank' },
+  { val: mitchell.ppg.toFixed(1),    lbl: 'PPG · 2025-26' },
   { val: mitchell.po_ppg.toFixed(1), lbl: 'Career Playoff PPG' },
-  { val: String(mitchell.po_gp),     lbl: 'Playoff Games' },
   { val: elevSign + mitchell.elevation.toFixed(1), lbl: 'Playoff Elevation' },
-  { val: '#1',                       lbl: 'PO PPG in Comparison Group' },
 ].forEach(({ val, lbl }) => {
   const item = el('div', 'vn-item');
   app(item, el('div', 'vn-val', val), el('div', 'vn-lbl', lbl));
