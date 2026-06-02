@@ -3,6 +3,7 @@ const MITCHELL_DATA = {
   "season": "2024-25",
   "ordered": [
     "Donovan Mitchell",
+    "Cade Cunningham",
     "Bam Adebayo",
     "Pascal Siakam",
     "Tyrese Haliburton",
@@ -43,6 +44,35 @@ const MITCHELL_DATA = {
         }
       },
       "clutch": {}
+    },
+    "Cade Cunningham": {
+      "player_id": 1630595,
+      "gp": 70,
+      "ppg": 26.1,
+      "rpg": 6.1,
+      "apg": 9.1,
+      "spg": 1.0,
+      "bpg": 0.8,
+      "fg_pct": 46.9,
+      "fg3_pct": 35.6,
+      "ft_pct": 84.6,
+      "ts_pct": 56.5,
+      "usg_pct": 32.3,
+      "pie": 15.2,
+      "career": {
+        "rs_career": {
+          "GP": 272,
+          "PPG": 22.5,
+          "RPG": 5.4,
+          "APG": 8.0
+        },
+        "playoff_career": {
+          "GP": 20,
+          "PPG": 27.2,
+          "RPG": 6.1,
+          "APG": 7.8
+        }
+      }
     },
     "Bam Adebayo": {
       "player_id": 1628389,

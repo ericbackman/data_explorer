@@ -105,6 +105,28 @@
     .vn-lbl{font-size:.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
 
     footer{text-align:center;padding:2rem;font-family:var(--mono);font-size:.7rem;color:#3a3e4a;border-top:1px solid var(--border)}
+
+    /* Cade rebuttal */
+    .cade-intro{font-size:clamp(1rem,2.2vw,1.15rem);color:var(--text2);line-height:1.8;margin-bottom:2rem;max-width:700px}
+    .cade-intro strong{color:var(--text)}
+    .cade-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+    @media(max-width:600px){.cade-grid{grid-template-columns:1fr}}
+    .cade-col{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+    .cade-col--mitchell{border-color:rgba(240,180,41,.4)}
+    .cade-col-title{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:1.25rem}
+    .cade-col--cade .cade-col-title{color:var(--text2)}
+    .cade-col--mitchell .cade-col-title{color:var(--gold)}
+    .cade-stat{display:flex;justify-content:space-between;align-items:baseline;padding:.5rem 0;border-bottom:1px solid var(--border)}
+    .cade-stat:last-child{border-bottom:none}
+    .cade-stat-lbl{font-family:var(--mono);font-size:.68rem;color:var(--text2);text-transform:uppercase}
+    .cade-stat-val{font-family:var(--mono);font-size:.9rem;font-weight:600}
+    .cade-col--mitchell .cade-stat-val{color:var(--gold)}
+    .cade-col--cade    .cade-stat-val{color:var(--text)}
+    .cade-win{color:var(--green)!important}
+    .cade-bottom{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:1.5rem 2rem}
+    .cade-bottom-title{font-family:var(--mono);font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.75rem}
+    .cade-bottom-text{font-size:.95rem;color:var(--text);line-height:1.75}
+    .cade-bottom-text .hl{color:var(--gold);font-weight:600}
   </style>
 </head>
 <body>
@@ -145,7 +167,7 @@
       <p class="chart-note">* fewer than 25 career playoff games (small sample)</p>
     </div>
     <div class="chart-card">
-      <p class="chart-label">Five Dimensions — Mitchell vs. Garland vs. LaMelo</p>
+      <p class="chart-label">Five Dimensions — Mitchell vs. Cade vs. LaMelo</p>
       <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
       <p class="chart-note">Normalized 0–100. Playoff PPG ceiling = 30; PO Experience ceiling = 100 games.</p>
     </div>
@@ -167,7 +189,18 @@
 
 <div class="section">
   <div class="section__head">
-    <p class="section__tag">04 / The Verdict</p>
+    <p class="section__tag">04 / The Cade Question</p>
+    <h2 class="section__title">But He Beat Mitchell This Year</h2>
+    <p class="section__desc">Cade's Pistons eliminated Mitchell's team in the 2024-25 playoffs. Fair point — let's address it directly.</p>
+  </div>
+  <div id="cade-section"></div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section__head">
+    <p class="section__tag">05 / The Verdict</p>
     <h2 class="section__title">Top 10. Settled.</h2>
   </div>
   <div class="verdict-box" id="verdict"></div>
@@ -365,7 +398,7 @@ const norm = p => [
   +(((p.po_ppg || 0)    / 30)  * 100).toFixed(1),
   +((Math.min(p.po_gp, 100) / 100) * 100).toFixed(1),
 ];
-const radarPlayers = [mitchell, byName['Darius Garland'], byName['LaMelo Ball']].filter(Boolean);
+const radarPlayers = [mitchell, byName['Cade Cunningham'], byName['LaMelo Ball']].filter(Boolean);
 const rc = ['#f0b429','#4f8ff7','#8b90a0'];
 const rb = ['rgba(240,180,41,0.12)','rgba(79,143,247,0.06)','rgba(139,144,160,0.04)'];
 
@@ -407,7 +440,7 @@ const METRICS = [
   { key: 'po_gp',  label: 'PO Games',   fmt: v => String(v), higher: true },
 ];
 
-['Darius Garland','LaMelo Ball','Julius Randle','Zach LaVine'].forEach(oppName => {
+['Darius Garland','LaMelo Ball','Julius Randle','Cade Cunningham'].forEach(oppName => {
   const opp = byName[oppName];
   if (!opp) return;
 
@@ -450,6 +483,79 @@ const METRICS = [
 
   document.getElementById('matchup-grid').appendChild(card);
 });
+
+/* ── Cade rebuttal section ───────────────────────────────────── */
+const cade = byName['Cade Cunningham'];
+if (cade) {
+  const cadeSec = document.getElementById('cade-section');
+
+  // Intro paragraph
+  const intro = el('p', 'cade-intro');
+  const t = txt => document.createTextNode(txt);
+  const b = txt => { const s = el('strong'); s.textContent = txt; return s; };
+  intro.append(
+    b('Yes, it happened. '),
+    t("Cade averaged 26.1 PPG this regular season — 2 points more than Mitchell. His PIE (15.2%) was higher. His Pistons won the series. None of that is spin. "),
+    b("Here's what the career numbers say.")
+  );
+  cadeSec.appendChild(intro);
+
+  // Two-column comparison
+  const grid = el('div', 'cade-grid');
+
+  // Cade column
+  const cadeCol = el('div', 'cade-col cade-col--cade');
+  app(cadeCol, el('p', 'cade-col-title', 'Cade Cunningham — The Evidence'));
+  [
+    { lbl: '2024-25 PPG',       val: cade.ppg.toFixed(1),         win: true  },
+    { lbl: '2024-25 PIE',       val: cade.pie.toFixed(1) + '%',   win: true  },
+    { lbl: '2024-25 TS%',       val: cade.ts_pct.toFixed(1) + '%', win: false },
+    { lbl: 'Career PO PPG',     val: cade.po_ppg.toFixed(1),      win: false },
+    { lbl: 'Career PO Games',   val: String(cade.po_gp),           win: false },
+    { lbl: 'Career RS PPG',     val: cade.rs_career_ppg != null ? cade.rs_career_ppg.toFixed(1) : '—', win: false },
+  ].forEach(({ lbl, val, win }) => {
+    const row = el('div', 'cade-stat');
+    const v   = el('span', 'cade-stat-val' + (win ? ' cade-win' : ''), val);
+    app(row, el('span', 'cade-stat-lbl', lbl), v);
+    cadeCol.appendChild(row);
+  });
+
+  // Mitchell column
+  const mitchCol = el('div', 'cade-col cade-col--mitchell');
+  app(mitchCol, el('p', 'cade-col-title', 'Donovan Mitchell — The Track Record'));
+  [
+    { lbl: '2024-25 PPG',       val: mitchell.ppg.toFixed(1),                  win: false },
+    { lbl: '2024-25 PIE',       val: mitchell.pie.toFixed(1) + '%',            win: false },
+    { lbl: '2024-25 TS%',       val: mitchell.ts_pct.toFixed(1) + '%',         win: true  },
+    { lbl: 'Career PO PPG',     val: mitchell.po_ppg.toFixed(1),               win: true  },
+    { lbl: 'Career PO Games',   val: String(mitchell.po_gp),                   win: true  },
+    { lbl: 'Career RS PPG',     val: mitchell.rs_career_ppg != null ? mitchell.rs_career_ppg.toFixed(1) : '—', win: true },
+  ].forEach(({ lbl, val, win }) => {
+    const row = el('div', 'cade-stat');
+    const v   = el('span', 'cade-stat-val' + (win ? '' : ''), val);
+    app(row, el('span', 'cade-stat-lbl', lbl), v);
+    mitchCol.appendChild(row);
+  });
+
+  app(grid, cadeCol, mitchCol);
+  cadeSec.appendChild(grid);
+
+  // Bottom verdict
+  const bottom    = el('div', 'cade-bottom');
+  const btmTitle  = el('p', 'cade-bottom-title', 'The Actual Comparison');
+  const btmText   = el('p', 'cade-bottom-text');
+  const hl = txt => { const s = el('span', 'hl', txt); return s; };
+  btmText.append(
+    hl('Cade averaged 27.2 PPG in 20 career playoff games. '),
+    t('Mitchell has averaged '),
+    hl('27.8 PPG in 81 playoff games'),
+    t(' — four times the sample, at a higher rate. Cade had one excellent playoff run. Mitchell has had that same output across '),
+    hl('seven postseasons'),
+    t(', against better competition, deeper in the bracket. The Pistons winning that series proves Cade can win a round. It doesn\'t change seven years of Mitchell\'s proven playoff record. One series is a data point. Eighty-one games is a body of work.')
+  );
+  app(bottom, btmTitle, btmText);
+  cadeSec.appendChild(bottom);
+}
 
 /* ── Verdict ─────────────────────────────────────────────────── */
 const elevSign = mitchell.elevation >= 0 ? '+' : '';
