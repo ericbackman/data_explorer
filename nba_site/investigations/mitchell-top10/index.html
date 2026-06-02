@@ -30,7 +30,7 @@
     a{color:var(--gold);text-decoration:none}
 
     /* Hero */
-    .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(240,180,41,0.06) 0%,transparent 70%),var(--bg)}
+    .hero{min-height:72vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:5rem 2rem 2.5rem;position:relative;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(240,180,41,0.06) 0%,transparent 70%),var(--bg)}
     .hero__grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.25}
     .hero__content{position:relative;z-index:1;max-width:820px}
     .hero__eyebrow{display:inline-block;font-family:var(--mono);font-size:.75rem;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-bottom:1.5rem;padding:.35rem .9rem;border:1px solid rgba(240,180,41,.3);border-radius:100px}
@@ -146,6 +146,8 @@
     .rung__stats{font-family:var(--mono);font-size:.66rem;color:var(--text2);margin-top:.2rem;line-height:1.5}
     .rung__stats b{color:#b9bdca;font-weight:500}
     .rung__score{font-family:var(--mono);font-size:1.05rem;font-weight:500;color:var(--text2);flex-shrink:0;text-align:right}
+    .rung__barwrap{height:4px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:.5rem;overflow:hidden}
+    .rung__bar{height:100%;border-radius:2px;transition:width .4s}
 
     .rung--lock{border-left:3px solid var(--blue)}
     .rung--tier{border-left:3px solid #6b7280}
@@ -192,7 +194,7 @@
   <div class="section__head">
     <p class="section__tag">01 / The Ladder</p>
     <h2 class="section__title" id="ladder-title">Where He Ranks</h2>
-    <p class="section__desc" id="ladder-desc">Every player ranked by Lab Score — a transparent blend of 2025-26 production, playoff resume, and availability. The data places Mitchell, and it places everyone around him.</p>
+    <p class="section__desc" id="ladder-desc">Ranked by Lab Score — 2025-26 production + playoff resume + availability.</p>
   </div>
   <div class="ladder" id="ladder"></div>
   <div class="ladder-note" id="ladder-dnq"></div>
@@ -205,7 +207,7 @@
   <div class="section__head">
     <p class="section__tag">02 / Playoff Elevation</p>
     <h2 class="section__title">Who Actually Shows Up</h2>
-    <p class="section__desc">Career playoff PPG minus career regular season PPG. Positive = scores more when the pressure peaks. Mitchell is one of the few stars who reliably elevates instead of fading.</p>
+    <p class="section__desc">Playoff PPG minus regular-season PPG. Positive = rises when it matters.</p>
   </div>
   <div class="charts-grid">
     <div class="chart-card">
@@ -227,7 +229,7 @@
   <div class="section__head">
     <p class="section__tag">03 / Head-to-Head</p>
     <h2 class="section__title">Four Matchups. One Winner.</h2>
-    <p class="section__desc">Same five metrics across every matchup: PPG, True Shooting %, PIE, Career Playoff PPG, Career Playoff Games. No playoffs = 0.</p>
+    <p class="section__desc">Five metrics, head to head. Gold = Mitchell wins it.</p>
   </div>
   <div class="matchup-grid" id="matchup-grid"></div>
 </div>
@@ -238,7 +240,7 @@
   <div class="section__head">
     <p class="section__tag">04 / The Cade Question</p>
     <h2 class="section__title">The Cade Cunningham Comparison</h2>
-    <p class="section__desc">Cade's Pistons knocked Mitchell out a year ago, and he's the trendy young pick to pass him. Here's where the data actually lands.</p>
+    <p class="section__desc">The trendy young pick to pass him. Here's where the data lands.</p>
   </div>
   <div id="cade-section"></div>
 </div>
@@ -351,6 +353,12 @@ function edgePhrase(me, them, direction) {
 const ladderEl = document.getElementById('ladder');
 let lastTier = null;
 
+// Min–max normalize scores across the visible 20 so the bars fill the width.
+const scores  = ranking.map(r => r.score ?? 0);
+const sMin    = Math.min(...scores), sMax = Math.max(...scores);
+const barPct  = s => 12 + 88 * ((s - sMin) / Math.max(sMax - sMin, 1)); // 12–100%
+const TIER_BAR = { lock: 'var(--blue)', tier: '#6b7280', chase: '#3a3e4a' };
+
 ranking.forEach((r, i) => {
   if (r.tier !== lastTier) {
     ladderEl.appendChild(el('div', 'tier-label', TIER_LABELS[r.tier] || ''));
@@ -377,6 +385,14 @@ ranking.forEach((r, i) => {
     el('b', null, poTxt), document.createTextNode(' PO'),
   );
   body.appendChild(stats);
+
+  // Visual Lab Score bar
+  const barWrap = el('div', 'rung__barwrap');
+  const bar     = el('div', 'rung__bar');
+  bar.style.width = barPct(r.score ?? 0).toFixed(1) + '%';
+  bar.style.background = r.is_mitchell ? 'var(--gold)' : (TIER_BAR[r.tier] || '#3a3e4a');
+  barWrap.appendChild(bar);
+  body.appendChild(barWrap);
 
   // Mitchell's promoted callout: ahead of the rung below, behind the rung above
   if (r.is_mitchell) {
@@ -629,15 +645,14 @@ if (cade) {
   const mitchWins = cadeMetrics.filter(x => (x.m ?? 0) > (x.c ?? 0)).length;
   const dPPG = (mitchell.ppg - cade.ppg);
 
-  // Intro — reframed for 2025-26 (Mitchell answered the series loss)
+  // Intro — one punch
   const intro = el('p', 'cade-intro');
   intro.append(
-    b('A year ago the torch looked like it was passing. '),
-    t('Cade’s Pistons knocked Mitchell out, and he’s the trendy pick to leapfrog him. Then 2025-26 happened: Mitchell '),
-    b(dPPG >= 0 ? `outscored Cade by ${dPPG.toFixed(1)} a night` : `scored ${Math.abs(dPPG).toFixed(1)} fewer per night`),
-    t(dPPG >= 0 ? ' on better efficiency, and wins ' : ', but still wins '),
-    b(`${mitchWins} of ${cadeMetrics.length} metrics`),
-    t('. Rising star, yes. Past Mitchell, not yet.')
+    t('In 2025-26 Mitchell '),
+    b(dPPG >= 0 ? `outscored Cade by ${dPPG.toFixed(1)} a night` : `trailed Cade by ${Math.abs(dPPG).toFixed(1)} a night`),
+    t(' and wins '),
+    b(`${mitchWins} of ${cadeMetrics.length}`),
+    t('. Rising star — not past Mitchell yet.')
   );
   cadeSec.appendChild(intro);
 
@@ -671,10 +686,10 @@ if (cade) {
   const btmText  = el('p', 'cade-bottom-text');
   const hl = txt => el('span', 'hl', txt);
   btmText.append(
-    hl(`Cade: ${(cade.po_ppg ?? 0).toFixed(1)} PPG in ${cade.po_gp} career playoff games. `),
-    t('Mitchell: '),
-    hl(`${(mitchell.po_ppg ?? 0).toFixed(1)} PPG in ${mitchell.po_gp}`),
-    t(`. That's ${Math.round(mitchell.po_gp / Math.max(cade.po_gp, 1))}× the sample at a higher rate. Cade has one good playoff run; Mitchell has a decade of them, deeper in the bracket against better defenses. Beating him in one series proves Cade belongs. It doesn't make him the better player — yet.`)
+    hl(`${(mitchell.po_ppg ?? 0).toFixed(1)} PPG in ${mitchell.po_gp} playoff games`),
+    t(` vs Cade's ${(cade.po_ppg ?? 0).toFixed(1)} in ${cade.po_gp} — `),
+    hl(`${Math.round(mitchell.po_gp / Math.max(cade.po_gp, 1))}× the sample`),
+    t(', higher rate. One series doesn’t outweigh a decade.')
   );
   app(bottom, el('p', 'cade-bottom-title', 'The Knockout Stat'), btmText);
   cadeSec.appendChild(bottom);
@@ -695,17 +710,11 @@ const aheadOf = Math.max(0, (MITCHELL_DATA.ranking || []).length - rk);
 const above   = (MITCHELL_DATA.ranking || []).filter(r => r.rank < rk).map(r => r.name.split(' ').pop());
 
 vP.append(
-  t("The argument isn't close — the math made it for us. Across 2025-26 production, playoff resume, and availability, the model ranks Mitchell "),
-  hl('#' + rk + ' in the NBA'),
-  t('. The only players above him are '),
+  t('The math ranks Mitchell '),
+  hl('#' + rk),
+  t('. The only names above him — '),
   hl(above.join(', ')),
-  t(" — the MVP tier. He's a "),
-  hl(mitchell.ppg.toFixed(1) + ' PPG scorer on ' + mitchell.ts_pct.toFixed(1) + '% true shooting'),
-  t(' who answers the durability question (' + mitchell.gp + ' games) and '),
-  el('em', null, 'elevates'),
-  t(' when it matters — his career playoff average sits '),
-  hl(elevSign + mitchell.elevation.toFixed(1) + ' above his regular-season number'),
-  t(' across ' + mitchell.po_gp + ' postseason games. Meanwhile Giannis, Tatum, AD, and Curry couldn’t stay on the floor. Top 10 isn’t generous. It undersells him.')
+  t(' — are the MVP tier. Top 10 isn’t generous. It undersells him.')
 );
 verdictEl.appendChild(vP);
 
