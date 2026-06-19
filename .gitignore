@@ -27,3 +27,16 @@ nba_site/investigations/*/.cache.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated NBA data & artifacts (regenerable from scripts — never commit)
+raw_data/
+*.db
+*_pbp.csv
+nba_quarter_trends_2025_26.csv
+max_deficit_situations.csv
+playoff_max_deficit_situations.csv
+q3_comeback_situations.csv
+q3_backtest_bets.csv
+
+# Generated charts (regenerable)
+*.png
