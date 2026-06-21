@@ -28,6 +28,10 @@ nba_site/investigations/*/.cache.json
 .DS_Store
 Thumbs.db
 
+# Per-domain DB build artifacts — db + raw API cache (regenerable; never commit)
+nba/data/
+pga/data/
+
 # Generated NBA data & artifacts (regenerable from scripts — never commit)
 raw_data/
 *.db
