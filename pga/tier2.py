@@ -39,6 +39,50 @@ _FIELDS = (
     "leader_54", "leader_54_score", "playoff", "source_url",
 )
 
+# Shared by both Tier-2 collectors (scrapekit = primary/free, firecrawl = fallback).
+# Wikipedia URL templates per major (stable across 1960-2004).
+MAJOR_URL_TEMPLATES = {
+    "Masters": "https://en.wikipedia.org/wiki/{year}_Masters_Tournament",
+    "U.S. Open": "https://en.wikipedia.org/wiki/{year}_U.S._Open_(golf)",
+    "The Open": "https://en.wikipedia.org/wiki/{year}_Open_Championship",
+    "PGA Championship": "https://en.wikipedia.org/wiki/{year}_PGA_Championship",
+}
+
+# Fields each collector pulls from a page (besides year/major/source_url).
+EXTRACT_FIELDS = (
+    "winner", "winning_score", "leader_36", "leader_36_score",
+    "leader_54", "leader_54_score", "playoff",
+)
+
+# JSON schema + prompt for the LLM extraction paths (Firecrawl; scrapekit's
+# Ollama fallback). The scrapekit table parser doesn't need these.
+EXTRACT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "winner": {"type": "string", "description": "Full name of the champion"},
+        "winning_score": {"type": "string",
+                          "description": "Winning total and to-par, e.g. '281 (-7)'"},
+        "leader_36": {"type": "string",
+                      "description": "Full name(s) leading after 36 holes (round 2). "
+                                     "Comma-separate co-leaders."},
+        "leader_36_score": {"type": "string", "description": "36-hole leader's score, e.g. '138 (-6)'"},
+        "leader_54": {"type": "string",
+                      "description": "Full name(s) leading after 54 holes (round 3). "
+                                     "Comma-separate co-leaders."},
+        "leader_54_score": {"type": "string", "description": "54-hole leader's score, e.g. '211 (-5)'"},
+        "playoff": {"type": "boolean",
+                    "description": "True if the championship was decided by a playoff"},
+    },
+    "required": ["winner"],
+}
+
+EXTRACT_PROMPT = (
+    "This is a Wikipedia page for a men's major golf championship. From the "
+    "round-by-round leaderboard or round summaries, extract the champion and the "
+    "players leading after the second round (36 holes) and third round (54 holes). "
+    "If a 36- or 54-hole leader is not stated on the page, leave that field blank."
+)
+
 
 def _norm_name(name: str | None) -> str:
     """Lowercase, strip accents/punctuation so 'José M. Olazábal' matches itself

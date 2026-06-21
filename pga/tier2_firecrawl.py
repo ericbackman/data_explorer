@@ -33,45 +33,13 @@ DEFAULT_CACHE = _ROOT / "data" / "firecrawl_cache"
 
 _API = "https://api.firecrawl.dev/v2/scrape"
 
-# Wikipedia URL templates per major (stable across 1960-2004).
-MAJOR_URL_TEMPLATES = {
-    "Masters": "https://en.wikipedia.org/wiki/{year}_Masters_Tournament",
-    "U.S. Open": "https://en.wikipedia.org/wiki/{year}_U.S._Open_(golf)",
-    "The Open": "https://en.wikipedia.org/wiki/{year}_Open_Championship",
-    "PGA Championship": "https://en.wikipedia.org/wiki/{year}_PGA_Championship",
-}
-
-# Fields Firecrawl should pull from each page.
-_EXTRACT_FIELDS = (
-    "winner", "winning_score", "leader_36", "leader_36_score",
-    "leader_54", "leader_54_score", "playoff",
-)
-
-_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "winner": {"type": "string", "description": "Full name of the champion"},
-        "winning_score": {"type": "string",
-                          "description": "Winning total and to-par, e.g. '281 (-7)'"},
-        "leader_36": {"type": "string",
-                      "description": "Full name(s) leading after 36 holes (round 2). "
-                                     "Comma-separate co-leaders."},
-        "leader_36_score": {"type": "string", "description": "36-hole leader's score, e.g. '138 (-6)'"},
-        "leader_54": {"type": "string",
-                      "description": "Full name(s) leading after 54 holes (round 3). "
-                                     "Comma-separate co-leaders."},
-        "leader_54_score": {"type": "string", "description": "54-hole leader's score, e.g. '211 (-5)'"},
-        "playoff": {"type": "boolean",
-                    "description": "True if the championship was decided by a playoff"},
-    },
-    "required": ["winner"],
-}
-
-_PROMPT = (
-    "This is a Wikipedia page for a men's major golf championship. From the "
-    "round-by-round leaderboard or round summaries, extract the champion and the "
-    "players leading after the second round (36 holes) and third round (54 holes). "
-    "If a 36- or 54-hole leader is not stated on the page, leave that field blank."
+# Shared Tier-2 constants now live in tier2.py (so the scrapekit collector need
+# not import from this Firecrawl module). Aliased to keep internals unchanged.
+from .tier2 import (  # noqa: E402
+    EXTRACT_FIELDS as _EXTRACT_FIELDS,
+    EXTRACT_PROMPT as _PROMPT,
+    EXTRACT_SCHEMA as _SCHEMA,
+    MAJOR_URL_TEMPLATES,
 )
 
 

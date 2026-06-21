@@ -52,27 +52,32 @@ The scraper is **resumable**: every API response is cached to disk and every loa
 is an idempotent upsert, so re-running re-fetches nothing and converges to the
 same DB.
 
-### Tier 2 — majors 1960–2004 (Firecrawl + Wikipedia)
+### Tier 2 — majors 1960–2004 (Wikipedia)
 
-ESPN has no pre-2005 data, so the deep major history comes from Wikipedia via
-Firecrawl's schema-based extraction (one `/scrape` per page, disk-cached).
+ESPN has no pre-2005 data, so the deep major history comes from Wikipedia. The
+**primary, free** path uses [scrapekit](../scrapekit/) (`pandas.read_html`): the
+36-/54-hole leaders are computed deterministically from each page's per-round
+leaderboard tables (`70-68=138` after R2), and the champion comes from the
+infobox. No API key, no credits, and *more precise* than prose extraction — it
+reads the `Place` column, so it distinguishes solo leaders from co-leaders.
 
 ```bash
-# 1. free key at firecrawl.dev -> put it in a gitignored .env:
-echo "FIRECRAWL_API_KEY=fc-..." > .env
-
-# 2. (credit-safe) test on a handful of pages first
-python -m pga.tier2_firecrawl collect --start 2003 --end 2003 --limit 4
-
-# 3. full backfill -> seeds/major_history_seed.json (cached, resumable)
-python -m pga.tier2_firecrawl collect --start 1960 --end 2004
-
-# 4. validate + load into the major_history table
+# Primary: free, deterministic, no key
+python -m pga.tier2_scrapekit collect --start 1960 --end 2004
 python -m pga.tier2 load seeds/major_history_seed.json
 ```
 
-~180 pages (4 majors × 45 years) fits inside Firecrawl's free monthly tier; the
-disk cache means re-runs cost zero credits.
+A **Firecrawl** collector (`tier2_firecrawl.py`) is kept as a fallback for pages
+the table parser can't handle (per the data_explorer convention, paid extraction
+is reserved for hostile/awkward sites). It needs `FIRECRAWL_API_KEY` in a
+gitignored `.env` (project root or `~/.env`):
+
+```bash
+python -m pga.tier2_firecrawl collect --start 1960 --end 2004   # ~2.7 credits/page
+```
+
+`seeds/major_history_seed.json` is the committed, validated output (winner
+matches the historical record player-for-player; Nicklaus 18, Watson 8, …).
 
 ## Data quirks handled
 
