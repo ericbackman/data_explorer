@@ -44,6 +44,11 @@ db_dashboard.widget.html
 # Run logs
 *.log
 
+# SQLite WAL/SHM sidecars (transient; never commit)
+*.db-wal
+*.db-shm
+*.db-journal
+
 # Generated NBA data & artifacts (regenerable from scripts — never commit)
 raw_data/
 *.db
