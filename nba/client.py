@@ -21,7 +21,7 @@ import time
 
 import pandas as pd
 import requests
-from nba_api.stats.endpoints import leaguegamelog
+from nba_api.stats.endpoints import leaguegamelog, playbyplayv3
 
 log = logging.getLogger(__name__)
 
@@ -131,3 +131,15 @@ class NBAClient:
         )
         self._write_cache(key, df)
         return df
+
+    def play_by_play(self, game_id: str) -> pd.DataFrame:
+        """All events for one game (PlayByPlayV3 — V2 was deprecated and now
+        returns empty JSON, see nba_api #591). One request per game; no bulk
+        endpoint. Not disk-cached: the play_by_play table is the durable store and
+        resumability comes from skipping already-loaded game_ids.
+        """
+        return self._fetch_df(
+            lambda: playbyplayv3.PlayByPlayV3(
+                game_id=str(game_id).zfill(10), timeout=self.timeout_s),
+            desc=f"pbp_{game_id}",
+        )
