@@ -140,15 +140,24 @@ def main() -> None:
 
     client = NBAClient(CACHE_DIR)
     totals = {"player_rows": 0, "team_rows": 0, "games": 0}
+    failed = []
     for season in todo:
-        c = ingest_season(client, conn, season, current)
+        try:
+            c = ingest_season(client, conn, season, current)
+        except Exception as e:  # one bad season must not abort an 80-season run
+            log.error("season %s failed: %s — skipping (re-run to retry)", season, e)
+            failed.append(season)
+            continue
         for k in totals:
             totals[k] += c[k]
         log.info("loaded %s: %d games, %d player-rows", season, c["games"], c["player_rows"])
 
     conn.close()
     log.info("done: %d games, %d player-rows, %d team-rows across %d seasons",
-             totals["games"], totals["player_rows"], totals["team_rows"], len(todo))
+             totals["games"], totals["player_rows"], totals["team_rows"], len(todo) - len(failed))
+    if failed:
+        log.warning("%d season(s) failed (cache makes done seasons free on re-run): %s",
+                    len(failed), ", ".join(failed))
 
 
 if __name__ == "__main__":
