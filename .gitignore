@@ -1,3 +1,8 @@
+# Secrets (never commit API keys / credentials)
+.env
+*.env
+.eric.env
+
 # Python
 __pycache__/
 *.py[cod]
@@ -31,6 +36,13 @@ Thumbs.db
 # Per-domain DB build artifacts — db + raw API cache (regenerable; never commit)
 nba/data/
 pga/data/
+
+# Generated dashboard artifacts (regenerable from db_dashboard.py)
+db_dashboard.html
+db_dashboard.widget.html
+
+# Run logs
+*.log
 
 # Generated NBA data & artifacts (regenerable from scripts — never commit)
 raw_data/
