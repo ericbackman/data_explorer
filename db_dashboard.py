@@ -32,7 +32,7 @@ MANIFEST = [
     ("NBA box scores",       "NBA",      "data_explorer/nba/data/nba.db"),
     ("NBA comebacks",        "NBA",      "data_explorer/nba_comebacks.db"),
     ("NBA playoff comebacks","NBA",      "data_explorer/nba_playoff_comebacks.db"),
-    ("PGA Tour history",     "Golf",     "pga-data/data/pga.db"),
+    ("PGA Tour history",     "Golf",     "data_explorer/pga/data/pga.db"),
     ("Betting odds history", "Betting",  "betting_stuff/data/odds_history.db"),
     ("MTG deckbuilding",     "Games",    "MTG-Deckbuilding/data/mtg.db"),
     ("Life tracker",         "Personal", "life_tracker/life_tracker.db"),
@@ -62,7 +62,8 @@ def inspect_db(path: pathlib.Path) -> dict:
     info = {"size": path.stat().st_size,
             "mtime": datetime.datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y-%m-%d"),
             "tables": [], "total_rows": 0}
-    conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=30)
+    conn.execute("PRAGMA busy_timeout=30000")  # wait out a concurrent writer (e.g. a backfill)
     try:
         names = [r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
