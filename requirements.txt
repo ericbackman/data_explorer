@@ -3,3 +3,5 @@ pandas
 requests
 lxml
 beautifulsoup4  # pga tier2_scrapekit: infobox champion extraction
+nflreadpy       # nfl: free nflverse box scores + play-by-play
+pyarrow         # nfl: polars -> pandas conversion for nflreadpy
