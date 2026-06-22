@@ -91,6 +91,18 @@ CREATE TABLE IF NOT EXISTS player_hole_scores (
     PRIMARY KEY (event_id, player_id, round_num, hole_num)
 );
 
+-- Field scoring average per (event, round, hole) -- the baseline for
+-- strokes-gained vs field. Materialized (rebuildable) from player_hole_scores so
+-- SG is a cheap join instead of a 7M-row aggregate per query.
+CREATE TABLE IF NOT EXISTS hole_field_avg (
+    event_id   INTEGER NOT NULL,
+    round_num  INTEGER NOT NULL,
+    hole_num   INTEGER NOT NULL,
+    field_avg  REAL,
+    n_players  INTEGER,
+    PRIMARY KEY (event_id, round_num, hole_num)
+);
+
 -- Player biographical dimension (ESPN athlete endpoint). Kept separate from
 -- `players` so the per-event loader (which only knows id/name/country) can't
 -- clobber it. age_at_fetch is a snapshot; turned_pro/dob are stable.

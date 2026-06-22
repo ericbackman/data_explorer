@@ -14,6 +14,7 @@ A `data_explorer` sub-project (mirrors `nba/`). Run all commands **from the
 | **1** | 2005–present, every PGA Tour stroke-play event | Full field, round-by-round (front/back nine), positions, earnings, venue | ESPN public JSON API |
 | **1h** | 2005–present | **Hole-by-hole** (7M+ rows): every player, round, hole — strokes + derived par | re-parsed from the same cached scoreboards |
 | **1b** | player dimension | **Bios**: age, turned-pro, birthplace, citizenship, hand, college, ht/wt | ESPN athlete endpoint |
+| **1s** | derived | **Strokes-gained vs field**: SG-Total per hole/round/event, par-3/4/5 splits | computed from the hole data |
 | **2** | Majors 1960–2004 | Winner + 36/54-hole leaders | Wikipedia (scrapekit) |
 
 ESPN's free golf API only returns events back to **2005** (verified empirically),
@@ -54,6 +55,11 @@ python -m pga.holes player "Scottie Scheffler"            # par-3/4/5 profile
 # Player bios (age, turned pro, birthplace, hand, college) from ESPN athletes
 python -m pga.bios_scrape                  # all players (resumable, cached)
 python -m pga.bios_scrape --min-results 4  # only regulars
+
+# Strokes-gained vs field (derived; build once, then query)
+python -m pga.sg build
+python -m pga.sg player "Scottie Scheffler"      # career SG + par splits
+python -m pga.sg event "Masters" --year 2024     # SG leaderboard
 
 # Tests (from the data_explorer root)
 python -m pytest pga/
