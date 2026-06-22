@@ -37,3 +37,6 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   (see `scrapekit/` for the credit-free web-extraction toolkit).
 - `python db_dashboard.py --widget` / the `/db-dashboard` skill shows a live
   inventory of every DB.
+- `sports_mcp.py` is a local **MCP server** (read-only `list_databases` /
+  `describe_schema` / `run_sql`) registered as `sports-data` in the workspace
+  `.mcp.json` — it lets any Claude surface query these DBs without shell access.

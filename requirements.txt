@@ -5,3 +5,4 @@ lxml
 beautifulsoup4  # pga tier2_scrapekit: infobox champion extraction
 nflreadpy       # nfl: free nflverse box scores + play-by-play
 pyarrow         # nfl: polars -> pandas conversion for nflreadpy
+mcp             # sports_mcp: local read-only MCP server over the DBs
