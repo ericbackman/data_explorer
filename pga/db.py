@@ -71,6 +71,26 @@ CREATE TABLE IF NOT EXISTS player_results (
     PRIMARY KEY (event_id, player_id)
 );
 
+-- Hole-level depth (re-parsed from the same cached ESPN scoreboards). par is the
+-- consensus across the field for that hole at that event; courses are derived by
+-- joining to tournaments.venue.
+CREATE TABLE IF NOT EXISTS event_holes (
+    event_id  INTEGER NOT NULL,
+    hole_num  INTEGER NOT NULL,
+    par       INTEGER,
+    PRIMARY KEY (event_id, hole_num)
+);
+
+CREATE TABLE IF NOT EXISTS player_hole_scores (
+    event_id   INTEGER NOT NULL,
+    player_id  INTEGER NOT NULL,
+    round_num  INTEGER NOT NULL,
+    hole_num   INTEGER NOT NULL,
+    strokes    INTEGER,
+    to_par     INTEGER,
+    PRIMARY KEY (event_id, player_id, round_num, hole_num)
+);
+
 -- Tier 2: deep major history (1960-2004), winner + 36/54-hole leaders only.
 -- Sourced from Wikipedia, lower granularity than Tier 1 (no full field).
 CREATE TABLE IF NOT EXISTS major_history (
@@ -94,6 +114,9 @@ CREATE INDEX IF NOT EXISTS idx_results_event  ON player_results(event_id);
 CREATE INDEX IF NOT EXISTS idx_results_player ON player_results(player_id);
 CREATE INDEX IF NOT EXISTS idx_tourn_season   ON tournaments(season);
 CREATE INDEX IF NOT EXISTS idx_tourn_major    ON tournaments(is_major);
+CREATE INDEX IF NOT EXISTS idx_holescores_event  ON player_hole_scores(event_id);
+CREATE INDEX IF NOT EXISTS idx_holescores_player ON player_hole_scores(player_id);
+CREATE INDEX IF NOT EXISTS idx_evholes_event     ON event_holes(event_id);
 """
 
 
@@ -133,6 +156,14 @@ def load_event(conn: sqlite3.Connection, parsed: ParsedEvent) -> None:
     _insert(conn, "players", list(seen.values()))
     _insert(conn, "player_rounds", parsed.rounds)
     _insert(conn, "player_results", parsed.results)
+    conn.commit()
+
+
+def load_event_holes(conn: sqlite3.Connection, event_holes: list[dict],
+                     hole_scores: list[dict]) -> None:
+    """Idempotently upsert one event's hole-level rows."""
+    _insert(conn, "event_holes", event_holes)
+    _insert(conn, "player_hole_scores", hole_scores)
     conn.commit()
 
 

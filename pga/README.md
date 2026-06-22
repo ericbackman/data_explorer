@@ -12,7 +12,8 @@ A `data_explorer` sub-project (mirrors `nba/`). Run all commands **from the
 | Tier | Coverage | Granularity | Source |
 |------|----------|-------------|--------|
 | **1** | 2005–present, every PGA Tour stroke-play event | Full field, round-by-round (front/back nine), positions, earnings, venue | ESPN public JSON API |
-| **2** | Majors 1960–2004 | Winner + 36/54-hole leaders | Wikipedia (Firecrawl) |
+| **1h** | 2005–present | **Hole-by-hole** (7M+ rows): every player, round, hole — strokes + derived par | re-parsed from the same cached scoreboards |
+| **2** | Majors 1960–2004 | Winner + 36/54-hole leaders | Wikipedia (scrapekit) |
 
 ESPN's free golf API only returns events back to **2005** (verified empirically),
 so 2005+ is the realistic ceiling for full-field round-by-round data. Pre-2005
@@ -43,6 +44,11 @@ python -m pga.scrape --seasons 2024
 
 # Leader-conversion report (all events + majors)
 python -m pga.analysis
+
+# Hole-level depth: backfill from cache (no network), then query
+python -m pga.holes_scrape --seasons 2005-2026
+python -m pga.holes course "Augusta National Golf Club"   # hardest holes
+python -m pga.holes player "Scottie Scheffler"            # par-3/4/5 profile
 
 # Tests (from the data_explorer root)
 python -m pytest pga/

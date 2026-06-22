@@ -254,3 +254,52 @@ def parse_leaderboard(raw: dict) -> ParsedEvent:
         "winner_player_id": winner_id,
     }
     return ParsedEvent(tournament=tournament, players=players, rounds=rounds, results=results)
+
+
+def parse_event_holes(event: dict) -> tuple[list[dict], list[dict]]:
+    """From a *scoreboard* event dict (which nests per-hole linescores under each
+    round), return (event_holes, hole_scores).
+
+    Each hole's par is derived as strokes - to_par (the per-hole scoreType is the
+    hole's own par-relative, verified: sum of hole strokes == round total). Par is
+    then taken as the field consensus per hole, robust to any stray value.
+    """
+    event_id = _int_or_none(event.get("id"))
+    competitions = event.get("competitions") or []
+    if not competitions or not isinstance(competitions[0], dict):
+        return [], []
+    competitors = competitions[0].get("competitors") or []
+
+    hole_scores: list[dict] = []
+    par_votes: dict[int, dict[int, int]] = {}
+    for comp in competitors:
+        # In the scoreboard feed the athlete id is the competitor's top-level id
+        # (athlete carries only the name); fall back to athlete.id for safety.
+        pid = _int_or_none(comp.get("id")) or _int_or_none((comp.get("athlete") or {}).get("id"))
+        if pid is None:
+            continue
+        for rnd in comp.get("linescores") or []:
+            round_num = _int_or_none(rnd.get("period"))
+            if round_num is None:
+                continue
+            for hole in rnd.get("linescores") or []:
+                hole_num = _int_or_none(hole.get("period"))
+                strokes = _int_or_none(hole.get("value"))
+                # a real hole is 1..15 strokes; 0/None marks an unplayed hole
+                if hole_num is None or strokes is None or not (1 <= strokes <= 15):
+                    continue
+                to_par = parse_to_par((hole.get("scoreType") or {}).get("displayValue"))
+                if to_par is not None:
+                    par = strokes - to_par
+                    par_votes.setdefault(hole_num, {})[par] = par_votes.setdefault(hole_num, {}).get(par, 0) + 1
+                hole_scores.append({
+                    "event_id": event_id, "player_id": pid, "round_num": round_num,
+                    "hole_num": hole_num, "strokes": strokes, "to_par": to_par,
+                })
+
+    event_holes = [
+        {"event_id": event_id, "hole_num": hole_num,
+         "par": max(votes, key=votes.get) if votes else None}
+        for hole_num, votes in sorted(par_votes.items())
+    ]
+    return event_holes, hole_scores
