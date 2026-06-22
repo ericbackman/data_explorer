@@ -36,6 +36,7 @@ Thumbs.db
 # Per-domain DB build artifacts — db + raw API cache (regenerable; never commit)
 nba/data/
 pga/data/
+nfl/data/
 
 # Generated dashboard artifacts (regenerable from db_dashboard.py)
 db_dashboard.html
