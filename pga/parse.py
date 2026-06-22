@@ -303,3 +303,36 @@ def parse_event_holes(event: dict) -> tuple[list[dict], list[dict]]:
         for hole_num, votes in sorted(par_votes.items())
     ]
     return event_holes, hole_scores
+
+
+def _stripped(value):
+    return value.strip() if isinstance(value, str) else value
+
+
+def parse_athlete(raw: dict) -> dict | None:
+    """Normalize one ESPN athlete payload into a player_bios row. ESPN pads some
+    string fields with trailing spaces (e.g. state), so everything is stripped."""
+    ath = raw.get("athlete") or raw
+    pid = _int_or_none(ath.get("id"))
+    if pid is None:
+        return None
+    birth = ath.get("birthPlace") or {}
+    hand = ath.get("hand") or {}
+    college = ath.get("college") or {}
+    return {
+        "player_id": pid,
+        "full_name": _stripped(ath.get("fullName")),
+        "dob": _stripped(ath.get("displayDOB")),
+        "age_at_fetch": _int_or_none(ath.get("age")),
+        "birth_city": _stripped(birth.get("city")),
+        "birth_state": _stripped(birth.get("state")),
+        "birth_country": _stripped(birth.get("country")),
+        "citizenship": _stripped(ath.get("citizenship")),
+        "turned_pro": _int_or_none(ath.get("turnedPro")),
+        "debut_year": _int_or_none(ath.get("debutYear")),
+        "hand": _stripped(hand.get("displayValue")),
+        "college": _stripped(college.get("name")),
+        "height": _stripped(ath.get("displayHeight")),
+        "weight": _stripped(ath.get("displayWeight")),
+        "gender": _stripped(ath.get("gender")),
+    }

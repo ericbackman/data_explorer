@@ -5,10 +5,27 @@ import pytest
 from pga.parse import (
     UnsupportedEventError,
     is_major,
+    parse_athlete,
     parse_leaderboard,
     parse_position,
     parse_to_par,
 )
+
+
+def test_parse_athlete():
+    raw = {"athlete": {
+        "id": "9478", "fullName": "Scottie Scheffler", "age": 29,
+        "displayDOB": "6/21/1996", "turnedPro": 2018, "gender": "Male",
+        "birthPlace": {"city": "Dallas", "state": "Texas        ", "country": "USA"},
+        "citizenship": "USA", "hand": {"displayValue": "Right"},
+        "college": {"name": "Texas"}, "displayHeight": "6' 3\"", "displayWeight": "200 lbs",
+    }}
+    bio = parse_athlete(raw)
+    assert bio["player_id"] == 9478
+    assert bio["turned_pro"] == 2018
+    assert bio["birth_state"] == "Texas"  # trailing spaces stripped
+    assert bio["hand"] == "Right" and bio["college"] == "Texas"
+    assert parse_athlete({"athlete": {"fullName": "No Id"}}) is None
 
 
 def test_parse_to_par():

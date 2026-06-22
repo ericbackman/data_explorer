@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 _SITE = "https://site.api.espn.com/apis/site/v2/sports/golf"
 _SCOREBOARD = f"{_SITE}/pga/scoreboard"
 _LEADERBOARD = f"{_SITE}/leaderboard"
+_ATHLETE = "https://site.api.espn.com/apis/common/v3/sports/golf/pga/athletes"
 
 # ESPN's golf data only returns events from 2005 onward (verified empirically).
 EARLIEST_SEASON = 2005
@@ -51,8 +52,8 @@ class EspnClient:
         self._session.headers.update(
             {"User-Agent": "pga-data/0.1 (personal research; contact via github.com/ericbackman)"}
         )
-        (self.cache_dir / "schedule").mkdir(parents=True, exist_ok=True)
-        (self.cache_dir / "events").mkdir(parents=True, exist_ok=True)
+        for sub in ("schedule", "events", "athletes"):
+            (self.cache_dir / sub).mkdir(parents=True, exist_ok=True)
 
     # -- public API ---------------------------------------------------------
 
@@ -72,6 +73,11 @@ class EspnClient:
         """Return one event's full leaderboard JSON (cached)."""
         cache_path = self.cache_dir / "events" / f"{event_id}.json"
         return self._cached_get(cache_path, _LEADERBOARD, params={"event": event_id})
+
+    def athlete(self, athlete_id: str | int) -> dict:
+        """Return one athlete's bio JSON (cached). Note the common/v3 base URL."""
+        cache_path = self.cache_dir / "athletes" / f"{athlete_id}.json"
+        return self._cached_get(cache_path, f"{_ATHLETE}/{athlete_id}", params={})
 
     # -- internals ----------------------------------------------------------
 
