@@ -91,6 +91,27 @@ CREATE TABLE IF NOT EXISTS player_hole_scores (
     PRIMARY KEY (event_id, player_id, round_num, hole_num)
 );
 
+-- Player biographical dimension (ESPN athlete endpoint). Kept separate from
+-- `players` so the per-event loader (which only knows id/name/country) can't
+-- clobber it. age_at_fetch is a snapshot; turned_pro/dob are stable.
+CREATE TABLE IF NOT EXISTS player_bios (
+    player_id     INTEGER PRIMARY KEY,
+    full_name     TEXT,
+    dob           TEXT,
+    age_at_fetch  INTEGER,
+    birth_city    TEXT,
+    birth_state   TEXT,
+    birth_country TEXT,
+    citizenship   TEXT,
+    turned_pro    INTEGER,
+    debut_year    INTEGER,
+    hand          TEXT,
+    college       TEXT,
+    height        TEXT,
+    weight        TEXT,
+    gender        TEXT
+);
+
 -- Tier 2: deep major history (1960-2004), winner + 36/54-hole leaders only.
 -- Sourced from Wikipedia, lower granularity than Tier 1 (no full field).
 CREATE TABLE IF NOT EXISTS major_history (
@@ -164,6 +185,12 @@ def load_event_holes(conn: sqlite3.Connection, event_holes: list[dict],
     """Idempotently upsert one event's hole-level rows."""
     _insert(conn, "event_holes", event_holes)
     _insert(conn, "player_hole_scores", hole_scores)
+    conn.commit()
+
+
+def load_bios(conn: sqlite3.Connection, bios: list[dict]) -> None:
+    """Idempotently upsert player biographical rows."""
+    _insert(conn, "player_bios", bios)
     conn.commit()
 
 
