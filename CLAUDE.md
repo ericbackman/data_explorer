@@ -27,6 +27,20 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   `sg` (strokes-gained), `tier2` (deep majors). See `pga/README.md`.
 - **NBA (`nba/`)** — box scores 1946-present (nba_api). See `nba/README.md`.
 - **NFL (`nfl/`)** — nflverse box scores + play-by-play, 1999-present.
+- **Betting (`betting/`)** — folded in from the `betting_stuff` repo 2026-07-01.
+  Playwright FanDuel automation (login/odds/bet with confirm gate — see
+  `betting/CLAUDE.md` for safety rules) + personal bet-history exports in
+  `betting/raw/` (**gitignored: personal account data, local-only, NEVER
+  commit**; second disk copy in `Github\_archive\betting_stuff\`). Creds in
+  `betting/.eric.env` (gitignored).
+- **Soccer betting UI (`sharp-edge/`)** — folded in 2026-07-01. Static no-vig/EV
+  World Cup dashboard (vanilla JS, no build step). Own conventions in
+  `sharp-edge/CLAUDE.md`; `lib/draw-signal.js` `shouldTakeDrawLive()` is Eric's
+  to write.
+- **Polymarket (`polymarket/`)** — folded in from `polymarket-diver` 2026-07-01.
+  Read-only python clients (Gamma/CLOB/Data APIs) + rate limiter; used by the
+  Iran-strikes insider-trading notebook. `from polymarket import GammaClient`
+  works from repo root. See `polymarket/README.md`.
 
 ## Conventions
 
