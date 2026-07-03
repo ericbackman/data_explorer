@@ -73,3 +73,7 @@ q3_backtest_bets.csv
 
 # Generated charts (regenerable)
 *.png
+
+# trades — generated flowcharts/boards (regenerable via `python -m trades`)
+trades/*.svg
+trades/*.html

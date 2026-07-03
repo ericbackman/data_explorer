@@ -41,6 +41,13 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   Read-only python clients (Gamma/CLOB/Data APIs) + rate limiter; used by the
   Iran-strikes insider-trading notebook. `from polymarket import GammaClient`
   works from repo root. See `polymarket/README.md`.
+- **Trades (`trades/`)** — pure-logic (no DB) tool that turns an NBA draft-pick
+  trade (protections, rolling conditions, swaps) into flowcharts / a slot map /
+  an ownership board. Pipeline: `model` → `expand`/`board` → `render` (Mermaid,
+  HTML, SVG). Real sourced deals in `real_2026.py`; `python -m trades --list`.
+  Best view for a protected pick is the **slot strip** (`board.slot_strips` →
+  `render.slot_strip_html`): every landing slot 1-30 colored by outcome. See
+  `trades/README.md`.
 
 ## Conventions
 
