@@ -55,6 +55,7 @@ class SlotStrip:
     to: str
     fallback: str
     cells: list[SlotCell]
+    rolls_to: int | None = None   # next scheduled year if a non-conveyance rolls
 
     @property
     def convey_slots(self) -> list[int]:
@@ -86,7 +87,7 @@ def slot_strips(pp: ProtectedPick) -> list[SlotStrip]:
             else:
                 cells.append(SlotCell(slot, "convey", pp.to, f"→ {pp.to}"))
         strips.append(SlotStrip(year, pp.origin, pp.round, prot.label(),
-                                pp.to, pp.fallback, cells))
+                                pp.to, pp.fallback, cells, rolls_to=next_year))
     return strips
 
 

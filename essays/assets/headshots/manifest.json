@@ -1,0 +1,34 @@
+{
+  "Tiger Woods": {
+    "file": "tiger_woods.jpg",
+    "commons_title": "File:20080609 Tiger Woods (cropped).jpg",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/20080609_Tiger_Woods_%28cropped%29.jpg/250px-20080609_Tiger_Woods_%28cropped%29.jpg",
+    "license": "CC BY 2.0",
+    "artist": "flickr user Jim Epler",
+    "cleared": true
+  },
+  "Rory McIlroy": {
+    "file": "rory_mcilroy.jpg",
+    "commons_title": "File:Rory McIlroy 20180927.jpg",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Rory_McIlroy_20180927.jpg/250px-Rory_McIlroy_20180927.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "EEJB",
+    "cleared": true
+  },
+  "Scottie Scheffler": {
+    "file": "scottie_scheffler.jpg",
+    "commons_title": "File:DSS at the Paris Olympics (53925563975).jpg",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/DSS_at_the_Paris_Olympics_%2853925563975%29.jpg/250px-DSS_at_the_Paris_Olympics_%2853925563975%29.jpg",
+    "license": "Public domain",
+    "artist": "Diplomatic Security Service from Washington, D.C., United States of America",
+    "cleared": true
+  },
+  "Lee Westwood": {
+    "file": "lee_westwood.jpg",
+    "commons_title": "File:Alstom Open de France 2015 01.jpg",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Alstom_Open_de_France_2015_01.jpg/250px-Alstom_Open_de_France_2015_01.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "Punishar",
+    "cleared": true
+  }
+}

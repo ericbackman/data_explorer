@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import math
 import sqlite3
 from pathlib import Path
 
@@ -77,22 +78,65 @@ def player_form(conn, name: str, last_n: int = 12) -> list[sqlite3.Row]:
     ).fetchall()
 
 
-def closers(conn, through: int = 3, min_leads: int = 4, majors_only: bool = False) -> list[dict]:
-    """Per-player: how often they won when (co-)leading after `through` rounds."""
-    where = "num_rounds >= 4" + (" AND is_major = 1" if majors_only else "")
+def _lead_counts(
+    conn, through: int, majors_only: bool,
+    exclude_staggered: bool = True, min_field: int = 30,
+) -> tuple[dict[int, int], dict[int, int]]:
+    """(led, won) per player: how many times each (co-)led after `through` rounds,
+    and how many of those they went on to win.
+
+    Events excluded so the record isn't silently polluted:
+      * events with an unknown winner (can't attribute a conversion),
+      * staggered-start finales (Tour Championship since 2019), whose raw-stroke
+        "leader" is a scoring artifact rather than a real 54-hole lead, and
+      * unofficial / limited-field exhibitions below `min_field` players (e.g. the
+        18-player Hero World Challenge) -- leading an 18-man silly-season event is
+        not a tour front-runner situation. Events with unknown field size are kept.
+    """
+    # num_rounds = 4 keeps standard 72-hole events; a "54-hole leader" only means
+    # "entering the final round" at 72 holes (excludes the 90-hole Bob Hope, etc.).
+    where = "num_rounds = 4" + (" AND is_major = 1" if majors_only else "")
     events = conn.execute(
-        f"SELECT event_id, winner_player_id FROM tournaments WHERE {where}"
+        f"SELECT event_id, winner_player_id, name, calendar_year, field_size "
+        f"FROM tournaments WHERE {where}"
     ).fetchall()
 
     led: dict[int, int] = {}
     won: dict[int, int] = {}
     for ev in events:
-        leaders = leaders_after_round(conn, ev["event_id"], through)
-        for pid in leaders:
+        if ev["winner_player_id"] is None:
+            continue
+        if ev["field_size"] is not None and ev["field_size"] < min_field:
+            continue
+        if exclude_staggered and _is_staggered_start(ev["name"], ev["calendar_year"]):
+            continue
+        for pid in leaders_after_round(conn, ev["event_id"], through):
             led[pid] = led.get(pid, 0) + 1
             if pid == ev["winner_player_id"]:
                 won[pid] = won.get(pid, 0) + 1
+    return led, won
 
+
+def _wilson_lower_bound(wins: int, n: int, z: float = 1.96) -> float:
+    """Lower bound of the Wilson score interval for a conversion rate (0-1).
+
+    This is the volume-accountability knob: a 5-for-5 record has a wide interval
+    and thus a low floor, so it cannot outrank a proven high-volume closer.
+    z=1.96 -> 95% confidence.
+    """
+    if n == 0:
+        return 0.0
+    phat = wins / n
+    denom = 1 + z * z / n
+    centre = phat + z * z / (2 * n)
+    margin = z * math.sqrt((phat * (1 - phat) + z * z / (4 * n)) / n)
+    return (centre - margin) / denom
+
+
+def closers(conn, through: int = 3, min_leads: int = 4, majors_only: bool = False) -> list[dict]:
+    """Per-player: how often they won when (co-)leading after `through` rounds.
+    Sorted by raw conversion rate; see `closer_rankings` for the volume-aware sort."""
+    led, won = _lead_counts(conn, through, majors_only)
     names = {r["player_id"]: r["name"] for r in conn.execute("SELECT player_id, name FROM players")}
     rows = []
     for pid, n_led in led.items():
@@ -109,6 +153,56 @@ def closers(conn, through: int = 3, min_leads: int = 4, majors_only: bool = Fals
     return rows
 
 
+def closer_rankings(
+    conn, through: int = 3, min_leads: int = 5, majors_only: bool = False
+) -> dict:
+    """Volume-accountable 54-hole closer records -- the video's data stage.
+
+    Policy (Eric, 2026-07): co-leaders included; >= `min_leads` appearances to be
+    ranked; ranked by the Wilson lower bound so small samples can't top the chart;
+    `above_exp` = conversions above what an average front-runner (the field base
+    rate) would manage from the same number of leads -- the volume-rewarding stat.
+
+    Returns {field_pct, total_leads, rows} with rows sorted best-closer first.
+    """
+    led, won = _lead_counts(conn, through, majors_only)
+    total_led = sum(led.values())
+    total_won = sum(won.values())
+    field_rate = total_won / total_led if total_led else 0.0
+
+    names = {r["player_id"]: r["name"] for r in conn.execute("SELECT player_id, name FROM players")}
+    rows = []
+    for pid, n_led in led.items():
+        if n_led < min_leads:
+            continue
+        n_won = won.get(pid, 0)
+        rows.append({
+            "player": names.get(pid, str(pid)),
+            "led": n_led,
+            "won": n_won,
+            "convert_pct": round(n_won / n_led * 100, 1),
+            "wilson_pct": round(_wilson_lower_bound(n_won, n_led) * 100, 1),
+            "expected": round(field_rate * n_led, 1),
+            "above_exp": round(n_won - field_rate * n_led, 1),
+        })
+    rows.sort(key=lambda r: -r["wilson_pct"])
+    return {
+        "field_pct": round(field_rate * 100, 1),
+        "total_leads": total_led,
+        "rows": rows,
+    }
+
+
+def worst_closers(rows: list[dict]) -> list[dict]:
+    """Order closer rows worst-first for the "who folds" segment.
+
+    The Wilson lower bound saturates at 0 for any winless player, so it can't
+    separate 0-for-7 from 0-for-5. Rank instead by conversions above expected
+    (most negative first), so the most-failed lead tops the list.
+    """
+    return sorted(rows, key=lambda r: (r["above_exp"], -r["led"]))
+
+
 # Events using a staggered / starting-strokes format, where a 54-hole "deficit"
 # is a scoring artifact, not a real comeback (FedEx Cup finale since 2019).
 _STAGGERED_START_EVENTS = ("tour championship",)
@@ -120,10 +214,13 @@ def _is_staggered_start(name: str, year: int | None) -> bool:
 
 
 def _leader_total(conn, event_id: int, through: int) -> int | None:
+    # made_cut=1 + strokes>0 exclude phantom post-cut rounds (see analysis._LEADERS_SQL).
     return conn.execute(
-        "SELECT MIN(s) FROM (SELECT SUM(strokes) s, COUNT(*) n FROM player_rounds "
-        "WHERE event_id=? AND round_num<=? AND is_playoff=0 AND strokes IS NOT NULL "
-        "GROUP BY player_id HAVING n>=?)",
+        "SELECT MIN(s) FROM (SELECT SUM(pr.strokes) s, COUNT(*) n FROM player_rounds pr "
+        "JOIN player_results r ON r.event_id=pr.event_id AND r.player_id=pr.player_id "
+        "WHERE pr.event_id=? AND pr.round_num<=? AND pr.is_playoff=0 "
+        "AND pr.strokes IS NOT NULL AND pr.strokes>0 AND r.made_cut=1 "
+        "GROUP BY pr.player_id HAVING n>=?)",
         (event_id, through, through),
     ).fetchone()[0]
 

@@ -27,6 +27,10 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   `sg` (strokes-gained), `tier2` (deep majors). See `pga/README.md`.
 - **NBA (`nba/`)** — box scores 1946-present (nba_api). See `nba/README.md`.
 - **NFL (`nfl/`)** — nflverse box scores + play-by-play, 1999-present.
+- **NHL (`nhl/`)** — free NHL API (`api-web.nhle.com`). Game index 1997-present;
+  skater/goalie box scores (RTSS era 1997+); resumable `--team-id` backfill.
+  `playoff_series` is derived (round + Game-7 + blown-lead flags). Built for the
+  Leafs "Plan the Parade" video essay. See `nhl/README.md`.
 - **Betting (`betting/`)** — folded in from the `betting_stuff` repo 2026-07-01.
   Playwright FanDuel automation (login/odds/bet with confirm gate — see
   `betting/CLAUDE.md` for safety rules) + personal bet-history exports in

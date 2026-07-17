@@ -361,60 +361,93 @@ def _ownership_card(team, assets, x, y, w, head_h, row_h) -> str:
 # ---------------------------------------------------------------------------
 # Slot strip: one pick across all 30 landing slots
 # ---------------------------------------------------------------------------
+# Mobile-first "trade card": ~380px wide so it reads like a phone graphic.
 _STRIP_CSS = """<style>
-.ss { font-family: 'Segoe UI', system-ui, sans-serif; color: #202430; }
-.ss-title { font-size: 17px; font-weight: 700; margin: 2px 0 2px; }
-.ss-year { font-size: 13px; font-weight: 700; margin: 16px 0 3px; }
-.ss-summary { font-size: 12px; color: #5b6472; margin-bottom: 7px; }
-.ss-grid { display: grid; grid-template-columns: repeat(15, 1fr); gap: 4px; }
-.ss-cell { border-radius: 6px; padding: 5px 2px 6px; text-align: center;
-  min-height: 42px; box-sizing: border-box; }
-.ss-slot { font-size: 13px; font-weight: 800; line-height: 1.1; }
-.ss-lab { font-size: 8.5px; font-weight: 700; opacity: .92; letter-spacing: .01em; }
-.ss-protected { background: #fdecc8; color: #7a5a12; }
-.ss-legend { font-size: 11.5px; color: #5b6472; margin-top: 12px; }
-.ss-legend b { color: #202430; }
+.tc { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a2233;
+  max-width: 380px; margin: 0 auto; background: #fff; border: 1px solid #e6e8ec;
+  border-radius: 16px; padding: 15px 15px 16px; box-sizing: border-box; }
+.tc-title { font-size: 16px; font-weight: 800; line-height: 1.2; }
+.tc-sub { font-size: 12px; color: #5b6472; margin-top: 2px; }
+.tc-year { font-size: 11px; font-weight: 800; color: #5b6472; margin: 15px 0 6px;
+  text-transform: uppercase; letter-spacing: .06em; }
+.tc-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.tc-cell { position: relative; border-radius: 7px; padding: 5px 1px 5px;
+  text-align: center; min-height: 40px; box-sizing: border-box; }
+.tc-slot { font-size: 14px; font-weight: 800; line-height: 1; }
+.tc-ab { font-size: 8px; font-weight: 800; margin-top: 2px; letter-spacing: .02em; opacity: .95; }
+.tc-keep::after { content: ''; position: absolute; inset: 0; border-radius: 7px;
+  pointer-events: none;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,.30) 0 4px, rgba(255,255,255,0) 4px 8px); }
+.tc-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 11px; }
+.tc-leg { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: #3a4150; }
+.tc-sw { width: 14px; height: 14px; border-radius: 4px; flex: none; position: relative; }
+.tc-sw.k::after { content: ''; position: absolute; inset: 0; border-radius: 4px;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,.45) 0 3px, rgba(255,255,255,0) 3px 6px); }
+.tc-note { margin-top: 11px; background: #f5f6f8; border-radius: 11px;
+  padding: 9px 11px; font-size: 11.5px; line-height: 1.4; color: #3a4150; }
+.tc-note b { color: #1a2233; }
+.tc-arrow { color: #98a0ab; }
 </style>"""
 
 
-def slot_strip_html(strips: list, title: str) -> str:
-    """Render slot outcome strips: each landing slot 1..30 colored by outcome.
+def slot_strip_html(strips: list, title: str, subtitle: str = "") -> str:
+    """Render a mobile trade card: each landing slot 1..30 colored by team.
 
-    Convey slots take the receiving team's color; protected slots are amber.
+    Convey slots take the receiving team's color; slots that DON'T convey take
+    the *origin* team's color (they keep it), differentiated by a diagonal
+    stripe. A footer note names what a non-conveyance leads to.
     """
     from .teams import color
 
-    parts = [_STRIP_CSS, '<div class="ss">', f'<div class="ss-title">{html.escape(title)}</div>']
+    parts = [_STRIP_CSS, '<div class="tc">', f'<div class="tc-title">{html.escape(title)}</div>']
+    if subtitle:
+        parts.append(f'<div class="tc-sub">{html.escape(subtitle)}</div>')
+
+    multi = len(strips) > 1
     for s in strips:
-        conv = _fmt_run(s.convey_slots)
-        prot = _fmt_run(s.protected_slots)
-        tail = f"rolls to next year" if any(c.kind == "roll" for c in s.cells) else html.escape(s.fallback)
-        parts.append(
-            f'<div class="ss-year">{s.year} · {html.escape(s.origin)} R{s.round} '
-            f'({html.escape(s.protection_label)})</div>'
-            f'<div class="ss-summary">Conveys {conv} → <b>{html.escape(s.to)}</b>'
-            f' &nbsp;·&nbsp; protected {prot} → {tail}</div>'
-        )
+        to_bg, to_fg = color(s.to)
+        keep_bg, keep_fg = color(s.origin)
+        if multi:
+            parts.append(f'<div class="tc-year">If it lands in {s.year}…</div>')
+
         cells = []
         for c in s.cells:
             if c.kind == "convey":
-                bg, fg = color(c.controller)
-                cells.append(
-                    f'<div class="ss-cell" style="background:{bg};color:{fg}">'
-                    f'<div class="ss-slot">{c.slot}</div><div class="ss-lab">{html.escape(c.label)}</div></div>'
-                )
+                cells.append(_strip_cell(c.slot, s.to, to_bg, to_fg, keep=False))
             else:
-                cells.append(
-                    f'<div class="ss-cell ss-protected">'
-                    f'<div class="ss-slot">{c.slot}</div><div class="ss-lab">{html.escape(c.label)}</div></div>'
-                )
-        parts.append('<div class="ss-grid">' + "".join(cells) + "</div>")
-    parts.append(
-        '<div class="ss-legend">Each cell is a <b>landing slot</b> (1–30). '
-        'Colored = the pick <b>conveys</b> to that team. '
-        'Amber = <b>protected</b> (stays / rolls / becomes the fallback).</div></div>'
-    )
+                cells.append(_strip_cell(c.slot, s.origin, keep_bg, keep_fg, keep=True))
+        parts.append('<div class="tc-grid">' + "".join(cells) + "</div>")
+
+        conv, prot = _fmt_run(s.convey_slots), _fmt_run(s.protected_slots)
+        parts.append(
+            '<div class="tc-legend">'
+            f'<div class="tc-leg"><span class="tc-sw" style="background:{to_bg}"></span>'
+            f'<span><b>{conv}</b> → conveys to {html.escape(s.to)}</span></div>'
+            f'<div class="tc-leg"><span class="tc-sw k" style="background:{keep_bg}"></span>'
+            f'<span><b>{prot}</b> → {html.escape(s.origin)} keeps it</span></div></div>'
+        )
+        parts.append(f'<div class="tc-note">{_strip_note(s, multi)}</div>')
+
+    parts.append("</div>")
     return "\n".join(parts)
+
+
+def _strip_cell(slot: int, ab: str, bg: str, fg: str, keep: bool) -> str:
+    kc = " tc-keep" if keep else ""
+    return (f'<div class="tc-cell{kc}" style="background:{bg};color:{fg}">'
+            f'<div class="tc-slot">{slot}</div><div class="tc-ab">{html.escape(ab)}</div></div>')
+
+
+def _strip_note(s, multi: bool) -> str:
+    """The 'if it doesn't convey' consequence — the different-pick outcome."""
+    prot = _fmt_run(s.protected_slots)
+    rolls = any(c.kind == "roll" for c in s.cells)
+    if rolls:
+        nxt = s.rolls_to if s.rolls_to is not None else s.year + 1
+        return (f'<b>Doesn\'t convey</b> (picks {prot}): {html.escape(s.origin)} keeps it '
+                f'and the obligation <b>rolls to {nxt}</b> ↓')
+    return (f'<b>Doesn\'t convey</b> (picks {prot}): {html.escape(s.origin)} keeps its pick — '
+            f'instead, {html.escape(s.fallback)}.')
 
 
 def _fmt_run(slots: list) -> str:

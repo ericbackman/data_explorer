@@ -77,3 +77,12 @@ q3_backtest_bets.csv
 # trades — generated flowcharts/boards (regenerable via `python -m trades`)
 trades/*.svg
 trades/*.html
+
+# essays — generated narration / voice / video media (regenerable via the tts_*
+# stages + `python -m essays.compose`; large personal-render artifacts, never commit)
+essays/assets/*.mp3
+essays/assets/*.wav
+essays/assets/*.mp4
+essays/assets/voice_samples/
+essays/assets/narration_parts*/
+nhl/data/
