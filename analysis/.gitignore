@@ -1,0 +1,21 @@
+# uv-managed virtual environment (rebuild with `uv sync`)
+.venv/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# marimo
+__marimo__/
+
+# Local server secrets — notebook access tokens
+.marimo_token
+.jupyter_token
+
+# Generated analysis artifacts (regenerable from notebooks)
+outputs/
+
+# NOTE: uv.lock is intentionally NOT ignored — commit it for reproducibility.

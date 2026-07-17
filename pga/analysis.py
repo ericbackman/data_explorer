@@ -22,12 +22,16 @@ DEFAULT_DB = _ROOT / "data" / "pga.db"
 
 _LEADERS_SQL = """
 WITH cum AS (
-    SELECT player_id,
-           SUM(strokes)  AS strokes_through,
-           COUNT(*)      AS rounds_done
-    FROM player_rounds
-    WHERE event_id = ? AND round_num <= ? AND is_playoff = 0 AND strokes IS NOT NULL
-    GROUP BY player_id
+    SELECT pr.player_id,
+           SUM(pr.strokes)  AS strokes_through,
+           COUNT(*)         AS rounds_done
+    FROM player_rounds pr
+    JOIN player_results r
+      ON r.event_id = pr.event_id AND r.player_id = pr.player_id
+    WHERE pr.event_id = ? AND pr.round_num <= ? AND pr.is_playoff = 0
+      AND pr.strokes IS NOT NULL AND pr.strokes > 0
+      AND r.made_cut = 1                      -- exclude phantom post-cut rounds
+    GROUP BY pr.player_id
     HAVING COUNT(*) >= ?
 )
 SELECT player_id, strokes_through

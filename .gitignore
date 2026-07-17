@@ -37,6 +37,17 @@ Thumbs.db
 nba/data/
 pga/data/
 nfl/data/
+osrs/data/
+
+# Personal betting-account exports (folded in from betting_stuff 2026-07-01) —
+# NOT regenerable, but PERSONAL ACCOUNT DATA: keep local only, NEVER commit.
+betting/raw/
+bet365_*.json
+fanduel_*.json
+
+# Betting automation runtime artifacts (browser sessions/screenshots stay local)
+betting/.browser_data*/
+betting/screenshots/
 
 # Generated dashboard artifacts (regenerable from db_dashboard.py)
 db_dashboard.html
@@ -62,3 +73,16 @@ q3_backtest_bets.csv
 
 # Generated charts (regenerable)
 *.png
+
+# trades — generated flowcharts/boards (regenerable via `python -m trades`)
+trades/*.svg
+trades/*.html
+
+# essays — generated narration / voice / video media (regenerable via the tts_*
+# stages + `python -m essays.compose`; large personal-render artifacts, never commit)
+essays/assets/*.mp3
+essays/assets/*.wav
+essays/assets/*.mp4
+essays/assets/voice_samples/
+essays/assets/narration_parts*/
+nhl/data/

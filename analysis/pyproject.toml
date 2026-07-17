@@ -1,0 +1,18 @@
+[project]
+name = "sports-analysis"
+version = "0.1.0"
+description = "Interactive analysis environment over the local sports/betting SQLite DBs, using DuckDB as a read-only query layer."
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=1.0",
+    "pandas>=2.2",
+    "polars>=1.0",
+    "pyarrow>=16",
+    "matplotlib>=3.8",
+    "jupyterlab>=4.0",
+    "ipykernel>=6.29",
+    "marimo>=0.9",
+]
+
+[tool.uv]
+# Add dev-only tools here later, e.g. ruff, pytest.
