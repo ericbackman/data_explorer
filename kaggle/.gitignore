@@ -1,0 +1,12 @@
+# Kaggle setup — never commit data, credentials, or generated artifacts.
+_staging/                  # hardlinked DBs staged for upload (regenerated each push)
+*.db                       # source databases live under <sport>/data/, never here
+*.sqlite
+*.sqlite3
+*.duckdb
+*.duckdb.tmp
+.fingerprints.json         # change-detection sidecar (see fingerprint())
+dataset-metadata.json      # generated at push time from your Kaggle username
+kaggle.json                # API token — belongs in ~/.kaggle/, never in a repo
+__pycache__/
+.pytest_cache/
