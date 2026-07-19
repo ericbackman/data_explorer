@@ -60,6 +60,23 @@ CREATE TABLE IF NOT EXISTS player_game (
     PRIMARY KEY (game_id, player_id)
 );
 
+CREATE TABLE IF NOT EXISTS drafts (
+    season INTEGER NOT NULL,
+    overall_pick INTEGER NOT NULL,
+    round_number INTEGER,
+    round_pick INTEGER,
+    person_id INTEGER,
+    player_name TEXT,
+    team_id INTEGER,
+    team_city TEXT,
+    team_name TEXT,
+    team_abbreviation TEXT,
+    organization TEXT,
+    organization_type TEXT,
+    draft_type TEXT,
+    PRIMARY KEY (season, overall_pick)
+);
+
 CREATE INDEX IF NOT EXISTS idx_pg_player  ON player_game(player_id);
 CREATE INDEX IF NOT EXISTS idx_pg_season  ON player_game(season);
 CREATE INDEX IF NOT EXISTS idx_pg_date    ON player_game(game_date);
@@ -67,6 +84,19 @@ CREATE INDEX IF NOT EXISTS idx_tg_team    ON team_game(team_id);
 CREATE INDEX IF NOT EXISTS idx_tg_season  ON team_game(season);
 CREATE INDEX IF NOT EXISTS idx_games_season ON games(season);
 CREATE INDEX IF NOT EXISTS idx_games_date   ON games(game_date);
+CREATE INDEX IF NOT EXISTS idx_drafts_season ON drafts(season);
+
+CREATE TABLE IF NOT EXISTS player_awards (
+    person_id INTEGER NOT NULL,
+    season TEXT,                 -- '1999-00'; NULL for career/one-off honors
+    description TEXT NOT NULL,    -- 'NBA All-Star', 'All-NBA', 'NBA Champion', ...
+    team_number INTEGER          -- All-NBA / All-Defensive team (1/2/3), else NULL
+);
+CREATE INDEX IF NOT EXISTS idx_awards_person ON player_awards(person_id);
+
+-- One row per person once their awards have been fetched, so a resumable scrape
+-- skips players it already checked even when they earned zero awards.
+CREATE TABLE IF NOT EXISTS awards_fetched (person_id INTEGER PRIMARY KEY);
 """
 
 # Exact column order each fact table is written in (a parse row may carry extra
@@ -82,6 +112,12 @@ GAME_COLS = [
     "game_id", "season", "season_type", "game_date",
     "home_team_id", "away_team_id", "home_pts", "away_pts",
 ]
+DRAFT_COLS = [
+    "season", "overall_pick", "round_number", "round_pick", "person_id",
+    "player_name", "team_id", "team_city", "team_name", "team_abbreviation",
+    "organization", "organization_type", "draft_type",
+]
+AWARD_COLS = ["person_id", "season", "description", "team_number"]
 
 
 def connect(db_path) -> sqlite3.Connection:
@@ -124,6 +160,32 @@ def load_team_game(conn: sqlite3.Connection, rows: list[dict]) -> int:
 
 def load_games(conn: sqlite3.Connection, rows: list[dict]) -> int:
     return _upsert(conn, "games", GAME_COLS, rows)
+
+
+def load_drafts(conn: sqlite3.Connection, rows: list[dict]) -> int:
+    """Upsert draft picks keyed on (season, overall_pick). Re-running is safe;
+    a corrected name/team on a slot overwrites the old row rather than duplicating.
+    """
+    return _upsert(conn, "drafts", DRAFT_COLS, rows)
+
+
+def load_player_awards(conn: sqlite3.Connection, person_id: int, rows: list[dict]) -> int:
+    """Replace one player's award rows (delete-then-insert = idempotent per player),
+    and mark him fetched so a resumable scrape skips him next time even with 0 awards."""
+    conn.execute("DELETE FROM player_awards WHERE person_id = ?", (person_id,))
+    n = _upsert(conn, "player_awards", AWARD_COLS, rows)
+    conn.execute("INSERT OR REPLACE INTO awards_fetched (person_id) VALUES (?)", (person_id,))
+    return n
+
+
+def loaded_award_persons(conn: sqlite3.Connection) -> set[int]:
+    """person_ids whose awards have already been fetched (earned some or none)."""
+    return {r[0] for r in conn.execute("SELECT person_id FROM awards_fetched")}
+
+
+def loaded_draft_seasons(conn: sqlite3.Connection) -> set[int]:
+    """Draft years that already have at least one pick row."""
+    return {r[0] for r in conn.execute("SELECT DISTINCT season FROM drafts")}
 
 
 def loaded_seasons(conn: sqlite3.Connection) -> set[str]:
