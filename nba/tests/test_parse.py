@@ -18,6 +18,26 @@ def test_current_season_before_october_belongs_to_prior_year():
     assert parse.current_season_str(datetime.date(2025, 11, 1)) == "2025-26"
 
 
+def test_parse_player_awards_normalizes_and_coerces_team_number():
+    df = pd.DataFrame([
+        {"DESCRIPTION": "NBA All-Star", "SEASON": "2002-03", "ALL_NBA_TEAM_NUMBER": ""},
+        {"DESCRIPTION": "All-NBA", "SEASON": "2002-03", "ALL_NBA_TEAM_NUMBER": "1"},
+        {"DESCRIPTION": "NBA Champion", "SEASON": "2001-02", "ALL_NBA_TEAM_NUMBER": None},
+        {"DESCRIPTION": "  ", "SEASON": "2000-01", "ALL_NBA_TEAM_NUMBER": ""},  # blank -> skipped
+    ])
+    rows = parse.parse_player_awards(df, person_id=977)
+    assert len(rows) == 3                                  # the blank-description row is dropped
+    assert all(r["person_id"] == 977 for r in rows)
+    allnba = next(r for r in rows if r["description"] == "All-NBA")
+    assert allnba["team_number"] == 1 and allnba["season"] == "2002-03"
+    star = next(r for r in rows if r["description"] == "NBA All-Star")
+    assert star["team_number"] is None                     # blank team number -> None
+
+
+def test_parse_player_awards_empty_frame_is_empty():
+    assert parse.parse_player_awards(pd.DataFrame(), person_id=1) == []
+
+
 def test_parse_player_log_normalizes_and_nulls_blanks():
     df = pd.DataFrame([{
         "GAME_ID": "21500001", "PLAYER_ID": 977, "PLAYER_NAME": "Kobe Bryant",

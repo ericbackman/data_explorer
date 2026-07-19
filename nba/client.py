@@ -21,7 +21,9 @@ import time
 
 import pandas as pd
 import requests
-from nba_api.stats.endpoints import leaguegamelog, playbyplayv3
+from nba_api.stats.endpoints import (
+    drafthistory, leaguegamelog, playbyplayv3, playerawards,
+)
 
 log = logging.getLogger(__name__)
 
@@ -131,6 +133,42 @@ class NBAClient:
         )
         self._write_cache(key, df)
         return df
+
+    def draft_history(self, season: str | None = None, use_cache: bool = True) -> pd.DataFrame:
+        """Every draft pick in one request (all years), or one draft year.
+
+        DraftHistory returns the entire draft history — every year, round and
+        pick — in a single call, so the default (season=None) is one cheap,
+        cached request rather than a per-year loop. Pass a four-digit start year
+        (e.g. '2003') to fetch just that draft.
+        """
+        key = f"draft_{season or 'all'}"
+        if use_cache:
+            cached = self._read_cache(key)
+            if cached is not None:
+                log.debug("cache hit: %s", key)
+                return cached
+
+        log.info("fetching %s", key)
+        df = self._fetch_df(
+            lambda: drafthistory.DraftHistory(
+                season_year_nullable=season or "", timeout=self.timeout_s),
+            desc=key,
+        )
+        self._write_cache(key, df)
+        return df
+
+    def player_awards(self, person_id: int) -> pd.DataFrame:
+        """Every award a player has won — All-Star, All-NBA, All-Defensive, MVP,
+        Finals MVP, Champion, ROY, etc. — in one request. Not disk-cached: the
+        player_awards table is the durable store and resumability comes from
+        skipping already-fetched person_ids (an empty frame = a player with none).
+        """
+        return self._fetch_df(
+            lambda: playerawards.PlayerAwards(
+                player_id=int(person_id), timeout=self.timeout_s),
+            desc=f"awards_{person_id}",
+        )
 
     def play_by_play(self, game_id: str) -> pd.DataFrame:
         """All events for one game (PlayByPlayV3 — V2 was deprecated and now

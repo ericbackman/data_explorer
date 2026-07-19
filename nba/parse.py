@@ -95,6 +95,67 @@ def parse_team_log(df: pd.DataFrame, season: str, season_type: str) -> list[dict
     return [_common(r, season, season_type) for r in df.to_dict(orient="records")]
 
 
+def parse_draft(df: pd.DataFrame) -> list[dict]:
+    """DraftHistory dataframe -> one row dict per pick.
+
+    Skips rows with no usable OVERALL_PICK (forfeited/placeholder entries carry
+    no slot and can't key the table) rather than writing a null-keyed row. Season
+    and overall_pick are coerced to int; a row that can't be coerced is skipped —
+    the caller logs the resulting count so a shrunk pull is visible, not silent.
+    """
+    rows = []
+    for r in df.to_dict(orient="records"):
+        overall = _num(r.get("OVERALL_PICK"))
+        season = _num(r.get("SEASON"))
+        if overall is None or season is None:
+            continue
+        try:
+            season_i, overall_i = int(season), int(overall)
+        except (TypeError, ValueError):
+            continue
+        rows.append({
+            "season": season_i,
+            "overall_pick": overall_i,
+            "round_number": _num(r.get("ROUND_NUMBER")),
+            "round_pick": _num(r.get("ROUND_PICK")),
+            "person_id": _num(r.get("PERSON_ID")),
+            "player_name": r.get("PLAYER_NAME"),
+            "team_id": _num(r.get("TEAM_ID")),
+            "team_city": r.get("TEAM_CITY"),
+            "team_name": r.get("TEAM_NAME"),
+            "team_abbreviation": r.get("TEAM_ABBREVIATION"),
+            "organization": r.get("ORGANIZATION"),
+            "organization_type": r.get("ORGANIZATION_TYPE"),
+            "draft_type": r.get("DRAFT_TYPE"),
+        })
+    return rows
+
+
+def parse_player_awards(df: pd.DataFrame, person_id: int) -> list[dict]:
+    """PlayerAwards dataframe -> one normalized row per award instance for a player.
+
+    Keeps the award (DESCRIPTION), its SEASON, and the All-NBA/All-Defensive team
+    number (1/2/3) when present. An empty frame (a player with no awards) yields [].
+    """
+    rows = []
+    for r in df.to_dict(orient="records"):
+        desc = r.get("DESCRIPTION")
+        if not desc or not str(desc).strip():
+            continue
+        tn = _num(r.get("ALL_NBA_TEAM_NUMBER"))
+        try:
+            tn = int(tn) if tn is not None else None
+        except (TypeError, ValueError):
+            tn = None
+        rows.append({
+            "person_id": int(person_id),
+            "season": _num(r.get("SEASON")),
+            "description": str(desc).strip(),
+            "team_number": tn,
+        })
+    return rows
+
+
 def derive_games(team_rows: list[dict]) -> list[dict]:
     """Collapse the two team rows of each game into one game row.
 
