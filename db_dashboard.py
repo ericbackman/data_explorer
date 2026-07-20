@@ -34,6 +34,7 @@ MANIFEST = [
     ("NBA playoff comebacks","NBA",      "data_explorer/nba_playoff_comebacks.db"),
     ("NFL (nflverse)",       "NFL",      "data_explorer/nfl/data/nfl.db"),
     ("NHL box scores",       "NHL",      "data_explorer/nhl/data/nhl.db"),
+    ("MLB draft + careers",  "MLB",      "data_explorer/mlb/data/mlb_draft.db"),
     ("PGA Tour history",     "Golf",     "data_explorer/pga/data/pga.db"),
     ("Betting odds history", "Betting",  "betting_stuff/data/odds_history.db"),
     ("MTG deckbuilding",     "Games",    "MTG-Deckbuilding/data/mtg.db"),
@@ -43,8 +44,8 @@ MANIFEST = [
 
 # Mid-ramp hexes (readable in both light & dark) for category accents.
 CATEGORY_COLOR = {
-    "NBA": "#D85A30", "NFL": "#1D9E75", "NHL": "#185FA5", "Golf": "#639922",
-    "Betting": "#BA7517", "Games": "#7F77DD", "Personal": "#378ADD",
+    "NBA": "#D85A30", "NFL": "#1D9E75", "NHL": "#185FA5", "MLB": "#B3485D",
+    "Golf": "#639922", "Betting": "#BA7517", "Games": "#7F77DD", "Personal": "#378ADD",
 }
 
 DATEISH = ("season", "game_date", "date", "year", "event_date",
