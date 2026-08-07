@@ -1,13 +1,17 @@
-# NBA Data Lab
+# Data Lab
 
-A manifest-driven hub for NBA data investigations. The landing page (`index.html`)
+A manifest-driven hub for data investigations. The landing page (`index.html`)
 renders itself from `investigations.js` — each investigation is a self-contained
-folder under `investigations/`.
+folder under `investigations/`. Two wings: NBA arguments settled with nba_api
+numbers, and **The Registry** — a curated catalog of where the big public
+datasets live (folded in from the standalone `public-data-lab` repo, 2026-08-07).
 
-**Live:** https://ericbackman.github.io/nba-data-lab/
+**Live:** https://datalab.ericbackman.com
 
-Source lives here in the private `data_explorer` repo; `deploy.py` publishes
-just this folder to the public `nba-data-lab` repo (GitHub Pages).
+Source lives here in the private `data_explorer` repo — **this folder is the
+source of truth; never edit the `nba-data-lab` clone directly** (a deploy wipes
+and re-mirrors it). `deploy.py` publishes just this folder to the
+`nba-data-lab` repo, whose own workflow deploys to Cloudflare Pages.
 
 ## Structure
 
