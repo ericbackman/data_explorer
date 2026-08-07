@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NBA Data Lab — Investigations</title>
-  <meta name="description" content="Data-driven NBA investigations and arguments, settled with hard numbers from the NBA API.">
-  <meta property="og:title" content="NBA Data Lab">
-  <meta property="og:description" content="Data-driven NBA investigations, settled with hard numbers.">
+  <title>Data Lab — Investigations</title>
+  <meta name="description" content="Data-driven investigations — NBA arguments settled with hard numbers, plus a curated registry of where the big public datasets live.">
+  <meta property="og:title" content="Data Lab">
+  <meta property="og:description" content="Data-driven investigations, settled with hard numbers.">
   <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -83,18 +83,18 @@
 
 <nav class="nav">
   <div class="nav__inner">
-    <span class="nav__logo">NBA Data Lab<span class="dot">.</span></span>
+    <span class="nav__logo">Data Lab<span class="dot">.</span></span>
     <span class="nav__meta" id="nav-count"></span>
   </div>
 </nav>
 
 <header class="hero">
-  <p class="hero__eyebrow">Powered by nba_api → NBA.com</p>
-  <h1 class="hero__title">NBA arguments,<br><span class="accent">settled with data.</span></h1>
+  <p class="hero__eyebrow">nba_api → NBA.com · public-data registries</p>
+  <h1 class="hero__title">Arguments,<br><span class="accent">settled with data.</span></h1>
   <p class="hero__tagline">
-    A growing collection of NBA investigations. Each one pulls real numbers from the
-    NBA API, caches them locally, and renders a self-contained brief. Pick a fight,
-    let the data finish it.
+    A growing collection of investigations. NBA arguments settled with numbers pulled
+    straight from the NBA API — plus The Registry, a curated map of where the big
+    public datasets live. Pick a fight, let the data finish it.
   </p>
 </header>
 
@@ -105,7 +105,7 @@
 
 <footer>
   Built in <a href="https://github.com/ericbackman/data_explorer">data_explorer</a> ·
-  Data sourced live from NBA.com via nba_api · <span id="foot-year"></span>
+  NBA data live from NBA.com via nba_api · registry hand-curated · <span id="foot-year"></span>
 </footer>
 
 <script>
@@ -134,7 +134,9 @@ const fmtDate = iso => {
 /* ── Build a single investigation card ────────────────────────── */
 function buildCard(inv) {
   const accent = inv.accent || '#f0b429';
-  const href   = 'investigations/' + inv.slug + '/';
+  // `url` overrides the internal path — for live tools hosted on their own
+  // subdomain (e.g. the betting tracker) that still belong in the hub.
+  const href   = inv.url || ('investigations/' + inv.slug + '/');
 
   const card = el('a', 'card' + (inv.status === 'draft' ? ' is-draft' : ''));
   card.style.borderLeftColor = accent;

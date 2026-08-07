@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """
-deploy.py — Publish nba_site/ to the public GitHub Pages repo.
+deploy.py — Publish nba_site/ to the nba-data-lab repo (the deploy mirror).
 
-Mirrors this folder's contents into ericbackman/nba-data-lab and pushes,
-which triggers a GitHub Pages rebuild. The data_explorer repo stays private;
-only nba_site/ content is published.
+Mirrors this folder's contents into ericbackman/nba-data-lab and pushes; the
+mirror repo's own workflow then deploys to Cloudflare Pages. The data_explorer
+repo stays private; only nba_site/ content is published.
+
+THIS FOLDER (data_explorer/nba_site/) IS THE SOURCE OF TRUTH — never edit the
+nba-data-lab clone directly; a deploy wipes and re-mirrors it. (That drift
+happened once: betting-tracker + health-curse were added mirror-side and had
+to be back-ported 2026-08-07.)
 
 Usage:
     python nba_site/deploy.py
     python nba_site/deploy.py -m "add clutch-kings investigation"
 
-Live site: https://ericbackman.github.io/nba-data-lab/
+Live site: https://datalab.ericbackman.com
 """
 
 import os, sys, shutil, subprocess, tempfile, datetime
@@ -28,9 +33,11 @@ def run(cmd, cwd=None):
 
 def mirror_into(dest):
     """Copy nba_site/ contents into dest, skipping EXCLUDE and cache files."""
-    # Clear dest's tracked files (keep .git)
+    # Clear dest's tracked files (keep .git, and .github — the mirror repo
+    # carries its own Cloudflare Pages deploy workflow that does not exist in
+    # the source tree; clearing it would silently kill deploy-on-push)
     for entry in os.listdir(dest):
-        if entry == ".git":
+        if entry in (".git", ".github"):
             continue
         path = os.path.join(dest, entry)
         shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
@@ -55,7 +62,7 @@ def mirror_into(dest):
 
 
 def main():
-    msg = "deploy: update NBA Data Lab"
+    msg = "deploy: update Data Lab"
     if "-m" in sys.argv:
         i = sys.argv.index("-m")
         if i + 1 < len(sys.argv):
@@ -83,8 +90,8 @@ def main():
         run(["git", "commit", "-m", msg], cwd=clone)
         run(["git", "push", "origin", "main"], cwd=clone)
 
-    print("\n  Deployed. Pages will rebuild in ~1 min:")
-    print("  https://ericbackman.github.io/nba-data-lab/\n")
+    print("\n  Deployed. Cloudflare Pages will rebuild in ~1 min:")
+    print("  https://datalab.ericbackman.com\n")
 
 
 if __name__ == "__main__":

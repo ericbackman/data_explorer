@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Registry — Data Lab</title>
+  <meta name="description" content="A curated catalog of where the world's large, public, constantly-updated datasets actually live — registries, ocean data, official statistics, climate, and markets.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="data.js"></script>
+  <style>
+    :root{
+      --bg:#0b1014; --bg2:#121a21; --bg3:#1a2630;
+      --text:#e6edf3; --text2:#8b9aa7; --accent:#22d3ee; --border:#21303b;
+      --mono:'JetBrains Mono','Fira Code',Consolas,monospace;
+      --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+    a{color:var(--accent);text-decoration:none}
+    .backlink{position:fixed;top:1.1rem;left:1.25rem;z-index:200;font-family:var(--mono);font-size:.72rem;color:var(--text2);background:rgba(11,16,20,.7);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:100px;padding:.4rem .85rem}
+    .backlink:hover{color:var(--accent);border-color:var(--accent)}
+
+    /* Hero */
+    .hero{max-width:1080px;margin:0 auto;padding:5rem 2rem 1.5rem}
+    .hero__eyebrow{font-family:var(--mono);font-size:.72rem;color:var(--accent);letter-spacing:.16em;text-transform:uppercase;margin-bottom:1rem}
+    .hero__title{font-size:clamp(2.1rem,6vw,3.4rem);font-weight:800;line-height:1.05;letter-spacing:-.03em;margin-bottom:1rem}
+    .hero__tagline{font-size:clamp(1rem,2.2vw,1.15rem);color:var(--text2);max-width:680px;line-height:1.7}
+    .hero__tagline code{font-family:var(--mono);font-size:.85em;color:var(--accent);background:var(--bg2);padding:.1rem .4rem;border-radius:5px}
+
+    /* Controls */
+    .controls{position:sticky;top:0;z-index:100;background:rgba(11,16,20,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:1rem 0}
+    .controls__inner{max-width:1080px;margin:0 auto;padding:0 2rem;display:flex;flex-direction:column;gap:.7rem}
+    .search{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.7rem 1rem;color:var(--text);font-family:var(--mono);font-size:.85rem}
+    .search::placeholder{color:var(--text2)}
+    .search:focus{outline:none;border-color:var(--accent)}
+    .filterrow{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center}
+    .filterrow__label{font-family:var(--mono);font-size:.64rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-right:.3rem;min-width:64px}
+    .pill{font-family:var(--mono);font-size:.72rem;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:100px;padding:.32rem .8rem;cursor:pointer;transition:all .16s;white-space:nowrap;display:inline-flex;align-items:center;gap:.4rem}
+    .pill:hover{color:var(--text);border-color:var(--text2)}
+    .pill.active{color:var(--bg);font-weight:500}
+    .pill .swatch{width:8px;height:8px;border-radius:2px;display:inline-block}
+
+    /* Grid */
+    .grid{max-width:1080px;margin:0 auto;padding:1.5rem 2rem 5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:1.1rem}
+    .card{position:relative;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:11px;padding:1.25rem 1.3rem;transition:transform .16s,box-shadow .16s,border-color .16s;text-decoration:none;color:inherit;min-height:200px}
+    .card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+    .card.is-hidden{display:none}
+    .card__top{display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem;margin-bottom:.55rem}
+    .card__name{font-size:1.12rem;font-weight:700;letter-spacing:-.01em;line-height:1.2;color:var(--text)}
+    .card__cadence{flex-shrink:0;font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.2rem .45rem;border-radius:5px;border:1px solid var(--border);color:var(--text2);white-space:nowrap}
+    .card__cadence.live{color:#34d399;border-color:#1f5e44}
+    .card__cadence.daily{color:#22d3ee;border-color:#1c4e5c}
+    .card__cadence.periodic{color:#f59e0b;border-color:#5e4720}
+    .card__cadence.dump{color:#a78bfa;border-color:#3f3566}
+    .card__blurb{font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:.85rem;flex:1}
+    .card__note{font-size:.74rem;color:var(--text2);background:var(--bg3);border-radius:7px;padding:.5rem .65rem;margin-bottom:.85rem;line-height:1.5}
+    .card__note code{font-family:var(--mono);font-size:.92em;color:var(--accent)}
+    .card__meta{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.9rem}
+    .chip{font-family:var(--mono);font-size:.6rem;color:var(--text2);background:var(--bg3);border-radius:5px;padding:.2rem .45rem}
+    .chip.scale{color:var(--text);font-weight:500}
+    .card__foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.66rem;color:var(--text2);border-top:1px solid var(--border);padding-top:.7rem;margin-top:auto}
+    .card__foot .domain-lbl{display:inline-flex;align-items:center;gap:.35rem}
+    .card__foot .domain-lbl .swatch{width:7px;height:7px;border-radius:2px}
+    .card__cta{font-weight:500}
+
+    .domainhead{max-width:1080px;margin:1.6rem auto -.2rem;padding:0 2rem;display:flex;align-items:baseline;gap:.7rem;grid-column:1/-1;flex-wrap:wrap}
+    .domainhead h2{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+    .domainhead p{font-size:.78rem;color:var(--text2)}
+
+    .count{max-width:1080px;margin:0 auto;padding:.2rem 2rem;font-family:var(--mono);font-size:.7rem;color:var(--text2)}
+    .empty{max-width:1080px;margin:0 auto;padding:3rem 2rem;font-family:var(--mono);font-size:.85rem;color:var(--text2);text-align:center}
+    footer{text-align:center;padding:2rem;font-family:var(--mono);font-size:.7rem;color:#3a4a55;border-top:1px solid var(--border)}
+  </style>
+</head>
+<body>
+<a class="backlink" href="../../">← Data Lab</a>
+
+<header class="hero">
+  <p class="hero__eyebrow">Reference · The Registry</p>
+  <h1 class="hero__title">Where the big public<br>datasets actually live.</h1>
+  <p class="hero__tagline">
+    A curated map of the registries, archives, and live feeds people pull from — the
+    meta-catalogs (<code>Hugging Face</code>, <code>AWS Open Data</code>), the ocean &amp;
+    marine record, official statistics, climate, and markets. Filtered by domain and by how
+    often the data <em>moves</em> — live streams vs. static dumps.
+  </p>
+</header>
+
+<div class="controls">
+  <div class="controls__inner">
+    <input class="search" id="search" type="text" placeholder="Search sources — name, format, anything (e.g. 'netCDF', 'reef', 'API')…" autocomplete="off">
+    <div class="filterrow" id="domainFilters"><span class="filterrow__label">Domain</span></div>
+    <div class="filterrow" id="cadenceFilters"><span class="filterrow__label">Cadence</span></div>
+  </div>
+</div>
+
+<p class="count" id="count"></p>
+<main class="grid" id="grid"></main>
+<div class="empty" id="empty" style="display:none">No sources match those filters.</div>
+
+<footer>Data Lab · The Registry · curated &amp; re-verified <span id="updated"></span></footer>
+
+<script>
+/* ── DOM helpers (createElement/textContent only — no innerHTML w/ data) ── */
+const el = (tag, cls, txt) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = String(txt);
+  return e;
+};
+const clear = node => { while (node.firstChild) node.removeChild(node.firstChild); };
+
+const DATA    = window.REGISTRY_DATA || { domains:{}, sources:[] };
+const DOMAINS = DATA.domains;
+const SOURCES = DATA.sources;
+document.getElementById('updated').textContent = DATA.updated || '';
+
+const CADENCES = {
+  live:     { label: "Live" },
+  daily:    { label: "Daily" },
+  periodic: { label: "Periodic" },
+  dump:     { label: "Bulk dump" },
+};
+
+/* ── State ─────────────────────────────────────────────────────────────── */
+let activeDomain  = null;   // null = all
+let activeCadence = null;
+let query         = "";
+
+/* ── Filter bars ───────────────────────────────────────────────────────── */
+function makePill(label, isActive, activeColor, onClick, swatchColor) {
+  const pill = el('button', 'pill' + (isActive ? ' active' : ''), null);
+  if (swatchColor) { const s = el('span', 'swatch'); s.style.background = swatchColor; pill.appendChild(s); }
+  pill.appendChild(el('span', null, label));
+  if (isActive && activeColor) { pill.style.background = activeColor; pill.style.borderColor = activeColor; }
+  pill.addEventListener('click', onClick);
+  return pill;
+}
+
+function renderDomainFilters() {
+  const bar = document.getElementById('domainFilters');
+  bar.querySelectorAll('.pill').forEach(p => p.remove());
+  bar.appendChild(makePill('All', activeDomain === null, 'var(--accent)',
+    () => { activeDomain = null; render(); }));
+  Object.entries(DOMAINS).forEach(([key, d]) => {
+    bar.appendChild(makePill(d.label, activeDomain === key, d.color,
+      () => { activeDomain = (activeDomain === key ? null : key); render(); }, d.color));
+  });
+}
+
+function renderCadenceFilters() {
+  const bar = document.getElementById('cadenceFilters');
+  bar.querySelectorAll('.pill').forEach(p => p.remove());
+  bar.appendChild(makePill('All', activeCadence === null, 'var(--accent)',
+    () => { activeCadence = null; render(); }));
+  Object.entries(CADENCES).forEach(([key, c]) => {
+    bar.appendChild(makePill(c.label, activeCadence === key, 'var(--accent)',
+      () => { activeCadence = (activeCadence === key ? null : key); render(); }));
+  });
+}
+
+/* ── A single source card ──────────────────────────────────────────────── */
+function buildCard(src) {
+  const d = DOMAINS[src.domain] || { color: 'var(--accent)', label: src.domain };
+  const card = el('a', 'card');
+  card.href = src.url; card.target = '_blank'; card.rel = 'noopener';
+  card.style.borderLeftColor = d.color;
+
+  const top = el('div', 'card__top');
+  top.appendChild(el('h3', 'card__name', src.name));
+  const cad = el('span', 'card__cadence ' + src.cadence, (CADENCES[src.cadence] || {}).label || src.cadence);
+  top.appendChild(cad);
+  card.appendChild(top);
+
+  card.appendChild(el('p', 'card__blurb', src.blurb));
+
+  if (src.note) {
+    // note may contain `code` spans delimited by backticks — split safely
+    const note = el('p', 'card__note');
+    src.note.split(/(`[^`]+`)/).forEach(part => {
+      if (part.startsWith('`') && part.endsWith('`')) note.appendChild(el('code', null, part.slice(1, -1)));
+      else if (part) note.appendChild(document.createTextNode(part));
+    });
+    card.appendChild(note);
+  }
+
+  const meta = el('div', 'card__meta');
+  if (src.scale)  meta.appendChild(el('span', 'chip scale', src.scale));
+  if (src.format) meta.appendChild(el('span', 'chip', src.format));
+  (src.access || []).forEach(a => meta.appendChild(el('span', 'chip', a)));
+  card.appendChild(meta);
+
+  const foot = el('div', 'card__foot');
+  const dl = el('span', 'domain-lbl');
+  const sw = el('span', 'swatch'); sw.style.background = d.color; dl.appendChild(sw);
+  dl.appendChild(el('span', null, d.label));
+  foot.appendChild(dl);
+  const cta = el('span', 'card__cta', 'Open →'); cta.style.color = d.color;
+  foot.appendChild(cta);
+  card.appendChild(foot);
+
+  return card;
+}
+
+/* ── Search predicate ──────────────────────────────────────────────────── */
+function matchesQuery(src) {
+  if (!query) return true;
+  const hay = [src.name, src.blurb, src.note, src.scale, src.format, (src.access || []).join(' '),
+               (DOMAINS[src.domain] || {}).label].join(' ').toLowerCase();
+  return query.toLowerCase().split(/\s+/).every(tok => hay.includes(tok));
+}
+
+/* ── Render ────────────────────────────────────────────────────────────── */
+function render() {
+  renderDomainFilters();
+  renderCadenceFilters();
+
+  const grid = document.getElementById('grid');
+  clear(grid);
+
+  const visible = SOURCES.filter(s =>
+    (!activeDomain  || s.domain  === activeDomain) &&
+    (!activeCadence || s.cadence === activeCadence) &&
+    matchesQuery(s));
+
+  // Group under domain headers, in DOMAINS declaration order
+  const order = Object.keys(DOMAINS);
+  const byDomain = {};
+  visible.forEach(s => (byDomain[s.domain] = byDomain[s.domain] || []).push(s));
+
+  order.forEach(key => {
+    const group = byDomain[key];
+    if (!group || !group.length) return;
+    const d = DOMAINS[key];
+    const head = el('div', 'domainhead');
+    const h = el('h2', null, d.label); h.style.color = d.color;
+    head.appendChild(h);
+    head.appendChild(el('p', null, d.blurb));
+    grid.appendChild(head);
+    group.forEach(s => grid.appendChild(buildCard(s)));
+  });
+
+  document.getElementById('count').textContent =
+    visible.length + ' of ' + SOURCES.length + ' sources';
+  document.getElementById('empty').style.display = visible.length ? 'none' : 'block';
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  query = e.target.value.trim();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
