@@ -45,6 +45,11 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   Read-only python clients (Gamma/CLOB/Data APIs) + rate limiter; used by the
   Iran-strikes insider-trading notebook. `from polymarket import GammaClient`
   works from repo root. See `polymarket/README.md`.
+- **Podcasts (`podcasts/`)** — folded in from the standalone `podcast-lab` folder
+  2026-08-07. Semantic layer over podcasts: RSS ingest → free-first transcript
+  waterfall (YouTube captions, faster-whisper fallback) → SQLite FTS →
+  mention-count queries by year. `podcasts/data/` gitignored (nested
+  `.gitignore`). See `podcasts/README.md`.
 - **Trades (`trades/`)** — pure-logic (no DB) tool that turns an NBA draft-pick
   trade (protections, rolling conditions, swaps) into flowcharts / a slot map /
   an ownership board. Pipeline: `model` → `expand`/`board` → `render` (Mermaid,

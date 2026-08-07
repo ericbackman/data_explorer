@@ -1,0 +1,13 @@
+# Local database + audio cache — regenerable from feeds, never committed
+data/
+audio/
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
