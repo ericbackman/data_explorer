@@ -18,7 +18,10 @@ All paths are relative to the workspace root (`C:\Users\ericb\Github`).
 ### NBA box scores — `data_explorer/nba/data/nba.db`
 - **awards_fetched** (3,476 rows): person_id INTEGER
 - **drafts** (7,678 rows): season INTEGER, overall_pick INTEGER, round_number INTEGER, round_pick INTEGER, person_id INTEGER, player_name TEXT, team_id INTEGER, team_city TEXT, team_name TEXT, team_abbreviation TEXT, organization TEXT, organization_type TEXT, draft_type TEXT
+- **exec_fetch_log** (311 rows): exec_id TEXT
+- **executives** (1,801 rows): exec_id TEXT, name TEXT, season INT, team_abbrev TEXT, team_id INT
 - **games** (73,126 rows): game_id TEXT, season TEXT, season_type TEXT, game_date TEXT, home_team_id INTEGER, away_team_id INTEGER, home_pts INTEGER, away_pts INTEGER
+- **hall_of_fame** (246 rows): inductee_name TEXT, inducted_year INTEGER, player_id INTEGER
 - **injuries** (126 rows): pulled_at TEXT, team_abbr TEXT, team_name TEXT, athlete_id TEXT, player_name TEXT, position TEXT, status TEXT, injury_type TEXT, injury_date TEXT, comment TEXT
 - **play_by_play** (18,280,064 rows): game_id TEXT, action_number INTEGER, period INTEGER, clock TEXT, team_id INTEGER, team_tricode TEXT, person_id INTEGER, player_name TEXT, action_type TEXT, sub_type TEXT, description TEXT, shot_result TEXT, is_field_goal INTEGER, shot_value INTEGER, shot_distance INTEGER, shot_x INTEGER, shot_y INTEGER, score_home INTEGER, score_away INTEGER, points_total INTEGER, location TEXT
 - **player_awards** (7,759 rows): person_id INTEGER, season TEXT, description TEXT, team_number INTEGER
@@ -50,14 +53,14 @@ _(database file not found — run its scraper)_
 
 ### NHL box scores — `data_explorer/nhl/data/nhl.db`
 - **drafts** (13,152 rows): draft_year INTEGER, overall_pick INTEGER, round_number INTEGER, round_pick INTEGER, player_id INTEGER, player_name TEXT, first_name TEXT, last_name TEXT, position TEXT, team_id INTEGER, team_abbrev TEXT, amateur_league TEXT, amateur_club TEXT, country_code TEXT, height INTEGER, weight INTEGER, source TEXT
-- **games** (36,012 rows): game_id TEXT, season TEXT, game_type INTEGER, date TEXT, home_team_id INTEGER, away_team_id INTEGER, home_score INTEGER, away_score INTEGER, boxscore_loaded INTEGER, pbp_loaded INTEGER
-- **goalie_boxscores** (53,933 rows): game_id TEXT, player_id INTEGER, team_id INTEGER, sweater INTEGER, starter INTEGER, decision TEXT, saves INTEGER, shots_against INTEGER, goals_against INTEGER, save_pct REAL, pim INTEGER, toi_seconds INTEGER, es_shots_against INTEGER, es_goals_against INTEGER, pp_shots_against INTEGER, pp_goals_against INTEGER, sh_shots_against INTEGER, sh_goals_against INTEGER
-- **players** (2,683 rows): player_id INTEGER, name TEXT, last_position TEXT
+- **games** (70,352 rows): game_id TEXT, season TEXT, game_type INTEGER, date TEXT, home_team_id INTEGER, away_team_id INTEGER, home_score INTEGER, away_score INTEGER, boxscore_loaded INTEGER, pbp_loaded INTEGER
+- **goalie_boxscores** (263,860 rows): game_id TEXT, player_id INTEGER, team_id INTEGER, sweater INTEGER, starter INTEGER, decision TEXT, saves INTEGER, shots_against INTEGER, goals_against INTEGER, save_pct REAL, pim INTEGER, toi_seconds INTEGER, es_shots_against INTEGER, es_goals_against INTEGER, pp_shots_against INTEGER, pp_goals_against INTEGER, sh_shots_against INTEGER, sh_goals_against INTEGER
+- **players** (8,984 rows): player_id INTEGER, name TEXT, last_position TEXT
 - **playoff_series** (25 rows): season TEXT, team_id INTEGER, round_num INTEGER, round_name TEXT, opponent_id INTEGER, opponent_abbrev TEXT, team_wins INTEGER, opp_wins INTEGER, games_played INTEGER, series_won INTEGER, went_to_game7 INTEGER, max_series_lead INTEGER, blew_lead INTEGER
 - **plays** (0 rows): game_id TEXT, sort_order INTEGER, event_id INTEGER, period INTEGER, period_type TEXT, time_in_period TEXT, event_type TEXT, event_team_id INTEGER, x_coord INTEGER, y_coord INTEGER, zone_code TEXT, shot_type TEXT, shooter_id INTEGER, goalie_id INTEGER, scorer_id INTEGER, assist1_id INTEGER, assist2_id INTEGER, faceoff_winner_id INTEGER, faceoff_loser_id INTEGER, hitter_id INTEGER, hittee_id INTEGER, blocker_id INTEGER, penalty_on_id INTEGER, penalty_drawn_id INTEGER, penalty_type TEXT, penalty_minutes INTEGER, player_id INTEGER, situation_code TEXT
-- **skater_boxscores** (485,306 rows): game_id TEXT, player_id INTEGER, team_id INTEGER, position TEXT, sweater INTEGER, goals INTEGER, assists INTEGER, points INTEGER, plus_minus INTEGER, pim INTEGER, sog INTEGER, hits INTEGER, blocked_shots INTEGER, takeaways INTEGER, giveaways INTEGER, power_play_goals INTEGER, faceoff_pct REAL, toi_seconds INTEGER, shifts INTEGER
-- **team_game** (26,966 rows): game_id TEXT, team_id INTEGER, is_home INTEGER, score INTEGER, sog INTEGER
-- **teams** (46 rows): team_id INTEGER, abbrev TEXT
+- **skater_boxscores** (2,432,543 rows): game_id TEXT, player_id INTEGER, team_id INTEGER, position TEXT, sweater INTEGER, goals INTEGER, assists INTEGER, points INTEGER, plus_minus INTEGER, pim INTEGER, sog INTEGER, hits INTEGER, blocked_shots INTEGER, takeaways INTEGER, giveaways INTEGER, power_play_goals INTEGER, faceoff_pct REAL, toi_seconds INTEGER, shifts INTEGER
+- **team_game** (140,704 rows): game_id TEXT, team_id INTEGER, is_home INTEGER, score INTEGER, sog INTEGER
+- **teams** (66 rows): team_id INTEGER, abbrev TEXT
 
 ## MLB
 

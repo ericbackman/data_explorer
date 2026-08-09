@@ -97,6 +97,30 @@ CREATE INDEX IF NOT EXISTS idx_awards_person ON player_awards(person_id);
 -- One row per person once their awards have been fetched, so a resumable scrape
 -- skips players it already checked even when they earned zero awards.
 CREATE TABLE IF NOT EXISTS awards_fetched (person_id INTEGER PRIMARY KEY);
+
+-- Naismith Hall of Fame inductions (see nba.hof_scrape).
+--
+-- WHY THIS IS NOT IN player_awards: stats.nba.com's PlayerAwards endpoint stops
+-- carrying "Hall of Fame Inductee" after the 2018 class — every inductee from
+-- 2019 on (Kobe, Duncan, Garnett, Dirk, Wade, Gasol, ...) is absent upstream, so
+-- no amount of re-scraping awards can produce them. This table is the separate,
+-- HOF-specific source; consumers UNION it into their awards view (the same shape
+-- MLB uses via its own `hall_of_fame` table).
+--
+-- Keeping it out of player_awards is also load-safety: `load_player_awards` is
+-- delete-then-insert per person, so rows injected there would be silently wiped
+-- by the next `python -m nba.awards_scrape` run.
+--
+-- player_id is NULL for inductees with no NBA playing career (WNBA players,
+-- Globetrotters, pre-NBA college stars). Those rows are still kept so the source
+-- is represented faithfully and the unmatched set stays inspectable.
+CREATE TABLE IF NOT EXISTS hall_of_fame (
+    inductee_name TEXT NOT NULL,
+    inducted_year INTEGER NOT NULL,
+    player_id INTEGER,
+    PRIMARY KEY (inductee_name, inducted_year)
+);
+CREATE INDEX IF NOT EXISTS idx_hof_player ON hall_of_fame(player_id);
 """
 
 # Exact column order each fact table is written in (a parse row may carry extra
@@ -167,6 +191,23 @@ def load_drafts(conn: sqlite3.Connection, rows: list[dict]) -> int:
     a corrected name/team on a slot overwrites the old row rather than duplicating.
     """
     return _upsert(conn, "drafts", DRAFT_COLS, rows)
+
+
+HOF_COLS = ["inductee_name", "inducted_year", "player_id"]
+
+
+def load_hall_of_fame(conn: sqlite3.Connection, rows: list[dict]) -> int:
+    """Replace the whole Hall of Fame table from one page scrape.
+
+    Full-snapshot replace (not per-row upsert) because the source IS the whole
+    list: a name corrected upstream should stop existing here rather than linger
+    beside its correction. Refuses to wipe a populated table with nothing, so a
+    silently-empty parse can't destroy good data.
+    """
+    if not rows:
+        raise ValueError("refusing to replace hall_of_fame with 0 rows")
+    conn.execute("DELETE FROM hall_of_fame")
+    return _upsert(conn, "hall_of_fame", HOF_COLS, rows)
 
 
 def load_player_awards(conn: sqlite3.Connection, person_id: int, rows: list[dict]) -> int:

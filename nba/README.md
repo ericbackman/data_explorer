@@ -8,6 +8,8 @@ player/team game logs purely from the free **nba_api** (stats.nba.com, no key).
 - `parse.py`  — LeagueGameLog dataframes → normalized rows (pure, tested)
 - `db.py`     — SQLite schema + idempotent (`INSERT OR REPLACE`) loaders
 - `scrape.py` — resumable backfill/update CLI
+- `hof_scrape.py` — Hall of Fame inductees → `hall_of_fame` (Wikipedia, **not**
+  nba_api — see Design notes)
 - `tests/`    — network-free tests for parsing + the refetch policy
 - `data/`     — SQLite DB + raw JSON cache (**gitignored**, regenerable)
 
@@ -28,3 +30,17 @@ cd C:\Users\ericb\Github\data_explorer
   rebuilds everything.
 - **Raw facts only** — derive betting metrics (rest, pace, ATS) in SQL. Per-game
   advanced box scores / play-by-play are a later tier that joins on `game_id`.
+- **Hall of Fame is NOT an nba_api award** (`hof_scrape.py`): stats.nba.com stops
+  emitting `Hall of Fame Inductee` after the **2018** class, so `player_awards`
+  has no Kobe/Duncan/Garnett (2020), Dirk/Wade/Gasol (2023) or Carmelo (2025)
+  row. Re-running `nba.awards_scrape` cannot fix it — the gap is upstream, and it
+  skips every already-fetched player anyway. HOF therefore has its own
+  `hall_of_fame` table scraped from Wikipedia's Naismith list, cross-validated
+  against the ≤2018 rows nba_api *does* have (a year disagreement fails the run).
+  Consumers UNION it into their awards view; never write HOF rows into
+  `player_awards`, which `load_player_awards` rewrites per player.
+
+  ```powershell
+  .\.venv\Scripts\python.exe -m nba.hof_scrape --dry-run   # parse + validate only
+  .\.venv\Scripts\python.exe -m nba.hof_scrape             # load hall_of_fame
+  ```
