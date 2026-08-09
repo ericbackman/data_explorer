@@ -6,7 +6,23 @@ plumbing); the other two go RED until you implement a monotonic score_player(),
 then GREEN. That red->green flip is the point. Run: python -m pytest osrs/
 """
 
+import pytest
+
 from osrs import scoring
+
+# score_player() is deliberately unimplemented (it raises NotImplementedError) -
+# implementing it is the exercise. These two tests pin the properties it must
+# satisfy, so they are EXPECTED to fail until then.
+#
+# Marked xfail rather than left raw-red so that `pytest` at the repo root exits
+# 0: a visitor should not have to know this convention to tell a healthy repo
+# from a broken one. The red->green flip this file is built around still shows -
+# once score_player() works these report as XPASS, which is the signal to delete
+# this marker.
+pending_contribution = pytest.mark.xfail(
+    reason="score_player() is an open contribution point - see osrs/scoring.py",
+    raises=NotImplementedError,
+)
 
 
 def _gains(**skill_to_xp):
@@ -23,6 +39,7 @@ def test_empty_input_returns_empty():
     assert scoring.rank_gains({}) == []
 
 
+@pending_contribution
 def test_dominant_player_ranks_first():
     # "grinder" gained more XP in EVERY skill than "casual". No reasonable metric
     # should rank casual above grinder (monotonicity) — whatever formula you pick.
@@ -34,6 +51,7 @@ def test_dominant_player_ranks_first():
     assert winner["rsn"] == "grinder"
 
 
+@pending_contribution
 def test_ranks_are_contiguous_places():
     ranked = scoring.rank_gains({
         "a": _gains(Mining=10), "b": _gains(Mining=20), "c": _gains(Mining=30),
