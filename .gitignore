@@ -79,11 +79,18 @@ trades/*.svg
 trades/*.html
 
 # essays — generated narration / voice / video media (regenerable via the tts_*
-# stages + `python -m essays.compose`; large personal-render artifacts, never commit)
-essays/assets/*.mp3
-essays/assets/*.wav
-essays/assets/*.mp4
-essays/assets/voice_samples/
-essays/assets/narration_parts*/
+# stages + `python -m essays.compose`; large personal-render artifacts, never commit).
+# Leading **/ so these keep matching after the tree moved to v1/essays/ — the old
+# anchored `essays/assets/...` form silently stopped matching and left ~150 MB of
+# media untracked-but-not-ignored, one `git add -A` from entering history.
+**/essays/assets/*.mp3
+**/essays/assets/*.wav
+**/essays/assets/*.mp4
+**/essays/assets/voice_samples/
+**/essays/assets/narration_parts*/
 nhl/data/
 mlb/data/
+
+# Local HTML renders of the almanac study. The markdown is the source of truth
+# (and currently richer than any render); a committed copy only invites drift.
+almanac/*.html

@@ -12,6 +12,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import os
 import pathlib
 import re
 import time
@@ -26,10 +27,19 @@ DEFAULT_MIN_INTERVAL_S = 0.5
 DEFAULT_TIMEOUT_S = 30
 DEFAULT_MAX_RETRIES = 4
 BACKOFF_BASE_S = 2.0
-# Many sites (e.g. prosportstransactions.com) 403 a non-browser UA, so present as
-# a normal browser. Still polite: rate-limited + disk-cached, low volume.
-USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-              "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+# Identify honestly by DEFAULT. A UA that names the project is the correct
+# behaviour: it lets a site operator see who is calling and block or contact us.
+USER_AGENT = "scrapekit/1.0 (+https://github.com/ericbackman/data_explorer)"
+
+# Some sites (e.g. prosportstransactions.com) 403 anything that isn't a browser.
+# Presenting as one is available, but it is OPT-IN via SCRAPEKIT_USER_AGENT
+# rather than the default, because disguising a bot is a decision the operator
+# of THIS tool should make deliberately for a specific site — not something the
+# library does silently on every request. Check the target's robots.txt and
+# terms before setting it; some sites (Sports Reference, most sportsbooks)
+# prohibit automated access outright, and a spoofed UA does not change that.
+BROWSER_USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
 DEFAULT_OLLAMA_HOST = "http://localhost:11434"
 DEFAULT_OLLAMA_MODEL = "qwen2.5:7b"
@@ -55,6 +65,7 @@ class Extractor:
         max_retries: int = DEFAULT_MAX_RETRIES,
         ollama_host: str = DEFAULT_OLLAMA_HOST,
         ollama_model: str = DEFAULT_OLLAMA_MODEL,
+        user_agent: str | None = None,
     ) -> None:
         self.cache_dir = pathlib.Path(cache_dir)
         (self.cache_dir / "html").mkdir(parents=True, exist_ok=True)
@@ -63,10 +74,13 @@ class Extractor:
         self.max_retries = max_retries
         self.ollama_host = ollama_host.rstrip("/")
         self.ollama_model = ollama_model
+        # Honest UA unless the caller deliberately overrides (arg wins over env).
+        # See BROWSER_USER_AGENT for when overriding is and isn't appropriate.
+        self.user_agent = user_agent or os.getenv("SCRAPEKIT_USER_AGENT") or USER_AGENT
         self._last_call_ts = 0.0
         self._session = requests.Session()
         self._session.headers.update({
-            "User-Agent": USER_AGENT,
+            "User-Agent": self.user_agent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
         })

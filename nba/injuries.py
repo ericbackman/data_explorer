@@ -28,6 +28,10 @@ log = logging.getLogger(__name__)
 
 PKG_DIR = pathlib.Path(__file__).resolve().parent
 DB_PATH = PKG_DIR / "data" / "nba.db"
+
+# Identify honestly rather than posing as a browser — this is a low-volume,
+# personal-use client and the operator should be able to tell who we are.
+USER_AGENT = "data_explorer/nba (+https://github.com/ericbackman/data_explorer)"
 ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
 TIMEOUT_S = 30
 MAX_RETRIES = 4
@@ -59,7 +63,7 @@ def fetch_injuries() -> dict:
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             r = requests.get(ESPN_INJURIES_URL, timeout=TIMEOUT_S,
-                             headers={"User-Agent": "Mozilla/5.0"})
+                             headers={"User-Agent": USER_AGENT})
             r.raise_for_status()
             return r.json()
         except requests.RequestException as e:

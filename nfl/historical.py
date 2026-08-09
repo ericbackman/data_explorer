@@ -24,6 +24,10 @@ from nfl import pull
 log = logging.getLogger(__name__)
 
 # Static historical mirror of the Kaggle Spreadspoke file (old rows never change).
+# Identify honestly rather than posing as a browser — this pulls a public CSV
+# from a GitHub repo, which needs no disguise.
+USER_AGENT = "data_explorer/nfl (+https://github.com/ericbackman/data_explorer)"
+
 SPREADSPOKE_URL = "https://raw.githubusercontent.com/peanutshawny/nfl-sports-betting/master/data/spreadspoke_scores.csv"
 START, END = 1966, 1998   # 1999+ comes authoritatively from nflverse
 
@@ -105,7 +109,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     log.info("downloading %s", args.url)
-    resp = requests.get(args.url, timeout=120, headers={"User-Agent": "Mozilla/5.0"})
+    resp = requests.get(args.url, timeout=120, headers={"User-Agent": USER_AGENT})
     resp.raise_for_status()
     raw = pd.read_csv(io.StringIO(resp.text))
     norm = normalize(raw)

@@ -30,9 +30,13 @@ def _():
     import matplotlib.pyplot as plt
     from matplotlib.colors import LinearSegmentedColormap
 
-    # DB lives in a gitignored git worktree (data_explorer/nfl/data/nfl.db).
-    DB = "C:/Users/ericb/Github/data_explorer/nfl/data/nfl.db"
-    return DB, LinearSegmentedColormap, mo, np, pd, plt, sqlite3
+    import dbpath
+
+    # nfl.db is gitignored (regenerable from the nflverse loader) and resolved
+    # relative to this file, so the notebook is not pinned to one machine.
+    DB = dbpath.db("nfl", "data", "nfl.db", env_var="NFL_DB")
+    DB_URI = dbpath.ro_uri(DB)
+    return DB, DB_URI, LinearSegmentedColormap, mo, np, pd, plt, sqlite3
 
 
 @app.cell
@@ -75,9 +79,9 @@ def _(mo):
 
 
 @app.cell
-def _(DB, sqlite3):
+def _(DB_URI, sqlite3):
     # READ-ONLY connection — never mutate the DB during analysis.
-    con = sqlite3.connect(f"file:///{DB}?mode=ro", uri=True)
+    con = sqlite3.connect(DB_URI, uri=True)
     return (con,)
 
 
@@ -337,7 +341,8 @@ def _(mo, n_games):
           `home: total_home−total_away`, else `total_away−total_home`.
         - **Down 22+ is a true floor: 0 comebacks in 16 seasons** at the 5:00/2:00/1:00
           checkpoints (the earlier "sits 2–3%" figure was the model, not reality).
-        - Connection is **read-only**; the DB lives in a gitignored git worktree.
+        - Connection is **read-only**; `nfl.db` is gitignored and rebuilt from the
+          nflverse loader (path resolved by `dbpath`, override with `NFL_DB`).
         """
     )
     return

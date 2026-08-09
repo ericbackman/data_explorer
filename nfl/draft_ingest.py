@@ -26,6 +26,10 @@ from nfl import pull
 
 log = logging.getLogger(__name__)
 
+# Identify honestly rather than posing as a browser — nflverse publishes this
+# data for exactly this use, so there is nothing to disguise.
+USER_AGENT = "data_explorer/nfl (+https://github.com/ericbackman/data_explorer)"
+
 DRAFT_PICKS_URL = "https://github.com/nflverse/nflverse-data/releases/download/draft_picks/draft_picks.csv"
 RAW_DIR = pull.PKG_DIR / "data" / "raw"
 RAW_PATH = RAW_DIR / "draft_picks.csv"
@@ -57,7 +61,7 @@ def _download_with_retry(url: str, attempts: int = 3, timeout: int = 60) -> byte
     last_exc: Exception | None = None
     for attempt in range(1, attempts + 1):
         try:
-            resp = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
+            resp = requests.get(url, timeout=timeout, headers={"User-Agent": USER_AGENT})
         except requests.exceptions.RequestException as exc:
             last_exc = exc
             log.warning("download attempt %d/%d errored: %s", attempt, attempts, exc)

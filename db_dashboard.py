@@ -22,7 +22,7 @@ import pathlib
 import sqlite3
 import webbrowser
 
-WORKSPACE = pathlib.Path(__file__).resolve().parent.parent  # C:\Users\ericb\Github
+WORKSPACE = pathlib.Path(__file__).resolve().parent.parent  # the Github/ workspace root
 HERE = pathlib.Path(__file__).resolve().parent
 OUT_HTML = HERE / "db_dashboard.html"
 OUT_WIDGET = HERE / "db_dashboard.widget.html"
