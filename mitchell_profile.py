@@ -158,6 +158,7 @@ def pull_clutch(pid, cache):
     time.sleep(SLEEP)
 
     result = {}
+    skipped = []
     for i, df in enumerate(dfs):
         if not df.empty and "PTS" in df.columns:
             try:
@@ -171,8 +172,19 @@ def pull_clutch(pid, cache):
                         "fg_pct": round(float(r.get("FG_PCT", 0)) * 100, 1),
                         "w_pct":  round(float(r.get("W_PCT", 0))  * 100, 1),
                     }
-            except Exception:
-                pass
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                # One malformed split shouldn't lose the others, but it must NOT
+                # be silent: this feeds data.js on the published investigation
+                # page, so a swallowed error ships a page with stats quietly
+                # missing. Report it and let the caller see the count.
+                skipped.append(f"s{i}")
+                print(f"  [warn] clutch split s{i} unusable, skipping: "
+                      f"{type(exc).__name__}: {exc}", file=sys.stderr)
+
+    if skipped:
+        print(f"  [warn] {len(skipped)} of {len(dfs)} clutch splits skipped "
+              f"({', '.join(skipped)}) — the published page will be missing them",
+              file=sys.stderr)
 
     cache[key] = result
     return result
