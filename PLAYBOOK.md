@@ -25,16 +25,25 @@ AUTOMATION.md row exists for this repo.
 - **Main-checkout DBs** (`db_dashboard.py` MANIFEST): `nba/data/nba.db`,
   `nfl/data/nfl.db`, `pga/data/pga.db`, root `nba_comebacks.db` /
   `nba_playoff_comebacks.db`. All gitignored, regenerable.
-- **Branch state:** checkout is on `feature/fold-betting-projects` (verified),
-  not master. `betting/`, `sharp-edge/`, `polymarket/` folded in 2026-07-01.
+- **Branch state:** checkout is on `main`. The betting / sharp-edge / polymarket
+  subtrees were split out to the private `betting-lab` repo on 2026-08-09 so this
+  repo could be published; they are not here and should not come back.
 - **Worktree DBs — TRIBAL, do not prune** (6 worktrees; run `git worktree list`).
   Branches unmerged, data gitignored — no other copy exists on disk:
   - `elegant-lamport-1d5555/soccer/` — soccer DB
   - `laughing-hugle-e9875d/mlb/` — mlb DB
   - `zen-turing-c1e6df/nhl.db` (11 MB) **and** `gracious-antonelli-777d65/nhl.db`
-    (8.7 MB) — NHL data exists in **two** worktrees at different sizes.
-    `TODO(Eric): which NHL copy is canonical?` Until answered, treat zen-turing
-    (larger) as the working copy but don't trust either for betting.
+    RESOLVED 2026-08-09 — the three NHL copies are different BUILDS, not
+    duplicates, so "which is canonical" depends on what you need:
+      * `nhl/data/nhl.db` (348 MB) is canonical for everything box-score:
+        70,352 games (1997-2026), 2.43M skater rows, drafts, playoff_series.
+        Schema uses `team_game` (SINGULAR). Its `plays` table exists but is EMPTY.
+      * `gracious-antonelli-777d65/nhl.db` (9 MB) is the ONLY play-by-play source
+        (29,710 `plays` over 7,085 games) and uses `team_games` (PLURAL) — a
+        different schema, NOT a drop-in. `analysis/nhl_leafs_era.py` needs this one.
+      * `zen-turing-c1e6df/nhl.db` (11 MB) is a partial backfill superseded by the
+        canonical build (36,012 games but only 2,850 team_game / 51,300 skater
+        rows). Prunable once Eric confirms — no unique data found in it.
   - `gracious-antonelli-777d65/nhl.db` shares that worktree with a root-level
     `nfl.db` (432 MB), distinct from the main checkout's `nfl/data/nfl.db` —
     purpose unconfirmed. `TODO(Eric).`
@@ -54,7 +63,7 @@ python db_dashboard.py --widget
 missing DBs listed explicitly, not silently dropped.
 
 ```powershell
-git branch --show-current   # expect: feature/fold-betting-projects
+git branch --show-current   # expect: main
 git worktree list            # expect: 6 worktrees (soccer/mlb/nhl×2/nfl/drafts + epic-faraday)
 ```
 If the branch changed, note it, don't act (§6). If a sport worktree row is
@@ -174,12 +183,13 @@ missing, **stop** — see §7 (data is gitignored and unrecoverable).
   ```
 - **Verify:** sport dir + `data/*.db` (or root `nhl.db`) present under that worktree.
 - **If it fails:** "DB doesn't exist" -> wrong location (§4). For NHL, confirm
-  which of the two copies is canonical before trusting results for betting (§6).
+  which build you need before trusting results — box scores vs play-by-play use
+  different copies with different schemas (§6).
 
 ### OP-9: Answering a sports question (reference only, fully covered elsewhere)
 See [`CLAUDE.md`](CLAUDE.md) (SCHEMA.md -> read-only SQL -> validate) and
 [`analysis/README.md`](analysis/README.md) (uv + DuckDB via `sportsdb.py` —
-`sportsdb.q()`/`pl()`, aliases `nba`/`nfl`/`pga`/`betting`). Never skip the
+`sportsdb.q()`/`pl()`, aliases `nba`/`nfl`/`pga`). Never skip the
 known-fact validation step, on any surface.
 
 ## 4. Failure modes & recovery
@@ -192,9 +202,8 @@ known-fact validation step, on any surface.
 | `ModuleNotFoundError: kagglesdk` | Default `pip install kaggle` broke import | Reinstall `kaggle==1.6.17` in `analysis/.venv` | `pip show kaggle` -> `1.6.17` |
 | Kaggle push re-uploads full ~6GB every time | `fingerprint()` unimplemented | Pending Eric (OP-5) — don't implement yourself | `pytest -q` in `kaggle/` still red |
 | Supabase COPY rejects a row | Blank/whitespace in numeric SQLite column | Already handled: `make_conv()` -> NULL before COPY | Load completes, row count matches |
-| "soccer/MLB/NHL DB doesn't exist" | Searched main checkout, not the worktree | Re-run in the correct worktree (OP-8); NHL lives in zen-turing / gracious-antonelli, not main | `data/*.db` or root `nhl.db` found under that worktree |
-| Betting DB path looks wrong in MANIFEST | `db_dashboard.py` + `analysis/sportsdb.py` MANIFESTs still point at pre-fold `betting_stuff/data/odds_history.db`; `betting/` folded in 2026-07-01 | **Don't silently "fix"** — confirm the correct current path with Eric first | `TODO(Eric): confirm betting DB path and which MANIFEST(s) to update` |
-| Site 403s the scraper | Non-browser default UA | Already handled: `scrapekit/extract.py` sends a real browser UA | Fetch succeeds, cached to disk |
+| "soccer/MLB DB doesn't exist" | Searched main checkout, not the worktree | Re-run in the correct worktree (OP-8). NHL box scores ARE in main (`nhl/data/nhl.db`); only play-by-play lives in a worktree (§1) | `data/*.db` found under that worktree |
+| Site 403s the scraper | Site rejects non-browser clients | `scrapekit` now identifies honestly by DEFAULT. Presenting as a browser is opt-in via `SCRAPEKIT_USER_AGENT` — check the target's robots.txt/terms FIRST; some sites prohibit automated access outright and a spoofed UA does not change that | Fetch succeeds, cached to disk |
 
 ## 5. Tuning knobs
 
@@ -203,34 +212,25 @@ known-fact validation step, on any surface.
 | NBA season range / `--force` / `--dry-run` | `nba/scrape.py` CLI args | `1996-2026` typical | `--force` = full rebuild, expensive | agent |
 | NFL `--datasets` / `--seasons` | `nfl/pull.py` `DATASETS` + CLI | `schedules,player_stats,team_stats`, `1999-2025` | Floor `EARLIEST_SEASON=1999`, auto-clamped | agent |
 | Kaggle dataset contents | `SOURCES` dict in `kaggle/push_datasets.py` | nba/nfl/pga | Add one line to `SOURCES`, then re-push (its docstring says so) | agent |
-| Analysis attached DBs | `MANIFEST` in `analysis/sportsdb.py` | nba, nfl, pga, betting (path may be stale — §4) | Add a line, `connect(refresh=True)` | agent |
+| Analysis attached DBs | `MANIFEST` in `analysis/sportsdb.py` | nba, nfl, pga | Add a line, `connect(refresh=True)` | agent |
 | scrapekit politeness/retry | `scrapekit/extract.py` constants | `MIN_INTERVAL_S=0.5`, `MAX_RETRIES=4`, `TIMEOUT_S=30` | Lower interval only for known-friendly APIs | agent |
 | `fingerprint(db_path)` strategy | `kaggle/push_datasets.py` stub; tests `kaggle/tests/test_fingerprint.py` | unimplemented (red) | Must be content-based, not mtime | **Eric** — propose, never implement unasked |
-| `shouldTakeDrawLive()` | `sharp-edge/lib/draw-signal.js` | placeholder | No default right answer | **Eric** — propose, never write the real logic |
-| FanDuel `confirm=True` | `betting/fanduel/bet.py` via `betting/run.py --confirm` | `False` unless explicit | Real money, never standing-authorized | **Eric** — per-bet only |
 | `classify_leader_outcome()` tie/playoff def | pga analysis module (`pga/README.md`) | documented baseline ships | Moves the headline %; a judgment call | **Eric** — propose, don't silently change |
 
 ## 6. Escalate to Eric (stop conditions)
 
-- Any real FanDuel bet placement/modification, or FanDuel login/2FA beyond odds scraping.
 - Known-fact validation fails on a refresh (e.g. Nicklaus != 18 majors) — stop;
   don't push suspect data to Kaggle/Supabase.
 - A source API changes shape beyond the drift already handled (ESPN golf JSON,
   nba_api, nflverse) requiring scraper redesign — Opus/Eric territory.
 - Kaggle first push: token + `--create` are pending Eric (OP-5) — don't create
   accounts/tokens on his behalf.
-- Merging `feature/fold-betting-projects` to master, or any soccer/mlb/nhl
-  worktree branch — branch strategy is Eric's call.
-- NHL data is needed for betting/analysis — two worktree copies exist at
-  different sizes; confirm which is canonical before trusting it (don't rebuild).
-- The betting-path MANIFEST drift (§4) needs a real decision — don't guess.
+- Merging any soccer/mlb/nhl worktree branch — branch strategy is Eric's call.
+- Pruning `.claude/worktrees/zen-turing-c1e6df` — its NHL copy looks superseded
+  by the canonical build (§1) but deleting data is Eric's call, not an agent's.
 
 ## 7. Do-not list
 
-- **Never** pass `confirm=True`/`--confirm` to FanDuel bet placement without
-  Eric's explicit per-bet instruction — real money.
-- **Never** commit `betting/raw/` or `betting/.eric.env` — gitignored personal
-  financial data.
 - **Never** mutate a DB during analysis — read-only always; `<sport>/data/` is
   gitignored, never force-add.
 - **Never** prune `.claude/worktrees/elegant-lamport-1d5555` or
@@ -245,6 +245,15 @@ known-fact validation step, on any surface.
 ## 8. Maintenance
 
 Update this playbook in the SAME change as any operation change.
+
+- 2026-08-09 — betting / sharp-edge / polymarket split out to the private
+  `betting-lab` repo (with `nba/exec_scrape.py`) so this repo can be published;
+  their operating rules moved to that repo's playbook. Removed the dangling
+  pre-fold `betting_stuff/data/odds_history.db` MANIFEST entry (the `TODO(Eric)`
+  in §4/§6 is resolved by deletion — the DB never existed here). Corrected the
+  §4 scrapekit row: the default UA now identifies the project, browser spoofing
+  is opt-in. Answered the open NHL-canonical `TODO(Eric)` with measured row
+  counts (§1) — three copies are different builds, not duplicates.
 
 - 2026-07-04 — created (Fable-week Track 5), grounded against the live repo:
   verified branch (`feature/fold-betting-projects`), all scrape entrypoints, and

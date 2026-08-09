@@ -1,7 +1,7 @@
 # Sports analysis environment
 
 A dedicated, reproducible workspace for hand-driven exploratory analysis over the
-local sports/betting SQLite databases. **DuckDB** attaches each `.db` file
+local sports SQLite databases. **DuckDB** attaches each `.db` file
 **read-only** and acts as a fast analytical front-end, so the databases stay the
 single source of truth and analysis can never corrupt them.
 
@@ -45,7 +45,7 @@ sportsdb.q("SELECT * FROM nba.player_game LIMIT 5")     # -> pandas
 sportsdb.pl("SELECT * FROM pga.tournaments")            # -> Polars
 ```
 
-Attached aliases (the schema you query): `nba`, `nfl`, `pga`, `betting`.
+Attached aliases (the schema you query): `nba`, `nfl`, `pga`.
 See the table/column map in [`../SCHEMA.md`](../SCHEMA.md).
 
 ## Adding a database

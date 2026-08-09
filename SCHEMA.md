@@ -87,11 +87,6 @@ _(database file not found — run its scraper)_
 - **players** (3,722 rows): player_id INTEGER, name TEXT, country TEXT
 - **tournaments** (991 rows): event_id INTEGER, season INTEGER, calendar_year INTEGER, name TEXT, short_name TEXT, start_date TEXT, end_date TEXT, venue TEXT, city TEXT, state TEXT, par INTEGER, purse REAL, playoff_type TEXT, num_rounds INTEGER, field_size INTEGER, is_major INTEGER, winner_player_id INTEGER
 
-## Betting
-
-### Betting odds history — `betting_stuff/data/odds_history.db`
-_(database file not found — run its scraper)_
-
 ## Games
 
 ### MTG deckbuilding — `MTG-Deckbuilding/data/mtg.db`

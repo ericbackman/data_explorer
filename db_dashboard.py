@@ -36,7 +36,6 @@ MANIFEST = [
     ("NHL box scores",       "NHL",      "data_explorer/nhl/data/nhl.db"),
     ("MLB draft + careers",  "MLB",      "data_explorer/mlb/data/mlb_draft.db"),
     ("PGA Tour history",     "Golf",     "data_explorer/pga/data/pga.db"),
-    ("Betting odds history", "Betting",  "betting_stuff/data/odds_history.db"),
     ("MTG deckbuilding",     "Games",    "MTG-Deckbuilding/data/mtg.db"),
     ("Life tracker",         "Personal", "life_tracker/life_tracker.db"),
     ("Video-game stats",     "Personal", "videogame-stattracker/stats.db"),

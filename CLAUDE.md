@@ -31,20 +31,6 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   skater/goalie box scores (RTSS era 1997+); resumable `--team-id` backfill.
   `playoff_series` is derived (round + Game-7 + blown-lead flags). Built for the
   Leafs "Plan the Parade" video essay. See `nhl/README.md`.
-- **Betting (`betting/`)** — folded in from the `betting_stuff` repo 2026-07-01.
-  Playwright FanDuel automation (login/odds/bet with confirm gate — see
-  `betting/CLAUDE.md` for safety rules) + personal bet-history exports in
-  `betting/raw/` (**gitignored: personal account data, local-only, NEVER
-  commit**; second disk copy in `Github\_archive\betting_stuff\`). Creds in
-  `betting/.eric.env` (gitignored).
-- **Soccer betting UI (`sharp-edge/`)** — folded in 2026-07-01. Static no-vig/EV
-  World Cup dashboard (vanilla JS, no build step). Own conventions in
-  `sharp-edge/CLAUDE.md`; `lib/draw-signal.js` `shouldTakeDrawLive()` is Eric's
-  to write.
-- **Polymarket (`polymarket/`)** — folded in from `polymarket-diver` 2026-07-01.
-  Read-only python clients (Gamma/CLOB/Data APIs) + rate limiter; used by the
-  Iran-strikes insider-trading notebook. `from polymarket import GammaClient`
-  works from repo root. See `polymarket/README.md`.
 - **Podcasts (`podcasts/`)** — folded in from the standalone `podcast-lab` folder
   2026-08-07. Semantic layer over podcasts: RSS ingest → free-first transcript
   waterfall (YouTube captions, faster-whisper fallback) → SQLite FTS →

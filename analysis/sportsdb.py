@@ -1,4 +1,4 @@
-"""Read-only DuckDB query layer over the local sports/betting SQLite databases.
+"""Read-only DuckDB query layer over the local sports SQLite databases.
 
 DuckDB attaches each SQLite file READ_ONLY and acts as a fast analytical
 front-end: the .db files stay the single source of truth and are never mutated.
@@ -42,7 +42,6 @@ MANIFEST: dict[str, Path] = {
     "nba": _DATA_EXPLORER / "nba" / "data" / "nba.db",
     "nfl": _DATA_EXPLORER / "nfl" / "data" / "nfl.db",
     "pga": _DATA_EXPLORER / "pga" / "data" / "pga.db",
-    "betting": _WORKSPACE / "betting_stuff" / "data" / "odds_history.db",
     # --- uncomment / edit to add more ---
     # "nba_comebacks": _DATA_EXPLORER / "nba_comebacks.db",
     # "mtg": _WORKSPACE / "MTG-Deckbuilding" / "data" / "mtg.db",
