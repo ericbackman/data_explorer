@@ -1,8 +1,9 @@
 """Toronto Maple Leafs — Matthews-Marner-Nylander era, regular-season strength vs
 playoff disappointment (marimo, reactive).
 
-Reproduces the NHL Leafs analysis with charts. Read-only over the local nhl.db
-(which currently lives in a git worktree — see DB_PATH below). DB coverage is
+Reproduces the NHL Leafs analysis with charts. Read-only over the play-by-play
+build of nhl.db, which lives in a git worktree — NOT the canonical
+nhl/data/nhl.db, which has a different schema (see DB_PATH below). DB coverage is
 2021-22 .. 2025-26 only; the "core four" era really starts 2016-17 but the
 pre-2021-22 seasons are not in this DB.
 
@@ -22,16 +23,18 @@ def _():
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    # nhl.db currently lives inside a git worktree, not the usual sport folder.
-    DB_PATH = (
-        "C:/Users/ericb/Github/data_explorer/.claude/worktrees/"
-        "gracious-antonelli-777d65/nhl.db"
-    )
+    import dbpath
+
+    # This notebook needs the WORKTREE build of nhl.db, which carries play-by-play
+    # (`plays`) and uses `team_games`. The canonical nhl/data/nhl.db is a different,
+    # larger build with an empty `plays` and a singular `team_game` — not a drop-in.
+    # dbpath searches the worktrees so a regenerated worktree name still resolves.
+    DB_PATH = dbpath.worktree_db("nhl.db", env_var="NHL_PBP_DB")
     TOR_TEAM_ID = 10  # teams: full_name='Toronto Maple Leafs'
 
     def connect_ro():
         """Read-only sqlite connection (never mutate a DB during analysis)."""
-        return sqlite3.connect(f"file:///{DB_PATH}?mode=ro", uri=True)
+        return sqlite3.connect(dbpath.ro_uri(DB_PATH), uri=True)
 
     return DB_PATH, TOR_TEAM_ID, connect_ro, mo, pd, plt
 

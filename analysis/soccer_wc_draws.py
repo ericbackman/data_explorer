@@ -15,9 +15,8 @@ Headline (all with Wilson 95% CIs):
 Open as a notebook:  uv run marimo edit soccer_wc_draws.py
 Run as an app:       uv run marimo run soccer_wc_draws.py
 
-Caveat: the DB currently lives in a git worktree
-(.claude/worktrees/elegant-lamport-1d5555/soccer/data/soccer.db); update DB_PATH if
-it moves back to soccer/data/soccer.db.
+Caveat: soccer.db currently lives in a git worktree rather than soccer/data/.
+`dbpath.worktree_db` finds it either way; set SOCCER_DB to override.
 """
 import marimo
 
@@ -33,13 +32,14 @@ def _():
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    DB_PATH = (
-        "C:/Users/ericb/Github/data_explorer/.claude/worktrees/"
-        "elegant-lamport-1d5555/soccer/data/soccer.db"
-    )
+    import dbpath
+
+    # soccer.db still lives in a git worktree; dbpath searches the worktrees
+    # rather than naming one, so a regenerated worktree still resolves.
+    DB_PATH = dbpath.worktree_db("soccer", "data", "soccer.db", env_var="SOCCER_DB")
 
     def connect_ro():
-        return sqlite3.connect("file:///" + DB_PATH + "?mode=ro", uri=True)
+        return sqlite3.connect(dbpath.ro_uri(DB_PATH), uri=True)
 
     def wilson(k, n, z=1.96):
         """Wilson score 95% CI for a proportion k/n. Returns (lo, hi)."""

@@ -35,15 +35,16 @@ def _():
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    # The MLB DB lives in a git worktree (see notebook caveat).
-    DB_PATH = (
-        "C:/Users/ericb/Github/data_explorer/.claude/worktrees/"
-        "laughing-hugle-e9875d/mlb/data/mlb.db"
-    )
+    import dbpath
+
+    # mlb.db still lives in a git worktree (see notebook caveat); dbpath searches
+    # the worktrees rather than naming one, and falls back to mlb/data/ if the DB
+    # is ever promoted out.
+    DB_PATH = dbpath.worktree_db("mlb", "data", "mlb.db", env_var="MLB_DB")
 
     def q(sql: str) -> "pd.DataFrame":
         """Read-only query into a DataFrame. Connection is opened ?mode=ro."""
-        con = sqlite3.connect("file:///" + DB_PATH + "?mode=ro", uri=True)
+        con = sqlite3.connect(dbpath.ro_uri(DB_PATH), uri=True)
         try:
             return pd.read_sql_query(sql, con)
         finally:
