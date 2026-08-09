@@ -85,7 +85,12 @@ def inspect_db(path: pathlib.Path) -> dict:
                             coverage = f"{lo} → {hi}" if lo != hi else str(lo)
                         break
                     except sqlite3.Error:
-                        pass
+                        # DATEISH is a list of GUESSES at a date-ish column name.
+                        # A failure here just means this candidate isn't usable
+                        # on this table, so try the next one. Coverage is a
+                        # display nicety — an empty string is an honest "unknown",
+                        # not a swallowed error.
+                        continue
             info["tables"].append({"name": t, "rows": rows, "coverage": coverage})
             info["total_rows"] += rows
     finally:
