@@ -31,13 +31,13 @@ with nothing to host and no Cloudflare in the loop.
 1. Sign in (or sign up) at **https://www.kaggle.com**.
 2. Go to **https://www.kaggle.com/settings** → scroll to **API** → click **Create New Token**.
    This downloads `kaggle.json` (contains your username + key).
-3. Move it to **`C:\Users\ericb\.kaggle\kaggle.json`** (create the `.kaggle` folder if
+3. Move it to **`$env:USERPROFILE\.kaggle\kaggle.json`** (create the `.kaggle` folder if
    needed). That's where the credential lives — never commit it to a repo.
 
 ### 2. Publish the dataset (first push)
 From `data_explorer/kaggle/`:
 ```powershell
-$py = "C:\Users\ericb\Github\data_explorer\analysis\.venv\Scripts\python.exe"
+$py = "$env:USERPROFILE\Github\data_explorer\analysis\.venv\Scripts\python.exe"
 & $py push_datasets.py --create
 ```
 This uploads ~6 GB once (slow the first time). It prints the dataset URL when done;
