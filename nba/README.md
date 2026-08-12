@@ -15,7 +15,7 @@ player/team game logs purely from the free **nba_api** (stats.nba.com, no key).
 
 ## Usage
 ```powershell
-cd C:\Users\ericb\Github\data_explorer
+cd $env:USERPROFILE\Github\data_explorer
 .\.venv\Scripts\python.exe -m nba.scrape --seasons 1996-2026   # modern era (~2 min)
 .\.venv\Scripts\python.exe -m nba.scrape --seasons 1946-2026   # all of NBA history
 .\.venv\Scripts\python.exe -m nba.scrape --seasons 2025-2026 --dry-run

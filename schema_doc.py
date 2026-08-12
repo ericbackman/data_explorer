@@ -24,7 +24,7 @@ answer one:
 3. Write read-only SQL and run it against the DB path with python + sqlite3.
 4. Validate against a known fact (a famous result/number) before reporting.
 
-All paths are relative to the workspace root (`{workspace}`).
+All paths are relative to the workspace root (the directory containing this repo).
 """
 
 
@@ -44,7 +44,7 @@ def _tables(conn: sqlite3.Connection) -> list[tuple[str, object, list[str]]]:
 
 
 def main() -> None:
-    lines = [PREAMBLE.format(workspace=WORKSPACE)]
+    lines = [PREAMBLE]
     by_cat: dict[str, list[tuple[str, str]]] = {}
     for label, cat, rel in MANIFEST:
         by_cat.setdefault(cat, []).append((label, rel))

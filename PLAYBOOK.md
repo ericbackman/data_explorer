@@ -43,12 +43,12 @@ AUTOMATION.md row exists for this repo.
         different schema, NOT a drop-in. `analysis/nhl_leafs_era.py` needs this one.
       * `zen-turing-c1e6df/nhl.db` (11 MB) is a partial backfill superseded by the
         canonical build (36,012 games but only 2,850 team_game / 51,300 skater
-        rows). Prunable once Eric confirms — no unique data found in it.
+        rows). Prunable once the owner confirms — no unique data found in it.
   - `gracious-antonelli-777d65/nhl.db` shares that worktree with a root-level
     `nfl.db` (432 MB), distinct from the main checkout's `nfl/data/nfl.db` —
-    purpose unconfirmed. `TODO(Eric).`
+    purpose unidentified; do not prune until someone confirms what it is.
   - `pedantic-meninsky-e2fee8/drafts.db` (22 MB) — likely the `trades/` draft-pick
-    data; purpose unconfirmed. `TODO(Eric).`
+    data; unconfirmed. Do not prune until someone confirms what it is.
   - `epic-faraday-73f136` — parallel full checkout, no unique DB; don't prune blind.
 - **Downstream publishes (optional):** private Kaggle dataset (`kaggle/`),
   curated Supabase serving tables (`load_to_supabase.py`).
@@ -56,7 +56,7 @@ AUTOMATION.md row exists for this repo.
 ## 2. Health check — run first
 
 ```powershell
-cd C:\Users\ericb\Github\data_explorer
+cd $env:USERPROFILE\Github\data_explorer
 python db_dashboard.py --widget
 ```
 **Expect:** inventory of every MANIFEST DB (size, mtime, table/row counts);
@@ -75,7 +75,7 @@ missing, **stop** — see §7 (data is gitignored and unrecoverable).
 - **Trigger:** Eric asks / before betting analysis / current season stale.
 - **Steps** (repo's own `.venv`, not `analysis/.venv`):
   ```powershell
-  cd C:\Users\ericb\Github\data_explorer
+  cd $env:USERPROFILE\Github\data_explorer
   .\.venv\Scripts\python.exe -m nba.scrape --seasons 1996-2026   # modern era, ~2 min
   # rarely: --seasons 1946-2026 (full history); --dry-run to preview; --force to rebuild
   ```
@@ -92,7 +92,7 @@ missing, **stop** — see §7 (data is gitignored and unrecoverable).
   `nfl/pull.py`/`nfl/historical.py` docstrings, verified against the code.
 - **Steps:**
   ```powershell
-  cd C:\Users\ericb\Github\data_explorer
+  cd $env:USERPROFILE\Github\data_explorer
   python -m nfl.pull --datasets schedules,player_stats,team_stats   # box scores
   python -m nfl.pull --datasets pbp                                 # play-by-play
   python -m nfl.historical   # one-shot: 1966-1998 Spreadspoke backfill, rarely re-run
@@ -132,19 +132,20 @@ missing, **stop** — see §7 (data is gitignored and unrecoverable).
 - **If it fails:** DB missing from output -> add a line to `MANIFEST` in
   `db_dashboard.py` (schema_doc.py imports it directly).
 
-### OP-5: Kaggle dataset push — prerequisites `TODO(Eric)`, not yet met
+### OP-5: Kaggle dataset push — prerequisites not yet met
 - **Trigger:** after a refresh worth publishing.
-- **Pre-flight (owner:Eric, incomplete):** needs (1) API token at
-  `C:\Users\ericb\.kaggle\kaggle.json`, (2) `kaggle==1.6.17` pinned (already in
+- **Pre-flight (incomplete — owner action required):** needs (1) API token at
+  `$env:USERPROFILE\.kaggle\kaggle.json`, (2) `kaggle==1.6.17` pinned (already in
   `analysis/.venv` — default `pip install kaggle` is broken on import, don't let
   it drift), (3) `fingerprint()` implemented in `kaggle/push_datasets.py`
   (stub; `kaggle/tests/test_fingerprint.py` is red by design until written).
-  **`TODO(Eric): create token, run first `--create` push, implement
-  `fingerprint()`. Do not create Kaggle accounts/tokens on his behalf.`**
+  **Owner action required: create the token, run the first `--create` push, and
+  implement `fingerprint()`. An agent must never create accounts or API tokens on
+  the owner's behalf.**
 - **Steps (once met):**
   ```powershell
-  $py = "C:\Users\ericb\Github\data_explorer\analysis\.venv\Scripts\python.exe"
-  cd C:\Users\ericb\Github\data_explorer\kaggle
+  $py = "$env:USERPROFILE\Github\data_explorer\analysis\.venv\Scripts\python.exe"
+  cd $env:USERPROFILE\Github\data_explorer\kaggle
   & $py push_datasets.py --create                          # FIRST push only
   & $py push_datasets.py -m "refresh nba through 2026-07"   # subsequent
   ```
@@ -176,10 +177,10 @@ missing, **stop** — see §7 (data is gitignored and unrecoverable).
 - **Steps:** `cd` into the specific worktree before querying — the main
   checkout has no soccer/mlb/nhl tables:
   ```powershell
-  cd C:\Users\ericb\Github\data_explorer\.claude\worktrees\elegant-lamport-1d5555\soccer
-  cd C:\Users\ericb\Github\data_explorer\.claude\worktrees\laughing-hugle-e9875d\mlb
+  cd $env:USERPROFILE\Github\data_explorer\.claude\worktrees\elegant-lamport-1d5555\soccer
+  cd $env:USERPROFILE\Github\data_explorer\.claude\worktrees\laughing-hugle-e9875d\mlb
   # NHL: two copies exist — use zen-turing (11 MB) as the working copy:
-  cd C:\Users\ericb\Github\data_explorer\.claude\worktrees\zen-turing-c1e6df
+  cd $env:USERPROFILE\Github\data_explorer\.claude\worktrees\zen-turing-c1e6df
   ```
 - **Verify:** sport dir + `data/*.db` (or root `nhl.db`) present under that worktree.
 - **If it fails:** "DB doesn't exist" -> wrong location (§4). For NHL, confirm
@@ -249,18 +250,18 @@ Update this playbook in the SAME change as any operation change.
 - 2026-08-09 — betting / sharp-edge / polymarket split out to the private
   `betting-lab` repo (with `nba/exec_scrape.py`) so this repo can be published;
   their operating rules moved to that repo's playbook. Removed the dangling
-  pre-fold `betting_stuff/data/odds_history.db` MANIFEST entry (the `TODO(Eric)`
+  pre-fold `betting_stuff/data/odds_history.db` MANIFEST entry (the open question
   in §4/§6 is resolved by deletion — the DB never existed here). Corrected the
   §4 scrapekit row: the default UA now identifies the project, browser spoofing
-  is opt-in. Answered the open NHL-canonical `TODO(Eric)` with measured row
+  is opt-in. Answered the open NHL-canonical question with measured row
   counts (§1) — three copies are different builds, not duplicates.
 
 - 2026-07-04 — created (Fable-week Track 5), grounded against the live repo:
   verified branch (`feature/fold-betting-projects`), all scrape entrypoints, and
   flagged a real MANIFEST path drift (`betting_stuff/data/odds_history.db`
-  post-fold) as `TODO(Eric)`.
+  post-fold) as an open question.
 - 2026-07-04 — corrected after adversarial verify: all **6** worktrees enumerated
   (prior draft saw only 2 and wrongly said NHL was missing). NHL DB exists in two
-  worktrees at different sizes (duplication → `TODO(Eric)` canonical); extra root
+  worktrees at different sizes (duplication → which is canonical was unresolved); extra root
   `nfl.db` (432 MB) + `drafts.db` (22 MB) noted, purpose unconfirmed. Kaggle knob
   corrected (`SOURCES` only, no `kaggle_sportsdb.py` MANIFEST).

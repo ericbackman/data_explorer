@@ -10,7 +10,7 @@ answer one:
 3. Write read-only SQL and run it against the DB path with python + sqlite3.
 4. Validate against a known fact (a famous result/number) before reporting.
 
-All paths are relative to the workspace root (`C:\Users\ericb\Github`).
+All paths are relative to the workspace root (the directory containing this repo).
 
 
 ## NBA

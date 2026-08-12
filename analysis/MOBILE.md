@@ -7,7 +7,7 @@ phone just talks to it over an authenticated tunnel, so the data is always live.
 ## Phase 1 — serve locally (verify on this machine)
 
 ```powershell
-cd C:\Users\ericb\Github\data_explorer\analysis
+cd $env:USERPROFILE\Github\data_explorer\analysis
 .\serve_mobile.ps1                  # full notebook editor on http://127.0.0.1:2718
 # or: .\serve_mobile.ps1 -Mode run  # app-only view of mobile.py (lightest for phone)
 ```
@@ -35,7 +35,7 @@ cloudflared tunnel route dns home-lab lab.ericbackman.com
 
 ```yaml
 tunnel: home-lab
-credentials-file: C:\Users\ericb\.cloudflared\<TUNNEL_ID>.json
+credentials-file: $env:USERPROFILE\.cloudflared\<TUNNEL_ID>.json
 ingress:
   - hostname: lab.ericbackman.com
     service: http://127.0.0.1:2718

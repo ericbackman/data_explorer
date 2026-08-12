@@ -15,7 +15,7 @@ data → make a notebook.**
   not on your PATH anyway.)*
 - Throughout this guide, `$py` is your Python. Paste this once per PowerShell window:
   ```powershell
-  $py = "C:\Users\ericb\Github\data_explorer\analysis\.venv\Scripts\python.exe"
+  $py = "$env:USERPROFILE\Github\data_explorer\analysis\.venv\Scripts\python.exe"
   ```
 
 ---
@@ -34,7 +34,7 @@ data → make a notebook.**
    "API Tokens (Recommended) → Generate New Token" button above it — those new-style tokens
    need a newer Kaggle client than the working `kaggle==1.6.17` and don't produce a `kaggle.json`.)*
 3. Your browser downloads **`kaggle.json`** (username + secret key) to your Downloads folder.
-4. Move it to `C:\Users\ericb\.kaggle\kaggle.json`. Easiest — paste into PowerShell:
+4. Move it to `$env:USERPROFILE\.kaggle\kaggle.json`. Easiest — paste into PowerShell:
    ```powershell
    New-Item -ItemType Directory -Force "$env:USERPROFILE\.kaggle" | Out-Null
    Move-Item "$env:USERPROFILE\Downloads\kaggle.json" "$env:USERPROFILE\.kaggle\kaggle.json" -Force
@@ -49,8 +49,8 @@ data → make a notebook.**
 Open PowerShell and run:
 
 ```powershell
-$py = "C:\Users\ericb\Github\data_explorer\analysis\.venv\Scripts\python.exe"
-cd C:\Users\ericb\Github\data_explorer\kaggle
+$py = "$env:USERPROFILE\Github\data_explorer\analysis\.venv\Scripts\python.exe"
+cd $env:USERPROFILE\Github\data_explorer\kaggle
 & $py push_datasets.py --create
 ```
 
@@ -107,8 +107,8 @@ sportsdb.pl("SELECT * FROM pga.tournaments")         # -> polars
 
 **Refresh the data after re-scraping** (Kaggle keeps versions):
 ```powershell
-$py = "C:\Users\ericb\Github\data_explorer\analysis\.venv\Scripts\python.exe"
-cd C:\Users\ericb\Github\data_explorer\kaggle
+$py = "$env:USERPROFILE\Github\data_explorer\analysis\.venv\Scripts\python.exe"
+cd $env:USERPROFILE\Github\data_explorer\kaggle
 & $py push_datasets.py -m "refresh nba through 2026-07"   # note: NO --create after the first time
 ```
 Then in the notebook, re-attach the newest dataset version (Kaggle prompts you) and Run All.
@@ -122,7 +122,7 @@ Then in the notebook, re-attach the newest dataset version (Kaggle prompts you) 
 
 | Symptom | Fix |
 |---------|-----|
-| `Could not find kaggle.json` | Token isn't at `C:\Users\ericb\.kaggle\kaggle.json`. Redo Step 2. |
+| `Could not find kaggle.json` | Token isn't at `$env:USERPROFILE\.kaggle\kaggle.json`. Redo Step 2. |
 | `401 - Unauthorized` | Token wrong/expired. On the settings page, create a fresh **Legacy API Key**, then redo Step 2's move. |
 | `ModuleNotFoundError: kagglesdk...` | You have the broken new kaggle. Fix: `& $py -m pip install "kaggle==1.6.17"`. |
 | `409 - dataset already exists` on `--create` | You already created it once. Drop `--create` and use the `-m "..."` form. |
