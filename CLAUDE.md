@@ -31,6 +31,14 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   skater/goalie box scores (RTSS era 1997+); resumable `--team-id` backfill.
   `playoff_series` is derived (round + Game-7 + blown-lead flags). Built for the
   Leafs "Plan the Parade" video essay. See `nhl/README.md`.
+- **Sumo (`sumo/`)** — free community API (`sumo-api.com`, mirrors SumoDB). Every
+  sekitori bout 1960-present (Makuuchi + Juryo) plus wrestler bios, **measurement
+  change-points**, full rank history, and awards. Query **`bout_wrestler`**, the
+  derived table: two rows per bout (one per wrestler's view) with physicals
+  resolved **as-of** that tournament — never join a bout to a career-latest
+  weight. Exclude `kimarite = 'fusen'` (forfeits, not contests). **Caveat:** win
+  rate by *absolute* weight/BMI is rank-confounded; only the differential columns
+  (`weight_adv`, …) are safe to read causally. See `sumo/README.md`.
 - **Podcasts (`podcasts/`)** — folded in from the standalone `podcast-lab` folder
   2026-08-07. Semantic layer over podcasts: RSS ingest → free-first transcript
   waterfall (YouTube captions, faster-whisper fallback) → SQLite FTS →

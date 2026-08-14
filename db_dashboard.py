@@ -36,6 +36,7 @@ MANIFEST = [
     ("NHL box scores",       "NHL",      "data_explorer/nhl/data/nhl.db"),
     ("MLB draft + careers",  "MLB",      "data_explorer/mlb/data/mlb_draft.db"),
     ("PGA Tour history",     "Golf",     "data_explorer/pga/data/pga.db"),
+    ("Sumo bouts + physique","Sumo",     "data_explorer/sumo/data/sumo.db"),
     ("MTG deckbuilding",     "Games",    "MTG-Deckbuilding/data/mtg.db"),
     ("Life tracker",         "Personal", "life_tracker/life_tracker.db"),
     ("Video-game stats",     "Personal", "videogame-stattracker/stats.db"),
@@ -44,11 +45,12 @@ MANIFEST = [
 # Mid-ramp hexes (readable in both light & dark) for category accents.
 CATEGORY_COLOR = {
     "NBA": "#D85A30", "NFL": "#1D9E75", "NHL": "#185FA5", "MLB": "#B3485D",
-    "Golf": "#639922", "Betting": "#BA7517", "Games": "#7F77DD", "Personal": "#378ADD",
+    "Golf": "#639922", "Sumo": "#A0499E", "Betting": "#BA7517",
+    "Games": "#7F77DD", "Personal": "#378ADD",
 }
 
 DATEISH = ("season", "game_date", "date", "year", "event_date",
-           "start_date", "pulled_at", "calendar_year")
+           "start_date", "pulled_at", "calendar_year", "basho_id")
 INTERNAL = {"sqlite_stat1", "sqlite_stat4", "sqlite_sequence", "sqlite_master"}
 
 

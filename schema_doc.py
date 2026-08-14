@@ -27,6 +27,32 @@ answer one:
 All paths are relative to the workspace root (the directory containing this repo).
 """
 
+# Per-database query notes, keyed by the MANIFEST path. Table/column lists are
+# introspected, but the *join conventions and known confounds* are not knowable
+# from the schema — and getting them wrong produces confidently wrong answers.
+# Keep each note to what changes the SQL you would write.
+NOTES: dict[str, list[str]] = {
+    "data_explorer/sumo/data/sumo.db": [
+        "**Query `bout_wrestler`, not `bouts`.** It is the analysis-ready table: two rows "
+        "per bout (one per wrestler's point of view), so win rate by any attribute is a "
+        "one-line `GROUP BY` and the overall win rate is exactly 50% by construction "
+        "(a built-in consistency check).",
+        "**`as_of_physical` join convention.** `measurements` holds *change-points*, not "
+        "one row per tournament. Never join a bout to a wrestler's career-latest weight — "
+        "the physicals on `bout_wrestler` are already resolved as-of the bout's `basho_id` "
+        "(most-recent-measurement-at-or-before, falling back to the earliest recorded for "
+        "bouts that predate it). 95.6% of rows resolve a weight; the rest are NULL, never 0.",
+        "**Exclude `kimarite = 'fusen'`** — those are forfeits where a wrestler was absent "
+        "and no sumo happened, not physical contests.",
+        "**Known caveat — marginal-mass claims are rank-confounded.** Win rate by *absolute* "
+        "`weight_kg` (or `bmi`) mostly measures rank: heavier men are disproportionately "
+        "higher-ranked, and rank predicts winning. Only the *differential* columns "
+        "(`weight_adv`, `height_adv`, `bmi_adv`, `age_adv` = own minus opponent) are "
+        "matchup-internal and safe to read causally. Any 'every extra kg is worth X%' claim "
+        "must control on `rank_value` / `rank_adv` before it means anything.",
+    ],
+}
+
 
 def _tables(conn: sqlite3.Connection) -> list[tuple[str, object, list[str]]]:
     names = [r[0] for r in conn.execute(
@@ -54,6 +80,12 @@ def main() -> None:
         for label, rel in items:
             path = WORKSPACE / rel
             lines.append(f"\n### {label} — `{rel}`")
+            notes = NOTES.get(rel, [])
+            if notes:
+                # One blockquote, blank-quote lines between notes, then a real
+                # blank line so the table list below isn't swallowed as lazy
+                # blockquote continuation.
+                lines.append("\n>\n".join(f"> {n}" for n in notes) + "\n")
             if not path.exists():
                 lines.append("_(database file not found — run its scraper)_")
                 continue

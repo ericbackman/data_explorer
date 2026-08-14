@@ -87,6 +87,28 @@ _(database file not found — run its scraper)_
 - **players** (3,722 rows): player_id INTEGER, name TEXT, country TEXT
 - **tournaments** (991 rows): event_id INTEGER, season INTEGER, calendar_year INTEGER, name TEXT, short_name TEXT, start_date TEXT, end_date TEXT, venue TEXT, city TEXT, state TEXT, par INTEGER, purse REAL, playoff_type TEXT, num_rounds INTEGER, field_size INTEGER, is_major INTEGER, winner_player_id INTEGER
 
+## Sumo
+
+### Sumo bouts + physique — `data_explorer/sumo/data/sumo.db`
+> **Query `bout_wrestler`, not `bouts`.** It is the analysis-ready table: two rows per bout (one per wrestler's point of view), so win rate by any attribute is a one-line `GROUP BY` and the overall win rate is exactly 50% by construction (a built-in consistency check).
+>
+> **`as_of_physical` join convention.** `measurements` holds *change-points*, not one row per tournament. Never join a bout to a wrestler's career-latest weight — the physicals on `bout_wrestler` are already resolved as-of the bout's `basho_id` (most-recent-measurement-at-or-before, falling back to the earliest recorded for bouts that predate it). 95.6% of rows resolve a weight; the rest are NULL, never 0.
+>
+> **Exclude `kimarite = 'fusen'`** — those are forfeits where a wrestler was absent and no sumo happened, not physical contests.
+>
+> **Known caveat — marginal-mass claims are rank-confounded.** Win rate by *absolute* `weight_kg` (or `bmi`) mostly measures rank: heavier men are disproportionately higher-ranked, and rank predicts winning. Only the *differential* columns (`weight_adv`, `height_adv`, `bmi_adv`, `age_adv` = own minus opponent) are matchup-internal and safe to read causally. Any 'every extra kg is worth X%' claim must control on `rank_value` / `rank_adv` before it means anything.
+
+- **basho** (398 rows): id TEXT, start_date TEXT, end_date TEXT, location TEXT
+- **bout_wrestler** (386,810 rows): basho_id TEXT, division TEXT, day INTEGER, match_no INTEGER, rikishi_id INTEGER, opp_id INTEGER, is_win INTEGER, height_cm REAL, weight_kg REAL, bmi REAL, age_years REAL, rank_value INTEGER, opp_height_cm REAL, opp_weight_kg REAL, opp_bmi REAL, opp_age_years REAL, opp_rank_value INTEGER, weight_adv REAL, height_adv REAL, bmi_adv REAL, age_adv REAL, rank_adv INTEGER, kimarite TEXT
+- **bouts** (193,405 rows): basho_id TEXT, division TEXT, day INTEGER, match_no INTEGER, east_id INTEGER, west_id INTEGER, east_shikona TEXT, west_shikona TEXT, east_rank TEXT, west_rank TEXT, winner_id INTEGER, kimarite TEXT
+- **fetched** (12,265 rows): scope TEXT
+- **measurements** (8,683 rows): rikishi_id INTEGER, basho_id TEXT, height_cm REAL, weight_kg REAL
+- **ranks** (72,002 rows): rikishi_id INTEGER, basho_id TEXT, rank_value INTEGER, rank TEXT
+- **rikishi** (989 rows): id INTEGER, sumodb_id INTEGER, nsk_id INTEGER, shikona_en TEXT, shikona_jp TEXT, heya TEXT, birth_date TEXT, shusshin TEXT, debut TEXT, height_cm REAL, weight_kg REAL
+- **rikishi_stats** (989 rows): rikishi_id INTEGER, career_basho INTEGER, total_matches INTEGER, total_wins INTEGER, total_losses INTEGER, total_absences INTEGER, yusho INTEGER, makuuchi_yusho INTEGER, juryo_yusho INTEGER, sansho_total INTEGER, makuuchi_basho INTEGER, makuuchi_wins INTEGER
+- **sansho** (1,194 rows): basho_id TEXT, prize TEXT, rikishi_id INTEGER
+- **yusho** (2,382 rows): basho_id TEXT, division TEXT, rikishi_id INTEGER
+
 ## Games
 
 ### MTG deckbuilding — `MTG-Deckbuilding/data/mtg.db`
