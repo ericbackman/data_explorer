@@ -38,6 +38,7 @@ nba/data/
 pga/data/
 nfl/data/
 osrs/data/
+sumo/data/
 
 # Personal betting-account exports (folded in from betting_stuff 2026-07-01) —
 # NOT regenerable, but PERSONAL ACCOUNT DATA: keep local only, NEVER commit.
