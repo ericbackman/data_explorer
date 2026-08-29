@@ -20,6 +20,17 @@
 
 const INVESTIGATIONS = [
   {
+    slug:        "canada-fiscal",
+    title:       "The Canadian Ledger",
+    subtitle:    "Every Tax Dollar In, Every Dollar Out",
+    description: "All government revenue in Canada beside everything it buys, on one consolidation basis — every tax against every function, from social protection down to street lighting, per person or as a share. Includes the reconciliation the two tables don't advertise: spending-by-function is only 84% of total expenditure, because capital is excluded.",
+    date:        "2026-08-29",
+    tags:        ["Government", "Reference", "Canada", "Public Finance"],
+    accent:      "#AFA238",
+    headline:    { stat: "$1.31T", label: "Revenue, All Levels, 2024" },
+    status:      "live",
+  },
+  {
     slug:        "registry",
     title:       "The Registry",
     subtitle:    "Where the Big Public Datasets Live",

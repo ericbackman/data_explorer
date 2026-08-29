@@ -1,0 +1,2 @@
+# raw StatCan pulls — 21 MB, regenerable via build_data.py --refresh
+.cache/
