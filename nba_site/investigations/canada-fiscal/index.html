@@ -190,6 +190,81 @@ button.row:hover .row__name { color: var(--bd-accent); }
 .bridge .sum { border-top: 1px solid var(--bd-line); padding-top: 0.35rem; margin-top: 0.2rem; }
 .bridge .sum dt, .bridge .sum dd { font-weight: 700; color: var(--bd-ink); }
 
+/* ---------- distribution ---------- */
+.dist-stats {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; margin: 0.4rem 0 1.2rem;
+  font-size: 0.9rem; color: var(--bd-ink-2);
+}
+.dist-stats b {
+  font-family: var(--mono); color: var(--bd-ink); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dist-legend {
+  display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--bd-ink-2); margin-bottom: 0.5rem;
+}
+.dist-legend span { display: flex; align-items: center; gap: 0.4rem; }
+.dist-legend i { width: 0.85rem; height: 0.55rem; border-radius: 2px; display: inline-block; }
+.dist-legend .k-filers {
+  background: color-mix(in srgb, var(--bd-accent-2) 32%, transparent);
+  box-shadow: inset 0 0 0 1px var(--bd-accent-2);
+}
+.dist-legend .k-tax { background: var(--bd-gain); }
+
+.dist {
+  display: grid;
+  grid-template-columns: 8.4rem 1fr 1fr 3.6rem;
+  align-items: center; gap: 0 0.5rem;
+  padding: 0.22rem 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.dist:last-of-type { border-bottom: none; }
+.dist__band {
+  font-family: var(--mono); font-size: 0.74rem; color: var(--bd-ink-2);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.dist__side { display: flex; height: 0.8rem; }
+.dist__side--l { justify-content: flex-end; border-right: 1px solid var(--bd-line); padding-right: 2px; }
+.dist__side--r { justify-content: flex-start; padding-left: 2px; }
+.dist__bar { height: 100%; border-radius: 2px; min-width: 2px; }
+/* The two series sit at almost the same luminance, so hue alone would not
+   separate them. The left side is outlined and translucent, the right solid --
+   position, fill style and colour all carry the distinction. */
+.dist__bar--filers {
+  background: color-mix(in srgb, var(--bd-accent-2) 32%, transparent);
+  box-shadow: inset 0 0 0 1px var(--bd-accent-2);
+}
+.dist__bar--tax { background: var(--bd-gain); }
+.dist__rate {
+  font-family: var(--mono); font-size: 0.74rem; text-align: right;
+  font-variant-numeric: tabular-nums; color: var(--bd-ink);
+}
+.dist--head {
+  border-bottom: 1px solid var(--bd-line); padding-bottom: 0.35rem; margin-bottom: 0.2rem;
+}
+.dist--head span {
+  font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--bd-ink-2);
+}
+.dist--head .c { text-align: center; }
+.dist--head .r { text-align: right; }
+
+.callout {
+  margin-top: 1.2rem; padding: 0.95rem 1.15rem;
+  background: var(--surface); border: 1px solid var(--bd-line);
+  border-left: 3px solid var(--bd-gain); border-radius: 4px;
+  font-size: 0.95rem; max-width: 66ch;
+}
+.callout b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 34rem) {
+  .dist { grid-template-columns: 6.6rem 1fr 1fr 3rem; }
+  .dist__band { font-size: 0.68rem; }
+}
+
 /* ---------- provinces ---------- */
 .provinces { margin-top: 3rem; }
 .sec__head {
@@ -282,6 +357,46 @@ footer.notes p { max-width: 68ch; margin-bottom: 0.7rem; }
   <dl id="bridge-lines"></dl>
 </section>
 
+<section class="distribution">
+  <div class="sec__head">
+    <h2>Who paid the income tax</h2>
+    <span class="basis">personal income tax only</span>
+    <div class="ctl" style="margin-left:auto">
+      <label for="taxyear">Tax year</label>
+      <select id="taxyear"></select>
+    </div>
+  </div>
+  <p class="sec__note">
+    Every individual return filed and assessed, grouped by total income. This is one
+    slice of the ledger above — personal income tax, not the sales, payroll, corporate
+    and property taxes that make up most of the rest. Administrative tax-year counts
+    also don't reconcile line-for-line with the national accounts, so read this for its
+    shape rather than against the totals above.
+  </p>
+  <p class="sec__note">
+    <strong>The bands are nominal dollars and are never re-indexed.</strong> $100,000 in
+    2018 is not $100,000 in 2024, so a rising share of filers in the upper bands is
+    partly inflation moving people across fixed lines rather than incomes genuinely
+    pulling away. Compare the shape of a single year confidently; compare across years
+    only with that in mind.
+  </p>
+
+  <div class="dist-stats" id="dist-stats"></div>
+
+  <div class="dist-legend">
+    <span><i class="k-filers"></i>Share of filers</span>
+    <span><i class="k-tax"></i>Share of income tax paid</span>
+  </div>
+
+  <div class="dist dist--head" aria-hidden="true">
+    <span>Total income</span><span class="r">Filers</span>
+    <span>Tax paid</span><span class="r">Rate</span>
+  </div>
+  <div id="dist-rows"></div>
+
+  <p class="callout" id="dist-callout"></p>
+</section>
+
 <section class="provinces">
   <div class="sec__head">
     <h2>Spending per person, by province</h2>
@@ -334,6 +449,7 @@ const state = {
   year: DATA.years[DATA.years.length - 1],
   unit: "total",                 // total | percap | share
   fn: "__all__",
+  taxYear: DATA.distribution.years[DATA.distribution.years.length - 1],
   open: new Set(),               // expanded parent rows, keyed "rev:3" / "sp:7"
 };
 
@@ -527,6 +643,82 @@ function renderBridge(fnTotal) {
   }
 }
 
+/* ── rendering: who paid the income tax ── */
+function renderDistribution() {
+  const D = DATA.distribution;
+  const d = D.series[state.taxYear];
+  const total = d.total;
+
+  // Shares, computed against the published totals rather than the band sums —
+  // per-cell rounding makes those differ slightly.
+  const shareFilers = d.filers.map(v => 100 * v / total.filers);
+  const shareTax = d.tax.map(v => 100 * v / total.tax);
+  const max = Math.max(...shareFilers, ...shareTax, 1);
+
+  const stats = document.getElementById("dist-stats");
+  clear(stats);
+  const add = (label, value) => {
+    const s = el("span", null, label + " ");
+    s.appendChild(el("b", null, value));
+    stats.appendChild(s);
+  };
+  add("Filers", (total.filers / 1e6).toFixed(1) + "M");
+  add("Total income", fmtDollars(total.income));
+  add("Income tax paid", fmtDollars(total.tax));
+  add("Overall effective rate", (100 * total.tax / total.income).toFixed(1) + "%");
+
+  const box = document.getElementById("dist-rows");
+  clear(box);
+  D.bands.forEach((band, i) => {
+    const row = el("div", "dist");
+    row.appendChild(el("span", "dist__band", band));
+
+    const left = el("div", "dist__side dist__side--l");
+    const lb = el("div", "dist__bar dist__bar--filers");
+    lb.style.width = (100 * shareFilers[i] / max) + "%";
+    lb.title = shareFilers[i].toFixed(1) + "% of filers";
+    left.appendChild(lb);
+    row.appendChild(left);
+
+    const right = el("div", "dist__side dist__side--r");
+    const rb = el("div", "dist__bar dist__bar--tax");
+    rb.style.width = (100 * shareTax[i] / max) + "%";
+    rb.title = shareTax[i].toFixed(1) + "% of the tax";
+    right.appendChild(rb);
+    row.appendChild(right);
+
+    const rate = d.income[i] ? 100 * d.tax[i] / d.income[i] : 0;
+    const cell = el("span", "dist__rate", rate.toFixed(1) + "%");
+    cell.title = band + ": " + shareFilers[i].toFixed(1) + "% of filers paid "
+      + shareTax[i].toFixed(1) + "% of the income tax";
+    row.appendChild(cell);
+    box.appendChild(row);
+  });
+
+  // Walk down from the top band until the accumulated tax passes half.
+  let filersPct = 0, taxPct = 0, bands = 0;
+  for (let i = D.bands.length - 1; i >= 0 && taxPct < 50; i--) {
+    filersPct += shareFilers[i];
+    taxPct += shareTax[i];
+    bands++;
+  }
+  // The claim covers every band from this one up, so it is the LOWER bound of
+  // the lowest included band that belongs in the sentence — not its full range.
+  const lowest = D.bands[D.bands.length - bands];
+  const floor = lowest.split("–")[0].replace("+", "");
+
+  const callout = document.getElementById("dist-callout");
+  clear(callout);
+  callout.appendChild(document.createTextNode("Filers earning "));
+  callout.appendChild(el("b", null, floor + " or more"));
+  callout.appendChild(document.createTextNode(" are "));
+  callout.appendChild(el("b", null, filersPct.toFixed(1) + "%"));
+  callout.appendChild(document.createTextNode(" of everyone who filed, and paid "));
+  callout.appendChild(el("b", null, taxPct.toFixed(1) + "%"));
+  callout.appendChild(document.createTextNode(
+    " of all personal income tax in " + state.taxYear + "."));
+}
+
 /* ── rendering: provinces ── */
 function renderProvinces() {
   const box = document.getElementById("prov-rows");
@@ -583,6 +775,7 @@ function render() {
   document.getElementById("spend-total").textContent = fmt(spendTotal, spendTotal);
 
   renderBridge(spendTotal);
+  renderDistribution();
   renderProvinces();
 }
 
@@ -609,6 +802,18 @@ function buildControls() {
     });
     seg.appendChild(b);
   }
+
+  const taxSel = document.getElementById("taxyear");
+  for (const y of [...DATA.distribution.years].reverse()) {
+    const o = el("option", null, y);
+    o.value = y;
+    taxSel.appendChild(o);
+  }
+  taxSel.value = state.taxYear;
+  taxSel.addEventListener("change", e => {
+    state.taxYear = e.target.value;
+    renderDistribution();
+  });
 
   const fnSel = document.getElementById("fn");
   const all = el("option", null, "All functions");

@@ -20,9 +20,12 @@ Three Statistics Canada tables, pulled through the Web Data Service (no API key)
 | `36-10-0450` | Revenue and expenditure by level of government | 2007–2024, annual |
 | `10-10-0005` | Spending by function (CCOFOG) | 2008–2024, annual |
 | `17-10-0009` | Population estimates | 1946–2026, quarterly |
+| CRA Table 2 | Individual returns by income band | 2018–2024, annual |
 
-The overlap, 2008–2024, is what the page renders. Raw CSVs cache to `.cache/`
-(21 MB, gitignored); `data.js` is the 71 KB extract that actually ships.
+The ledger renders the 2008–2024 StatCan overlap; the distributional layer runs on
+its own 2018–2024 timeline with its own selector, because tax years and national
+accounts years are different things. Raw CSVs cache to `.cache/` (21 MB, gitignored);
+`data.js` is the 76 KB extract that actually ships.
 
 ## The decisions that shaped this
 
@@ -40,6 +43,12 @@ is ~84% of total expenditure because CCOFOG excludes capital acquisition and con
 of fixed capital. Rather than hide that, the bridge section shows the shortfall against
 both excluded lines, which the revenue table publishes itself.
 
+**The distributional layer is a slice, not a total.** CRA Table 2 covers personal
+income tax from assessed returns — one part of the ledger's "Taxes on incomes", not
+sales, payroll, corporate or property tax. It is administrative tax-year data against
+the ledger's national accounts, so the two will not reconcile; the section is framed
+to be read for its shape.
+
 ## Traps, and what the code does about them
 
 **Estimate labels are not unique — join on the member id.** Table 36-10-0450 carries
@@ -52,6 +61,31 @@ sum to the published revenue total in every year — the check that would have c
 
 **Metadata labels and CSV labels differ.** Cube metadata gives `Defence`; the CSV gives
 `Defence [702]`. Only display names are stripped; the join never depends on them.
+
+**The CRA is the mirror image — join on the name, never the row number.** Row 104 is
+"Net provincial or territorial tax" in the 2022 edition and "Eligible educator school
+supply tax credit" in the 2023 one. Statistics Canada has stable ids and duplicated
+names; the CRA has stable names and unstable numbering. Neither source can be joined
+the way the other one must be.
+
+**A 200 is not proof of a CSV.** canada.ca answers unknown paths with a styled HTML
+page under a 200, and the Table 2 filename drifts by edition (`t02ca`, `tbl2`,
+`tbl2ac`, `table2_ac`, `tbl2_ac`, `tbl2_ac_en`), so a constructed URL will cheerfully
+cache a web page as data. URLs come from the open data catalogue and every download is
+sniffed for HTML. Six archived editions (2012–2017) have rotted catalogue links and
+are recorded as `.dead` tombstones so rebuilds skip them.
+
+**Editions disagree about their own layout.** Through 2021 the paired columns are
+`<band> #` / `<band> $ (000)` with a "Grand total" column; from 2022 they are
+`<band> (Number / Nombre)` / `(Thousands of Dollars)` with a plain "Total". The 2009
+and 2010 editions use a different item vocabulary entirely and 2011 carries an extra
+income band whose values do not reconcile to its own published total. The build parses
+every edition it can reach, then keeps the largest set that agrees on band shape --
+first-wins would have let 2011 discard all seven good years.
+
+**The income bands are nominal and never re-indexed.** The share of filers above
+$100,000 rose from 9.9% in 2018 to 16.6% in 2024; a large part of that is inflation
+carrying people across fixed lines. The page says so where the numbers are.
 
 **Consolidation means you cannot add levels together.** Transfers between governments are
 already netted out. `Current transfers from general governments` therefore comes back
@@ -75,9 +109,14 @@ sides, so they are consistently excluded.
 - national revenue, expenditure and population land in sane magnitude ranges
 - every province carries spending data for the latest year
 - any dimension filter that matches zero rows raises rather than yielding an empty chart
+- each CRA edition's income bands sum to its own published totals within 1% (per-cell
+  counts are rounded to the nearest 10, so they never match exactly)
+- filer counts and the overall effective rate land in plausible ranges
 
 Latest build: 2024 revenue $1,312B, expenditure $1,356B, functions $1,137B (84%),
-population 41.3M, $31,808 revenue per person.
+population 41.3M, $31,808 revenue per person. Distribution: 2024 tax year, 31.6M
+filers, $331B personal income tax, 16.4% effective rate, top band 2.0% of filers and
+31.9% of the tax.
 
 ## Conventions
 
@@ -91,7 +130,9 @@ surfaces, per the gate gap recorded in `BRICKS.md`.
 
 - **The Sankey.** Tax source → level of government → function is the better picture, but
   the two tables share no classification, so it needs a deliberate bridge rather than a join.
-- **Who pays.** CRA T1 statistics add the distributional half (by income band, by province)
-  and lag ~2 years behind the spending data.
+- **The distributional layer by province.** CRA Table 2 exists for all 13 provinces and
+  territories; only the all-Canada cut is wired up. That is 13 more files per tax year.
+- **The 2009-2017 tax years.** Six have rotted catalogue links, and 2009-2011 would each
+  need their own parser.
 - **Federal-only functions.** Published separately on a non-consolidated basis, not derivable
   by subtracting the provincial component from the national one.

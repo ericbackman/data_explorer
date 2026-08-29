@@ -27,6 +27,7 @@ import csv
 import io
 import json
 import logging
+import re
 import sys
 import time
 import urllib.error
@@ -47,6 +48,47 @@ WDS_META = "https://www150.statcan.gc.ca/t1/wds/rest/getCubeMetadata"
 TBL_FISCAL = 36100450  # Revenue, expenditure -- provincial & territorial economic accounts
 TBL_CCOFOG = 10100005  # Functions of government (CCOFOG) by consolidated component
 TBL_POP = 17100009     # Population estimates, quarterly
+
+# The distributional layer comes from the CRA, not Statistics Canada: Table 2 of
+# the annual individual income tax statistics, "all returns by income range".
+#
+# Its URLs cannot be constructed. The filename drifts by edition (t02ca / tbl2 /
+# tbl2ac / table2_ac / tbl2_ac / tbl2_ac_en) and canada.ca answers a wrong guess
+# with an HTTP 200 carrying an HTML page, so a status check alone will happily
+# cache a web page as a data file. Every URL is therefore resolved from the open
+# data catalogue, and every download is sniffed for HTML before it is kept.
+CKAN_SEARCH = (
+    "https://open.canada.ca/data/en/api/3/action/package_search"
+    "?q=title:(%22T1%20Final%20Statistics%22%20OR%20"
+    "%22Individual%20Income%20Tax%20Return%20Statistics%22)&rows=40"
+)
+
+# The table was renamed in the 2022 edition; both spellings must match.
+CRA_TABLE2 = re.compile(r"income range|total income class", re.I)
+# Exclude the per-province cuts and Table 2A, which covers taxable returns only.
+CRA_EXCLUDE = re.compile(
+    r"alberta|british columbia|manitoba|new brunswick|newfoundland|nova scotia|"
+    r"nunavut|ontario|prince edward|quebec|saskatchewan|yukon|northwest|"
+    r"non.?resident|taxable returns", re.I
+)
+
+# Line items to lift out of each edition. These are matched by NAME, because the
+# CRA renumbers its rows between editions -- row 104 is "Net provincial or
+# territorial tax" in the 2022 file and "Eligible educator school supply tax
+# credit" in the 2023 one. (Statistics Canada is the opposite: stable ids,
+# duplicated names. Neither source can be joined the way the other one must be.)
+CRA_LINES = {
+    "filers": "Total number of returns",
+    "income": "Total income assessed",
+    "tax": "Total tax payable",
+}
+
+# Header layouts also drift. Through the 2021 edition the paired columns are
+# suffixed "<band> #" and "<band> $ (000)"; from 2022 they read "<band> (Number /
+# Nombre)" and "<band> (Thousands of Dollars / ...)". The total column is
+# "Grand total/Total global" in the old style and plain "Total" in the new.
+CRA_COUNT_COL = re.compile(r"\(\s*number|#\s*$", re.I)
+CRA_TOTAL_BAND = re.compile(r"^(grand\s+)?total", re.I)
 
 # The dimension members we slice to. A change in these strings upstream should
 # fail loudly (see `_require_rows`) rather than silently produce an empty chart.
@@ -97,6 +139,12 @@ GEO_ABBR = {
 # fetching
 # --------------------------------------------------------------------------- #
 
+# An explicit empty ProxyHandler stops urllib probing Windows' system proxy
+# settings on every request. Without it these downloads take minutes apiece here
+# while curl fetches the same file in two seconds.
+_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+
 def _http(url: str, *, data: bytes | None = None, timeout: int = 120) -> bytes:
     """GET/POST with a timeout and a bounded retry on transient failures."""
     headers = {"User-Agent": "canada-fiscal-ledger/1.0 (+data_explorer)"}
@@ -107,7 +155,7 @@ def _http(url: str, *, data: bytes | None = None, timeout: int = 120) -> bytes:
     for attempt in range(3):
         try:
             req = urllib.request.Request(url, data=data, headers=headers)
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            with _OPENER.open(req, timeout=timeout) as resp:
                 if resp.status != 200:
                     raise RuntimeError(f"HTTP {resp.status} from {url}")
                 return resp.read()
@@ -164,6 +212,166 @@ def fetch_meta(pid: int, *, refresh: bool) -> dict:
     obj = payload[0]["object"]
     cached.write_text(json.dumps(obj), encoding="utf-8")
     return obj
+
+
+def resolve_cra_tables(*, refresh: bool) -> dict[str, str]:
+    """Map tax year -> URL of that edition's Table 2, from the open data catalogue."""
+    CACHE.mkdir(exist_ok=True)
+    cached = CACHE / "cra_urls.json"
+    if cached.exists() and not refresh:
+        return json.loads(cached.read_text(encoding="utf-8"))
+
+    log.info("CRA: resolving Table 2 URLs from the open data catalogue")
+    payload = json.loads(_http(CKAN_SEARCH).decode("utf-8"))
+    if not payload.get("success"):
+        raise RuntimeError(f"CKAN search failed: {payload}")
+
+    def name_of(res: dict) -> str:
+        n = res.get("name")
+        return (n.get("en") if isinstance(n, dict) else n) or ""
+
+    found: dict[str, str] = {}
+    for pkg in payload["result"]["results"]:
+        title = pkg.get("title")
+        title = title.get("en") if isinstance(title, dict) else title
+        match = re.search(r"(\d{4})\s*[Tt]ax [Yy]ear", str(title))
+        if not match:
+            continue
+        for res in pkg.get("resources", []):
+            label = name_of(res)
+            if (res.get("format") == "CSV"
+                    and CRA_TABLE2.search(label)
+                    and not CRA_EXCLUDE.search(label)
+                    and not re.search(r"_fra|_fr\.|-fr\.|/fr/", res["url"], re.I)):
+                found[match.group(1)] = res["url"]
+                break
+
+    if not found:
+        raise RuntimeError("CRA: the catalogue returned no Table 2 resources")
+    cached.write_text(json.dumps(found, indent=1), encoding="utf-8")
+    log.info("CRA: resolved %s tax years (%s-%s)",
+             len(found), min(found), max(found))
+    return found
+
+
+def fetch_cra_year(year: str, url: str, *, refresh: bool) -> list[list[str]]:
+    """Download one edition's Table 2, refusing anything that is not a CSV."""
+    CACHE.mkdir(exist_ok=True)
+    cached = CACHE / f"cra_{year}.csv"
+    # Several archived editions have rotted catalogue links that answer with a
+    # web page. Remember that verdict so a rebuild does not re-fetch them.
+    tombstone = CACHE / f"cra_{year}.dead"
+
+    if tombstone.exists() and not refresh:
+        raise RuntimeError(f"CRA {year}: {tombstone.read_text(encoding='utf-8').strip()}")
+
+    if not cached.exists() or refresh:
+        log.info("CRA %s: downloading %s", year, url.rsplit("/", 1)[-1])
+        blob = _http(url, timeout=180)
+        head = blob[:400].lstrip().lower()
+        if head.startswith(b"<!doctype") or b"<html" in head:
+            reason = (f"{url} returned an HTML page, not a CSV -- canada.ca answers "
+                      f"unknown paths with a styled 200, so this edition's catalogue "
+                      f"link has rotted")
+            tombstone.write_text(reason, encoding="utf-8")
+            raise RuntimeError(f"CRA {year}: {reason}")
+        tombstone.unlink(missing_ok=True)
+        cached.write_bytes(blob)
+
+    # These files are Windows-encoded and carry French labels in every row.
+    with cached.open(encoding="cp1252", newline="") as fh:
+        return list(csv.reader(fh))
+
+
+def parse_cra_table(rows: list[list[str]], year: str) -> dict:
+    """Pull filers / income / tax per income band out of one edition.
+
+    Amount columns are thousands of dollars and are converted to millions to
+    match the Statistics Canada tables; counts stay as counts.
+    """
+    header = rows[0]
+
+    # The leading metadata columns are "#, Item, Poste, Tax year" -- and that
+    # first one is literally "#", which the old-style count-column pattern would
+    # otherwise match, shifting every band by one. Start after the tax-year cell.
+    start = next((i for i, c in enumerate(header) if re.search(r"tax year", c, re.I)), 3) + 1
+
+    bands, pairs = [], []
+    for i, cell in enumerate(header):
+        if i < start or not CRA_COUNT_COL.search(cell):
+            continue
+        # strip either the " (Number / Nombre)" or the trailing " #"
+        label = re.split(r"\s*\(|\s*#\s*$", cell)[0].strip()
+        if not label:
+            continue
+        bands.append(label)
+        pairs.append((i, i + 1))
+    if not bands:
+        raise RuntimeError(
+            f"CRA {year}: no count columns found -- the header layout has changed "
+            f"again. First cells: {header[:6]}"
+        )
+
+    items: dict[str, list[str]] = {}
+    for row in rows[1:]:
+        if len(row) > 2 and row[1].strip():
+            items.setdefault(row[1].strip().lower(), row)
+
+    def read(line_key: str, col: int) -> float:
+        label = CRA_LINES[line_key]
+        row = items.get(label.lower())
+        if row is None:
+            raise RuntimeError(
+                f"CRA {year}: line item {label!r} is missing -- the CRA renames "
+                f"items between editions, so this needs a look, not a default."
+            )
+        raw = row[col].strip().replace(",", "") if col < len(row) else ""
+        return float(raw) if raw else 0.0
+
+    out = {"bands": [], "filers": [], "income": [], "tax": []}
+    for band, (n_col, d_col) in zip(bands, pairs):
+        if is_total_band(band):
+            continue                                  # the "Total" column, kept separately
+        out["bands"].append(clean_band(band))
+        out["filers"].append(round(read("filers", n_col)))
+        out["income"].append(round(read("income", d_col) / 1000))   # $000 -> $M
+        out["tax"].append(round(read("tax", d_col) / 1000))
+
+    total_col = next((p for b, p in zip(bands, pairs) if is_total_band(b)), None)
+    if total_col is None:
+        raise RuntimeError(f"CRA {year}: no Total column found")
+    out["total"] = {
+        "filers": round(read("filers", total_col[0])),
+        "income": round(read("income", total_col[1]) / 1000),
+        "tax": round(read("tax", total_col[1]) / 1000),
+    }
+    return out
+
+
+def is_total_band(label: str) -> bool:
+    return bool(CRA_TOTAL_BAND.match(label.strip()))
+
+
+def clean_band(label: str) -> str:
+    """'4999 and under/Moins de 4 999' -> 'Under $5,000'; ranges -> '$5,000-9,999'."""
+    en = label.split("/")[0].strip()
+    money = lambda n: "$" + f"{int(n):,}"
+
+    m = re.match(r"^([\d\s]+)\s*and under$", en, re.I)
+    if m:
+        return "Under " + money(int(re.sub(r"\s", "", m.group(1))) + 1)
+
+    m = re.match(r"^([\d\s]+)\s*and over$", en, re.I)
+    if m:
+        return money(re.sub(r"\s", "", m.group(1))) + "+"
+
+    m = re.match(r"^([\d\s]+)\s*-\s*([\d\s]+)$", en)
+    if m:
+        lo = re.sub(r"\s", "", m.group(1))
+        hi = re.sub(r"\s", "", m.group(2))
+        return f"{money(lo)}–{int(hi):,}"
+
+    return en
 
 
 # --------------------------------------------------------------------------- #
@@ -400,6 +608,46 @@ def build(refresh: bool) -> dict:
 
     population = build_population(pop_rows, years, geos)
 
+    # ---- the distributional layer: who actually paid the income tax --------
+    cra_urls = resolve_cra_tables(refresh=refresh)
+
+    # Editions differ more than they look. Through 2010 the item vocabulary is
+    # different enough that the lines we need are absent; 2011 carries an extra
+    # income band and its bands do not reconcile to its own published total.
+    # Parse every edition, then keep the largest set that agrees on band shape --
+    # first-wins would let one odd early year discard all the good ones.
+    parsed_by_year: dict[str, dict] = {}
+    for year in sorted(cra_urls):
+        try:
+            rows = fetch_cra_year(year, cra_urls[year], refresh=refresh)
+            parsed_by_year[year] = parse_cra_table(rows, year)
+        except RuntimeError as exc:
+            log.warning("CRA %s: skipped -- %s", year, exc)
+
+    if not parsed_by_year:
+        raise RuntimeError("no CRA edition could be parsed")
+
+    shapes: dict[tuple, list[str]] = {}
+    for year, parsed in parsed_by_year.items():
+        shapes.setdefault(tuple(parsed["bands"]), []).append(year)
+    best = max(shapes.values(), key=len)
+    band_shape = list(parsed_by_year[best[0]]["bands"])
+
+    for shape, years_ in shapes.items():
+        if years_ is not best:
+            log.warning("CRA: dropping %s -- %s income bands, not the %s the rest share",
+                        ", ".join(sorted(years_)), len(shape), len(band_shape))
+
+    dist_years = sorted(best)
+    dist = {}
+    for year in dist_years:
+        parsed = parsed_by_year[year]
+        dist[year] = {k: parsed[k] for k in ("filers", "income", "tax")}
+        dist[year]["total"] = parsed["total"]
+
+    log.info("distribution: %s tax years (%s-%s) over %s income bands",
+             len(dist_years), dist_years[0], dist_years[-1], len(band_shape))
+
     return {
         "meta": {
             "generated": time.strftime("%Y-%m-%d"),
@@ -431,6 +679,15 @@ def build(refresh: bool) -> dict:
                     "released": "",
                     "url": f"https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid={TBL_POP}01",
                 },
+                {
+                    "pid": "CRA Table 2",
+                    "title": ("Individual income tax return statistics, all returns "
+                              f"by income range ({dist_years[0]}-{dist_years[-1]} tax years)"),
+                    "released": "",
+                    "url": ("https://www.canada.ca/en/revenue-agency/programs/"
+                            "about-canada-revenue-agency-cra/income-statistics-gst-hst-"
+                            "statistics/t1-final-statistics.html"),
+                },
             ],
             "caveats": [
                 "Consolidated figures: transfers between governments are already "
@@ -440,6 +697,9 @@ def build(refresh: bool) -> dict:
                 "CPP and QPP are outside the consolidated general government here.",
                 "Federal Indigenous programs were reclassified into Housing and "
                 "community amenities in 2023, breaking that series.",
+                "The CRA income bands are nominal dollars and are never re-indexed, "
+                "so movement between bands across years is partly inflation rather "
+                "than real income growth.",
             ],
         },
         "geos": [{"name": g, "abbr": GEO_ABBR.get(g, g[:3].upper())} for g in geos],
@@ -454,6 +714,19 @@ def build(refresh: bool) -> dict:
         },
         "bridge": {"names": ["revenue", "expenditure", "balance", "cfc", "capital"],
                    "series": bridge_matrix},
+        "distribution": {
+            "years": dist_years,
+            "bands": band_shape,
+            "series": dist,
+            "note": (
+                "Personal income tax only, from individual returns filed and "
+                "assessed for each tax year. This is one slice of the ledger's "
+                "'Taxes on incomes', not the whole of it -- sales, payroll, "
+                "corporate and property taxes are elsewhere. Administrative "
+                "counts on a tax-year basis do not reconcile line-for-line with "
+                "the national accounts."
+            ),
+        },
     }
 
 
@@ -545,6 +818,40 @@ def validate(payload: dict) -> None:
         "(%.0f%% of expenditure), population %.1fM, $%s revenue per person",
         latest, rev / 1000, exp / 1000, fn_total / 1000, 100 * fn_total / exp,
         pop / 1e6, f"{round(rev * 1e6 / pop):,}",
+    )
+
+    # ---- the distributional layer ------------------------------------------
+    dist = payload["distribution"]
+    for year in dist["years"]:
+        d = dist["series"][year]
+        for key in ("filers", "income", "tax"):
+            banded, published = sum(d[key]), d["total"][key]
+            if not published:
+                raise RuntimeError(f"CRA {year}: published total for {key} is zero")
+            # Counts are rounded to the nearest 10 per cell, so bands and the
+            # published total drift slightly; anything past 1% is a parse error.
+            drift = abs(banded - published) / published
+            if drift > 0.01:
+                raise RuntimeError(
+                    f"CRA {year}: {key} bands sum to {banded:,} but the published "
+                    f"total is {published:,} ({drift:.2%} apart) -- check the parse"
+                )
+
+    newest = dist["years"][-1]
+    d = dist["series"][newest]
+    filers, income, tax = d["total"]["filers"], d["total"]["income"], d["total"]["tax"]
+    if not (20e6 < filers < 40e6):
+        raise RuntimeError(f"CRA {newest}: {filers:,} filers is outside a sane range")
+    if not (0.05 < tax / income < 0.35):
+        raise RuntimeError(
+            f"CRA {newest}: overall effective rate of {tax / income:.1%} is implausible")
+
+    top_share = 100 * d["tax"][-1] / tax
+    top_filers = 100 * d["filers"][-1] / filers
+    log.info(
+        "distribution: %s tax year -- %.1fM filers, $%.0fB income tax, %.1f%% "
+        "effective rate; the top band is %.1f%% of filers and %.1f%% of the tax",
+        newest, filers / 1e6, tax / 1000, 100 * tax / income, top_filers, top_share,
     )
 
 
