@@ -65,6 +65,16 @@ CKAN_SEARCH = (
 
 # The table was renamed in the 2022 edition; both spellings must match.
 CRA_TABLE2 = re.compile(r"income range|total income class", re.I)
+# Provincial resources cannot be identified by name: in the 2024 edition every
+# per-province file is simply called "Alberta", whether it is Table 2 (income
+# ranges) or Table 4 (age and gender), and in 2021 they are "Final Table 2 -
+# Alberta" and "Final Table 3 - Alberta". Only the filename reliably says which
+# table it is, so match on that and let the name identify the geography.
+CRA_TABLE2_FILE = re.compile(r"/(tbl|table)0?2[_-]", re.I)
+# French editions sit beside the English ones under several spellings, and the
+# catalogue's `format` field is not trustworthy -- at least one French PDF
+# (2021 Alberta) is registered as a CSV -- so the URL must end in .csv too.
+CRA_FRENCH = re.compile(r"[_-]fra?[._-]|/fr/|[_-]fr\.", re.I)
 # Exclude the per-province cuts and Table 2A, which covers taxable returns only.
 CRA_EXCLUDE = re.compile(
     r"alberta|british columbia|manitoba|new brunswick|newfoundland|nova scotia|"
@@ -81,7 +91,20 @@ CRA_LINES = {
     "filers": "Total number of returns",
     "income": "Total income assessed",
     "tax": "Total tax payable",
+    # Carried only to detect separately-administered provincial tax; see
+    # SELF_ADMIN_SHARE below.
+    "provincial": "Net provincial or territorial tax",
 }
+
+# Quebec collects its own income tax through Revenu Quebec, so a Quebec return
+# filed with the CRA carries essentially no provincial tax: $0.1B in 2024
+# against Ontario's $54.0B on a base 54% as large. "Total tax payable" for
+# Quebec is therefore close to federal tax alone, and putting it beside the
+# other provinces makes Quebec look like the lowest-taxing province in Canada,
+# which is the opposite of the truth. The condition is derived from the data
+# rather than hardcoded to one province, so that if another province ever left
+# the collection agreement it would be caught the same way.
+SELF_ADMIN_SHARE = 0.05
 
 # Header layouts also drift. Through the 2021 edition the paired columns are
 # suffixed "<band> #" and "<band> $ (000)"; from 2022 they read "<band> (Number /
@@ -139,15 +162,23 @@ GEO_ABBR = {
 # fetching
 # --------------------------------------------------------------------------- #
 
-# An explicit empty ProxyHandler stops urllib probing Windows' system proxy
-# settings on every request. Without it these downloads take minutes apiece here
-# while curl fetches the same file in two seconds.
+# An explicit empty ProxyHandler skips urllib's system-proxy lookup per request.
 _OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def _http(url: str, *, data: bytes | None = None, timeout: int = 120) -> bytes:
-    """GET/POST with a timeout and a bounded retry on transient failures."""
-    headers = {"User-Agent": "canada-fiscal-ledger/1.0 (+data_explorer)"}
+    """GET/POST with a timeout and a bounded retry on transient failures.
+
+    The Accept header is load-bearing, not decoration. canada.ca stalls a request
+    that omits it until the socket times out, while the same URL fetched by curl
+    -- which always sends `Accept: */*` -- returns in about two seconds. urllib
+    sends no Accept header of its own, so without this line every CRA download
+    fails with a read timeout that looks like the server being down.
+    """
+    headers = {
+        "User-Agent": "canada-fiscal-ledger/1.0 (+data_explorer)",
+        "Accept": "*/*",
+    }
     if data is not None:
         headers["Content-Type"] = "application/json"
 
@@ -214,10 +245,16 @@ def fetch_meta(pid: int, *, refresh: bool) -> dict:
     return obj
 
 
-def resolve_cra_tables(*, refresh: bool) -> dict[str, str]:
-    """Map tax year -> URL of that edition's Table 2, from the open data catalogue."""
+def resolve_cra_tables(*, refresh: bool) -> dict[str, dict[str, str]]:
+    """Map tax year -> {geography -> URL} for Table 2, from the open data catalogue.
+
+    Every edition publishes an all-Canada cut plus one file per province and
+    territory. Resource naming differs across the 2022 rebrand ("Final Table 2 -
+    Alberta" against a bare "Alberta"), so provinces are matched on the name
+    ending rather than an exact string.
+    """
     CACHE.mkdir(exist_ok=True)
-    cached = CACHE / "cra_urls.json"
+    cached = CACHE / "cra_urls_by_geo.json"
     if cached.exists() and not refresh:
         return json.loads(cached.read_text(encoding="utf-8"))
 
@@ -230,51 +267,82 @@ def resolve_cra_tables(*, refresh: bool) -> dict[str, str]:
         n = res.get("name")
         return (n.get("en") if isinstance(n, dict) else n) or ""
 
-    found: dict[str, str] = {}
+    provinces = [g for g in GEO_ORDER if g != NATIONAL]
+    found: dict[str, dict[str, str]] = {}
+
     for pkg in payload["result"]["results"]:
         title = pkg.get("title")
         title = title.get("en") if isinstance(title, dict) else title
         match = re.search(r"(\d{4})\s*[Tt]ax [Yy]ear", str(title))
         if not match:
             continue
+        year = match.group(1)
+        by_geo: dict[str, str] = {}
+
         for res in pkg.get("resources", []):
-            label = name_of(res)
-            if (res.get("format") == "CSV"
-                    and CRA_TABLE2.search(label)
-                    and not CRA_EXCLUDE.search(label)
-                    and not re.search(r"_fra|_fr\.|-fr\.|/fr/", res["url"], re.I)):
-                found[match.group(1)] = res["url"]
-                break
+            if res.get("format") != "CSV":
+                continue
+            if CRA_FRENCH.search(res["url"]) or not res["url"].lower().endswith(".csv"):
+                continue
+            label = name_of(res).strip()
+
+            if (CRA_TABLE2.search(label) and not CRA_EXCLUDE.search(label)):
+                by_geo.setdefault(NATIONAL, res["url"])
+                continue
+
+            if not CRA_TABLE2_FILE.search(res["url"]):
+                continue
+            for prov in provinces:
+                # the province is the whole name, or trails a "Table 2 -" prefix
+                if re.search(r"(^|[-–—:]\s*)" + re.escape(prov) + r"\s*$",
+                             label, re.I):
+                    by_geo.setdefault(prov, res["url"])
+                    break
+
+        if by_geo:
+            found[year] = by_geo
 
     if not found:
         raise RuntimeError("CRA: the catalogue returned no Table 2 resources")
+
     cached.write_text(json.dumps(found, indent=1), encoding="utf-8")
-    log.info("CRA: resolved %s tax years (%s-%s)",
-             len(found), min(found), max(found))
+    log.info("CRA: resolved %s tax years (%s-%s), %s geographies at the newest",
+             len(found), min(found), max(found), len(found[max(found)]))
     return found
 
 
-def fetch_cra_year(year: str, url: str, *, refresh: bool) -> list[list[str]]:
+def fetch_cra_year(year: str, url: str, *, geo: str = NATIONAL,
+                   refresh: bool) -> list[list[str]]:
     """Download one edition's Table 2, refusing anything that is not a CSV."""
     CACHE.mkdir(exist_ok=True)
-    cached = CACHE / f"cra_{year}.csv"
+    suffix = "" if geo == NATIONAL else "_" + GEO_ABBR.get(geo, geo[:2]).lower()
+    cached = CACHE / f"cra_{year}{suffix}.csv"
     # Several archived editions have rotted catalogue links that answer with a
     # web page. Remember that verdict so a rebuild does not re-fetch them.
-    tombstone = CACHE / f"cra_{year}.dead"
+    tombstone = CACHE / f"cra_{year}{suffix}.dead"
 
     if tombstone.exists() and not refresh:
         raise RuntimeError(f"CRA {year}: {tombstone.read_text(encoding='utf-8').strip()}")
 
     if not cached.exists() or refresh:
-        log.info("CRA %s: downloading %s", year, url.rsplit("/", 1)[-1])
+        log.info("CRA %s %s: downloading %s", year, GEO_ABBR.get(geo, geo),
+                 url.rsplit("/", 1)[-1])
         blob = _http(url, timeout=180)
-        head = blob[:400].lstrip().lower()
-        if head.startswith(b"<!doctype") or b"<html" in head:
+        head = blob[:400].lstrip()
+        lower = head.lower()
+
+        reason = None
+        if lower.startswith(b"<!doctype") or b"<html" in lower:
             reason = (f"{url} returned an HTML page, not a CSV -- canada.ca answers "
                       f"unknown paths with a styled 200, so this edition's catalogue "
                       f"link has rotted")
+        elif head.startswith(b"%PDF"):
+            # The catalogue mislabels at least one PDF as a CSV; without this the
+            # failure surfaces as an unrelated character-decoding error.
+            reason = f"{url} is a PDF, though the catalogue registers it as a CSV"
+        if reason:
             tombstone.write_text(reason, encoding="utf-8")
-            raise RuntimeError(f"CRA {year}: {reason}")
+            raise RuntimeError(f"CRA {year} {geo}: {reason}")
         tombstone.unlink(missing_ok=True)
         cached.write_bytes(blob)
 
@@ -317,10 +385,12 @@ def parse_cra_table(rows: list[list[str]], year: str) -> dict:
         if len(row) > 2 and row[1].strip():
             items.setdefault(row[1].strip().lower(), row)
 
-    def read(line_key: str, col: int) -> float:
+    def read(line_key: str, col: int, *, required: bool = True) -> float:
         label = CRA_LINES[line_key]
         row = items.get(label.lower())
         if row is None:
+            if not required:
+                return 0.0
             raise RuntimeError(
                 f"CRA {year}: line item {label!r} is missing -- the CRA renames "
                 f"items between editions, so this needs a look, not a default."
@@ -345,6 +415,13 @@ def parse_cra_table(rows: list[list[str]], year: str) -> dict:
         "income": round(read("income", total_col[1]) / 1000),
         "tax": round(read("tax", total_col[1]) / 1000),
     }
+    # Diagnostic only -- a missing provincial line must not fail the build.
+    has_prov = CRA_LINES["provincial"].lower() in items
+    prov = round(read("provincial", total_col[1], required=False) / 1000)
+    out["total"]["provincial"] = prov
+    # A province whose provincial tax barely appears is collecting it elsewhere.
+    out["selfAdmin"] = bool(has_prov and out["total"]["tax"]
+                            and prov / out["total"]["tax"] < SELF_ADMIN_SHARE)
     return out
 
 
@@ -616,10 +693,16 @@ def build(refresh: bool) -> dict:
     # income band and its bands do not reconcile to its own published total.
     # Parse every edition, then keep the largest set that agrees on band shape --
     # first-wins would let one odd early year discard all the good ones.
+    # The all-Canada cut decides which years are usable; provinces are then
+    # loaded only for those years.
     parsed_by_year: dict[str, dict] = {}
     for year in sorted(cra_urls):
+        url = cra_urls[year].get(NATIONAL)
+        if not url:
+            log.warning("CRA %s: no all-Canada resource in the catalogue", year)
+            continue
         try:
-            rows = fetch_cra_year(year, cra_urls[year], refresh=refresh)
+            rows = fetch_cra_year(year, url, refresh=refresh)
             parsed_by_year[year] = parse_cra_table(rows, year)
         except RuntimeError as exc:
             log.warning("CRA %s: skipped -- %s", year, exc)
@@ -639,14 +722,49 @@ def build(refresh: bool) -> dict:
                         ", ".join(sorted(years_)), len(shape), len(band_shape))
 
     dist_years = sorted(best)
-    dist = {}
-    for year in dist_years:
-        parsed = parsed_by_year[year]
-        dist[year] = {k: parsed[k] for k in ("filers", "income", "tax")}
-        dist[year]["total"] = parsed["total"]
 
-    log.info("distribution: %s tax years (%s-%s) over %s income bands",
-             len(dist_years), dist_years[0], dist_years[-1], len(band_shape))
+    def pack(parsed: dict) -> dict:
+        out = {k: parsed[k] for k in ("filers", "income", "tax")}
+        out["total"] = parsed["total"]
+        out["selfAdmin"] = parsed["selfAdmin"]
+        return out
+
+    dist: dict[str, dict[str, dict]] = {NATIONAL: {}}
+    for year in dist_years:
+        dist[NATIONAL][year] = pack(parsed_by_year[year])
+
+    # ---- the same table, one file per province and territory ---------------
+    for geo in (g for g in GEO_ORDER if g != NATIONAL):
+        per_year: dict[str, dict] = {}
+        for year in dist_years:
+            url = cra_urls[year].get(geo)
+            if not url:
+                log.warning("CRA %s %s: not in the catalogue", year, GEO_ABBR.get(geo, geo))
+                continue
+            try:
+                parsed = parse_cra_table(
+                    fetch_cra_year(year, url, geo=geo, refresh=refresh), f"{year} {geo}")
+            except RuntimeError as exc:
+                log.warning("CRA %s %s: skipped -- %s", year, GEO_ABBR.get(geo, geo), exc)
+                continue
+            if parsed["bands"] != band_shape:
+                log.warning("CRA %s %s: %s income bands, not the %s Canada uses -- skipped",
+                            year, GEO_ABBR.get(geo, geo), len(parsed["bands"]), len(band_shape))
+                continue
+            per_year[year] = pack(parsed)
+
+        if per_year:
+            dist[geo] = per_year
+            if len(per_year) < len(dist_years):
+                gaps = [y for y in dist_years if y not in per_year]
+                log.warning("CRA %s: no Table 2 CSV for %s -- kept with %s of %s "
+                            "years, and the page offers only the years it has",
+                            GEO_ABBR.get(geo, geo), ", ".join(gaps),
+                            len(per_year), len(dist_years))
+
+    dist_geos = [g for g in GEO_ORDER if g in dist]
+    log.info("distribution: %s tax years (%s-%s), %s geographies, %s income bands",
+             len(dist_years), dist_years[0], dist_years[-1], len(dist_geos), len(band_shape))
 
     return {
         "meta": {
@@ -682,7 +800,9 @@ def build(refresh: bool) -> dict:
                 {
                     "pid": "CRA Table 2",
                     "title": ("Individual income tax return statistics, all returns "
-                              f"by income range ({dist_years[0]}-{dist_years[-1]} tax years)"),
+                              f"by income range ({dist_years[0]}-{dist_years[-1]} tax "
+                              f"years, Canada and {len(dist_geos) - 1} provinces "
+                              f"and territories)"),
                     "released": "",
                     "url": ("https://www.canada.ca/en/revenue-agency/programs/"
                             "about-canada-revenue-agency-cra/income-statistics-gst-hst-"
@@ -717,6 +837,10 @@ def build(refresh: bool) -> dict:
         "distribution": {
             "years": dist_years,
             "bands": band_shape,
+            "geos": [{"name": g, "abbr": GEO_ABBR.get(g, g[:3].upper()),
+                       "years": sorted(dist[g]),
+                       "selfAdmin": all(dist[g][y]["selfAdmin"] for y in dist[g])}
+                      for g in dist_geos],
             "series": dist,
             "note": (
                 "Personal income tax only, from individual returns filed and "
@@ -822,23 +946,61 @@ def validate(payload: dict) -> None:
 
     # ---- the distributional layer ------------------------------------------
     dist = payload["distribution"]
+    dist_geo_names = [g["name"] for g in dist["geos"]]
+
+    # Every cell is rounded before publication -- counts to the nearest 10, money
+    # to the nearest $1M once converted -- so a band sum never lands exactly on
+    # the published total. Across 19 bands that rounding is bounded, and on a
+    # base as small as Nunavut's it is worth more than 1% on its own. The test is
+    # therefore a percentage OR that absolute rounding bound, whichever is looser.
+    n_bands = len(dist["bands"])
+    floors = {"filers": 5 * n_bands, "income": n_bands, "tax": n_bands}
+
+    for geo in dist_geo_names:
+        for year in dist["series"][geo]:
+            d = dist["series"][geo][year]
+            for key in ("filers", "income", "tax"):
+                banded, published = sum(d[key]), d["total"][key]
+                if not published:
+                    raise RuntimeError(f"CRA {year} {geo}: published total for {key} is zero")
+                gap = abs(banded - published)
+                if gap > max(0.01 * published, floors[key]):
+                    raise RuntimeError(
+                        f"CRA {year} {geo}: {key} bands sum to {banded:,} but the "
+                        f"published total is {published:,} (off by {gap:,}, "
+                        f"{gap / published:.2%}) -- check the parse"
+                    )
+
+    # The provinces are separate files, so their agreeing with the all-Canada
+    # file is real evidence the right column was read from each of 91 downloads.
+    # They will not match exactly: the national table also counts non-residents
+    # and filers with no province of residence.
+    provinces = [g for g in dist_geo_names if g != NATIONAL]
     for year in dist["years"]:
-        d = dist["series"][year]
-        for key in ("filers", "income", "tax"):
-            banded, published = sum(d[key]), d["total"][key]
-            if not published:
-                raise RuntimeError(f"CRA {year}: published total for {key} is zero")
-            # Counts are rounded to the nearest 10 per cell, so bands and the
-            # published total drift slightly; anything past 1% is a parse error.
-            drift = abs(banded - published) / published
-            if drift > 0.01:
-                raise RuntimeError(
-                    f"CRA {year}: {key} bands sum to {banded:,} but the published "
-                    f"total is {published:,} ({drift:.2%} apart) -- check the parse"
-                )
+        have = [g for g in provinces if year in dist["series"][g]]
+        if len(have) < len(provinces):
+            continue                    # an incomplete year cannot be summed
+        summed = sum(dist["series"][g][year]["total"]["filers"] for g in have)
+        national = dist["series"][NATIONAL][year]["total"]["filers"]
+        gap = (national - summed) / national
+        if not (-0.005 < gap < 0.02):
+            raise RuntimeError(
+                f"CRA {year}: the {len(have)} provincial files sum to {summed:,} "
+                f"filers against {national:,} nationally ({gap:+.2%}) -- outside "
+                f"the non-resident residual, so a file is mismatched"
+            )
+        log.info("CRA %s: %s provincial files sum to %.2f%% of the national filer "
+                 "count (the rest are non-residents)", year, len(have),
+                 100 * summed / national)
+
+    flagged = [g["name"] for g in dist["geos"] if g.get("selfAdmin")]
+    if flagged:
+        log.info("provincial income tax is collected outside the CRA in %s -- "
+                 "excluded from the cross-province rate comparison",
+                 ", ".join(flagged))
 
     newest = dist["years"][-1]
-    d = dist["series"][newest]
+    d = dist["series"][NATIONAL][newest]
     filers, income, tax = d["total"]["filers"], d["total"]["income"], d["total"]["tax"]
     if not (20e6 < filers < 40e6):
         raise RuntimeError(f"CRA {newest}: {filers:,} filers is outside a sane range")

@@ -20,7 +20,7 @@ Three Statistics Canada tables, pulled through the Web Data Service (no API key)
 | `36-10-0450` | Revenue and expenditure by level of government | 2007–2024, annual |
 | `10-10-0005` | Spending by function (CCOFOG) | 2008–2024, annual |
 | `17-10-0009` | Population estimates | 1946–2026, quarterly |
-| CRA Table 2 | Individual returns by income band | 2018–2024, annual |
+| CRA Table 2 | Individual returns by income band | 2018–2024, annual, Canada + 13 |
 
 The ledger renders the 2008–2024 StatCan overlap; the distributional layer runs on
 its own 2018–2024 timeline with its own selector, because tax years and national
@@ -49,6 +49,15 @@ sales, payroll, corporate or property tax. It is administrative tax-year data ag
 the ledger's national accounts, so the two will not reconcile; the section is framed
 to be read for its shape.
 
+**Quebec is excluded from the cross-province rate chart, and the build works that out
+for itself.** Quebec collects its own income tax through Revenu Québec, so a Quebec
+return filed with the CRA carries almost no provincial tax — $0.1B in 2024 against
+Ontario's $54.0B on a base barely half the size. Charted naively it appears as the
+lowest-taxing province in Canada, the reverse of the truth. `parse_cra_table` flags any
+geography whose provincial tax is under 5% of its total tax, so the rule is a property
+of the data rather than a province hardcoded by name, and the page both drops it from
+the comparison and warns when it is selected on its own.
+
 ## Traps, and what the code does about them
 
 **Estimate labels are not unique — join on the member id.** Table 36-10-0450 carries
@@ -68,12 +77,33 @@ supply tax credit" in the 2023 one. Statistics Canada has stable ids and duplica
 names; the CRA has stable names and unstable numbering. Neither source can be joined
 the way the other one must be.
 
+**canada.ca stalls any request without an `Accept` header.** urllib sends none by
+default, so every CRA download failed with a read timeout that looked exactly like the
+server being down — while curl fetched the same URL in two seconds, because curl always
+sends `Accept: */*`. One header turned a 40-second timeout into 0.13 seconds. A first
+guess that the culprit was Windows proxy detection was wrong.
+
 **A 200 is not proof of a CSV.** canada.ca answers unknown paths with a styled HTML
 page under a 200, and the Table 2 filename drifts by edition (`t02ca`, `tbl2`,
 `tbl2ac`, `table2_ac`, `tbl2_ac`, `tbl2_ac_en`), so a constructed URL will cheerfully
 cache a web page as data. URLs come from the open data catalogue and every download is
 sniffed for HTML. Six archived editions (2012–2017) have rotted catalogue links and
 are recorded as `.dead` tombstones so rebuilds skip them.
+
+**The catalogue's own metadata is not reliable.** The `format` field registers at least
+one French PDF (2021 Alberta) as a CSV, so resources are filtered on the URL extension
+too. And per-province resources cannot be identified by name: in the 2024 edition every
+provincial file is called simply "Alberta" whether it is Table 2 (income ranges) or
+Table 4 (age and gender), while in 2021 they are "Final Table 2 – Alberta" and "Final
+Table 3 – Alberta". Only the filename says which table it is. Matching on the name alone
+silently loaded Table 3 — returns by *source* of income — whose nine columns the band
+check then rejected.
+
+**Two provinces are missing a year.** Neither Alberta nor Quebec has an English Table 2
+CSV in the 2021 edition; only PDFs were published. Rather than drop two of the largest
+provinces, each geography carries its own list of available years and the page offers
+only those, snapping to the newest available year when you switch to a province that
+lacks the one you were looking at.
 
 **Editions disagree about their own layout.** Through 2021 the paired columns are
 `<band> #` / `<band> $ (000)` with a "Grand total" column; from 2022 they are
@@ -109,8 +139,12 @@ sides, so they are consistently excluded.
 - national revenue, expenditure and population land in sane magnitude ranges
 - every province carries spending data for the latest year
 - any dimension filter that matches zero rows raises rather than yielding an empty chart
-- each CRA edition's income bands sum to its own published totals within 1% (per-cell
-  counts are rounded to the nearest 10, so they never match exactly)
+- each CRA file's income bands sum to its own published totals, for all 14 geographies
+  and 7 years, within 1% or the accumulated rounding bound — whichever is looser, because
+  per-cell rounding is worth more than 1% on a base as small as Nunavut's
+- the 13 provincial files sum to between 98% and 100.5% of the national filer count in
+  every complete year; they land at 99.46–99.56%, and the residual is non-residents.
+  This is the check that the right column was read out of all 91 downloads
 - filer counts and the overall effective rate land in plausible ranges
 
 Latest build: 2024 revenue $1,312B, expenditure $1,356B, functions $1,137B (84%),
@@ -130,8 +164,6 @@ surfaces, per the gate gap recorded in `BRICKS.md`.
 
 - **The Sankey.** Tax source → level of government → function is the better picture, but
   the two tables share no classification, so it needs a deliberate bridge rather than a join.
-- **The distributional layer by province.** CRA Table 2 exists for all 13 provinces and
-  territories; only the all-Canada cut is wired up. That is 13 more files per tax year.
 - **The 2009-2017 tax years.** Six have rotted catalogue links, and 2009-2011 would each
   need their own parser.
 - **Federal-only functions.** Published separately on a non-consolidated basis, not derivable

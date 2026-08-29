@@ -259,6 +259,8 @@ button.row:hover .row__name { color: var(--bd-accent); }
   font-size: 0.95rem; max-width: 66ch;
 }
 .callout b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.callout--warn { border-left-color: var(--bd-warn); }
+.callout:empty { display: none; }
 
 @media (max-width: 34rem) {
   .dist { grid-template-columns: 6.6rem 1fr 1fr 3rem; }
@@ -362,6 +364,10 @@ footer.notes p { max-width: 68ch; margin-bottom: 0.7rem; }
     <h2>Who paid the income tax</h2>
     <span class="basis">personal income tax only</span>
     <div class="ctl" style="margin-left:auto">
+      <label for="taxgeo">Where</label>
+      <select id="taxgeo"></select>
+    </div>
+    <div class="ctl">
       <label for="taxyear">Tax year</label>
       <select id="taxyear"></select>
     </div>
@@ -382,6 +388,7 @@ footer.notes p { max-width: 68ch; margin-bottom: 0.7rem; }
   </p>
 
   <div class="dist-stats" id="dist-stats"></div>
+  <p class="callout callout--warn" id="dist-warn"></p>
 
   <div class="dist-legend">
     <span><i class="k-filers"></i>Share of filers</span>
@@ -395,6 +402,21 @@ footer.notes p { max-width: 68ch; margin-bottom: 0.7rem; }
   <div id="dist-rows"></div>
 
   <p class="callout" id="dist-callout"></p>
+
+  <div class="sec__head" style="margin-top:2.4rem">
+    <h2>The same income, taxed by province</h2>
+    <div class="ctl" style="margin-left:auto">
+      <label for="taxband">Income band</label>
+      <select id="taxband"></select>
+    </div>
+  </div>
+  <p class="sec__note">
+    Effective rate on total income for filers in one band, wherever they filed. Federal
+    tax is the same everywhere, so the spread here is provincial rates, provincial credits,
+    and the different mix of incomes inside a band that is thousands of dollars wide.
+  </p>
+  <div id="rate-rows"></div>
+  <p class="callout callout--warn" id="rate-omitted"></p>
 </section>
 
 <section class="provinces">
@@ -450,6 +472,8 @@ const state = {
   unit: "total",                 // total | percap | share
   fn: "__all__",
   taxYear: DATA.distribution.years[DATA.distribution.years.length - 1],
+  taxGeo: NATIONAL,
+  taxBand: DATA.distribution.bands.length - 1,
   open: new Set(),               // expanded parent rows, keyed "rev:3" / "sp:7"
 };
 
@@ -644,9 +668,15 @@ function renderBridge(fnTotal) {
 }
 
 /* ── rendering: who paid the income tax ── */
+/** Years this geography actually has — Alberta and Quebec have no 2021 file. */
+function taxYearsFor(geo) {
+  const entry = DATA.distribution.geos.find(g => g.name === geo);
+  return entry ? entry.years : DATA.distribution.years;
+}
+
 function renderDistribution() {
   const D = DATA.distribution;
-  const d = D.series[state.taxYear];
+  const d = D.series[state.taxGeo][state.taxYear];
   const total = d.total;
 
   // Shares, computed against the published totals rather than the band sums —
@@ -666,6 +696,18 @@ function renderDistribution() {
   add("Total income", fmtDollars(total.income));
   add("Income tax paid", fmtDollars(total.tax));
   add("Overall effective rate", (100 * total.tax / total.income).toFixed(1) + "%");
+
+  // A province that collects its own income tax shows only the federal half here.
+  const geoMeta = D.geos.find(g => g.name === state.taxGeo);
+  const warn = document.getElementById("dist-warn");
+  clear(warn);
+  if (geoMeta && geoMeta.selfAdmin) {
+    warn.appendChild(el("strong", null, "Federal tax only. "));
+    warn.appendChild(document.createTextNode(
+      state.taxGeo + " collects its own income tax, so a return filed with the CRA "
+      + "carries almost no provincial tax. Every rate below understates what someone "
+      + "here actually pays, by roughly the provincial return they file separately."));
+  }
 
   const box = document.getElementById("dist-rows");
   clear(box);
@@ -716,7 +758,65 @@ function renderDistribution() {
   callout.appendChild(document.createTextNode(" of everyone who filed, and paid "));
   callout.appendChild(el("b", null, taxPct.toFixed(1) + "%"));
   callout.appendChild(document.createTextNode(
-    " of all personal income tax in " + state.taxYear + "."));
+    " of all personal income tax "
+    + (state.taxGeo === NATIONAL ? "in Canada" : "in " + state.taxGeo)
+    + " in " + state.taxYear + "."));
+}
+
+/** One band, every province — the question per-province data exists to answer. */
+function renderRateByProvince() {
+  const D = DATA.distribution;
+  const box = document.getElementById("rate-rows");
+  clear(box);
+
+  const rows = D.geos
+    .filter(g => g.name !== NATIONAL && !g.selfAdmin
+                 && g.years.includes(state.taxYear))
+    .map(g => {
+      const d = D.series[g.name][state.taxYear];
+      const income = d.income[state.taxBand];
+      return { ...g, rate: income ? 100 * d.tax[state.taxBand] / income : 0,
+               filers: d.filers[state.taxBand] };
+    })
+    .filter(r => r.filers > 0);
+
+  const national = D.series[NATIONAL][state.taxYear];
+  const natIncome = national.income[state.taxBand];
+  if (natIncome) {
+    rows.push({ name: NATIONAL, abbr: "CAN",
+                rate: 100 * national.tax[state.taxBand] / natIncome, filers: 1 });
+  }
+
+  rows.sort((a, b) => b.rate - a.rate);
+  const max = Math.max(...rows.map(r => r.rate), 1);
+
+  for (const r of rows) {
+    const row = el("div", "prov" + (r.name === NATIONAL ? " prov--natl" : ""));
+    const abbr = el("span", "prov__abbr", r.abbr);
+    abbr.title = r.name;
+    row.appendChild(abbr);
+    const track = el("div", "prov__track");
+    const fill = el("div", "prov__fill");
+    fill.style.width = (100 * r.rate / max) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("span", "prov__val", r.rate.toFixed(1) + "%"));
+    box.appendChild(row);
+  }
+
+  const omitted = D.geos.filter(g => g.selfAdmin).map(g => g.name);
+  const note = document.getElementById("rate-omitted");
+  clear(note);
+  if (omitted.length) {
+    note.appendChild(el("strong", null, omitted.join(", ") + " is not on this chart. "));
+    note.appendChild(document.createTextNode(
+      "It collects its own income tax rather than having the CRA collect it, so the "
+      + "provincial tax on a return filed with the CRA is close to nil — $0.1B in 2024 "
+      + "against Ontario's $54.0B on a base barely half the size. Charting it here would "
+      + "show it as the lowest-taxing province in Canada, which is the reverse of the "
+      + "truth. The build flags this from the data, by spotting a province whose "
+      + "provincial tax is under 5% of its total, rather than by naming one."));
+  }
 }
 
 /* ── rendering: provinces ── */
@@ -776,6 +876,7 @@ function render() {
 
   renderBridge(spendTotal);
   renderDistribution();
+  renderRateByProvince();
   renderProvinces();
 }
 
@@ -803,16 +904,53 @@ function buildControls() {
     seg.appendChild(b);
   }
 
-  const taxSel = document.getElementById("taxyear");
-  for (const y of [...DATA.distribution.years].reverse()) {
-    const o = el("option", null, y);
-    o.value = y;
-    taxSel.appendChild(o);
+  const geoSel = document.getElementById("taxgeo");
+  for (const g of DATA.distribution.geos) {
+    const o = el("option", null, g.name === NATIONAL ? "All of Canada" : g.name);
+    o.value = g.name;
+    geoSel.appendChild(o);
   }
-  taxSel.value = state.taxYear;
+  geoSel.value = state.taxGeo;
+
+  const taxSel = document.getElementById("taxyear");
+
+  /** Rebuild the year list for the current geography, keeping the year if it
+   *  exists there and falling back to the newest one that does. */
+  function syncTaxYears() {
+    const years = taxYearsFor(state.taxGeo);
+    if (!years.includes(state.taxYear)) state.taxYear = years[years.length - 1];
+    clear(taxSel);
+    for (const y of [...years].reverse()) {
+      const o = el("option", null, y);
+      o.value = y;
+      taxSel.appendChild(o);
+    }
+    taxSel.value = state.taxYear;
+  }
+  syncTaxYears();
+
+  geoSel.addEventListener("change", e => {
+    state.taxGeo = e.target.value;
+    syncTaxYears();
+    renderDistribution();
+    renderRateByProvince();
+  });
   taxSel.addEventListener("change", e => {
     state.taxYear = e.target.value;
     renderDistribution();
+    renderRateByProvince();
+  });
+
+  const bandSel = document.getElementById("taxband");
+  DATA.distribution.bands.forEach((b, i) => {
+    const o = el("option", null, b);
+    o.value = String(i);
+    bandSel.appendChild(o);
+  });
+  bandSel.value = String(state.taxBand);
+  bandSel.addEventListener("change", e => {
+    state.taxBand = Number(e.target.value);
+    renderRateByProvince();
   });
 
   const fnSel = document.getElementById("fn");
