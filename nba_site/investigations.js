@@ -23,7 +23,7 @@ const INVESTIGATIONS = [
     slug:        "canada-fiscal",
     title:       "The Canadian Ledger",
     subtitle:    "Every Tax Dollar In, Every Dollar Out",
-    description: "All government revenue in Canada beside everything it buys, on one consolidation basis — every tax against every function, from social protection down to street lighting, per person or as a share. Then who actually paid: 31.6M tax filers by income band, where the 16.6% earning over $100,000 carry 69.9% of the personal income tax. Includes the reconciliation the two tables don't advertise.",
+    description: "All government revenue in Canada beside everything it buys, on one consolidation basis — every tax against every function, from social protection down to street lighting, per person or as a share. Then who actually paid: 31.6M tax filers by income band, for Canada and all 13 provinces and territories, where the 16.6% earning over $100,000 carry 69.9% of the personal income tax — and the same income taxed province by province. Includes the reconciliations neither source advertises.",
     date:        "2026-08-29",
     tags:        ["Government", "Reference", "Canada", "Public Finance", "Taxes"],
     accent:      "#AFA238",
