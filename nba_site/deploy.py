@@ -3,8 +3,10 @@
 deploy.py — Publish nba_site/ to the nba-data-lab repo (the deploy mirror).
 
 Mirrors this folder's contents into ericbackman/nba-data-lab and pushes; the
-mirror repo's own workflow then deploys to Cloudflare Pages. The data_explorer
-repo stays private; only nba_site/ content is published.
+mirror repo's own workflow then deploys to Cloudflare Pages. Only nba_site/
+content is published here. (This used to add "the data_explorer repo stays
+private" — it is PUBLIC as of 2026-08-29, so that is no longer a backstop:
+treat anything committed anywhere in this repo as already published.)
 
 THIS FOLDER (data_explorer/nba_site/) IS THE SOURCE OF TRUTH — never edit the
 nba-data-lab clone directly; a deploy wipes and re-mirrors it. (That drift
@@ -22,7 +24,11 @@ import os, sys, shutil, subprocess, tempfile, datetime
 
 HERE        = os.path.dirname(os.path.abspath(__file__))
 REPO_URL    = "https://github.com/ericbackman/nba-data-lab.git"
-EXCLUDE     = {".cache.json", ".git", "__pycache__"}  # never publish these
+# Never publish these. `.cache` is a DIRECTORY -- canada-fiscal caches 21 MB of
+# raw StatCan/CRA CSVs in one. The older `.cache.json` was a single file, and
+# matching only that name mirrored the whole directory into the public site
+# repo: measured at 28.2 MB and 121 cache files before this line was fixed.
+EXCLUDE     = {".cache", ".cache.json", ".git", "__pycache__"}
 
 
 def run(cmd, cwd=None):
@@ -58,7 +64,7 @@ def mirror_into(dest):
 
     # Always ship a .gitignore so cache files can never be published by hand
     with open(os.path.join(dest, ".gitignore"), "w", encoding="utf-8") as f:
-        f.write(".cache.json\n*.cache.json\n.DS_Store\nThumbs.db\n")
+        f.write(".cache/\n.cache.json\n*.cache.json\n.DS_Store\nThumbs.db\n")
 
 
 def main():
