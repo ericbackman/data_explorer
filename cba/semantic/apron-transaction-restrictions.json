@@ -1,0 +1,24 @@
+{
+  "_source": "2023 NBA CBA, Article VII, Section 2(e) — 'Operation of Apron Levels'",
+  "_corpus_lines": "corpus/text/2023-nba-cba.raw.txt lines 2736-2835 (table at 2775-2820, worked examples from 2825)",
+  "_semantics": "The CBA does not frame apron consequences as flat prohibitions. Per Section 2(e)(2)(i): (A) a Team MAY NOT engage in a listed transaction if, immediately after, its 'Apron Team Salary' would EXCEED the listed 'Applicable Apron Level'; and (B) once it engages in that transaction, it is HARD-CAPPED at that Applicable Apron Level for the remainder of the Salary Cap Year. So a team already above the First Apron cannot do rows A-G; a team above the Second Apron cannot do rows A-K.",
+  "_apron_team_salary_note": "'Apron Team Salary' (defined Section 2(e)(1), line 2737) is a distinct, higher figure than ordinary Team Salary — it adds back Performance Bonuses, uses higher of qualifying-offer/first-refusal amounts for RFAs, etc. Do not conflate with Team Salary or the Tax Level.",
+  "hard_cap_triggers": [
+    { "row": "A", "transaction": "Sign or acquire a player using the Bi-annual Exception", "governing_section": "VII, 6(d)", "hard_caps_at": "First Apron" },
+    { "row": "B", "transaction": "Sign or acquire a player using the Non-Taxpayer Mid-Level Salary Exception", "governing_section": "VII, 6(e)", "hard_caps_at": "First Apron" },
+    { "row": "C", "transaction": "Acquire a player under a contract signed-and-traded to you (a Contract entered into per Section 8(e)(1))", "governing_section": "VII, 8(e)(1)", "hard_caps_at": "First Apron" },
+    { "row": "D", "transaction": "Sign, during the Regular Season, a player waived mid-season whose prior Salary exceeded the Non-Taxpayer MLE (i.e. sign a bought-out/waived 'above-MLE' player)", "governing_section": "VII, 2(e)(4) row D", "hard_caps_at": "First Apron" },
+    { "row": "E", "transaction": "Acquire a player using an Expanded Traded Player Exception", "governing_section": "VII, 6(j)(1)(iv)", "hard_caps_at": "First Apron" },
+    { "row": "F", "transaction": "Acquire a player using a Standard Traded Player Exception after the Regular Season in which it arose (i.e. use a carried-over TPE from a prior trade)", "governing_section": "VII, 6(j)(1)(i)", "hard_caps_at": "First Apron" },
+    { "row": "G", "transaction": "Acquire a player using a Transition Traded Player Exception", "governing_section": "VII, 6(j)(1)(iii)", "hard_caps_at": "First Apron" },
+    { "row": "H", "transaction": "Acquire a player using an Aggregated Standard Traded Player Exception (combine two or more players' salaries to match for an incoming player)", "governing_section": "VII, 6(j)(1)(ii)", "hard_caps_at": "Second Apron", "media_name": "'can't aggregate salaries in a trade'" },
+    { "row": "I", "transaction": "Pay cash to another Team in connection with a trade", "governing_section": "VII, 8(a)", "hard_caps_at": "Second Apron", "media_name": "'can't send cash in trades'" },
+    { "row": "J", "transaction": "Acquire a player using a TPE that arose from a sign-and-trade (a Contract signed-and-traded per 8(e)(1))", "governing_section": "VII, 6(j) + 8(e)(1)", "hard_caps_at": "Second Apron" },
+    { "row": "K", "transaction": "Sign a player using the Taxpayer Mid-Level Salary Exception", "governing_section": "VII, 6(f)", "hard_caps_at": "Second Apron", "media_name": "'can't use the taxpayer mid-level exception'" }
+  ],
+  "additional_rules": {
+    "offseason_projection": "Section 2(e)(2)(ii) (line 2756): in the post-Regular-Season-through-year-end window, rows E-J additionally cannot push the team's PROJECTED Apron Team Salary for the FOLLOWING Salary Cap Year over the corresponding apron (options assumed exercised, etc., per 2(e)(3)).",
+    "taxpayer_mle_lockout": "Section 2(e)(2)(iii) (line 2759): once a team signs anyone with the Taxpayer MLE, it may not engage in rows A-E (2023-24) / rows A-F (2024-25 onward). So the Taxpayer MLE and the TPE/BAE/NTMLE tools are mutually exclusive within a year.",
+    "not_in_this_table": "The second-apron FROZEN/MOVABLE first-round-DRAFT-PICK penalty is NOT in this table — it lives in Article VII, Section 2 ('Draft Pick Penalty'). Verify separately."
+  }
+}
