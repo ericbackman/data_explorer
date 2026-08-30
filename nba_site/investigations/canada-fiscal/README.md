@@ -168,6 +168,10 @@ sides, so they are consistently excluded.
 - national revenue, expenditure and population land in sane magnitude ranges
 - every province carries spending data for the latest year
 - any dimension filter that matches zero rows raises rather than yielding an empty chart
+- every download is HTTPS and its host is on a four-entry allowlist. Download URLs are
+  read out of the catalogue's JSON rather than written here, so their host and scheme
+  arrive in a response; the check pins them, and a moved source fails loudly instead of
+  being fetched and cached as data
 - each CRA file's income bands sum to its own published totals, for all 14 geographies
   and 7 years, within 1% or the accumulated rounding bound — whichever is looser, because
   per-cell rounding is worth more than 1% on a base as small as Nunavut's

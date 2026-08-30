@@ -31,6 +31,7 @@ import re
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -165,6 +166,30 @@ GEO_ABBR = {
 # An explicit empty ProxyHandler skips urllib's system-proxy lookup per request.
 _OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
+# Download URLs are not written here -- they are read out of the open data
+# catalogue's JSON, so their host and scheme come from a response rather than
+# from this file. That is fine while the catalogue is honest, and this pins it:
+# a redirected or tampered entry pointing somewhere else fails instead of being
+# fetched and cached as data.
+ALLOWED_HOSTS = frozenset({
+    "www150.statcan.gc.ca",
+    "open.canada.ca",
+    "www.canada.ca",
+    "donnees-data.tpsgc-pwgsc.gc.ca",
+})
+
+
+def _check_url(url: str) -> None:
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme != "https":
+        raise RuntimeError(f"refusing non-HTTPS URL: {url}")
+    if parts.hostname not in ALLOWED_HOSTS:
+        raise RuntimeError(
+            f"refusing {parts.hostname!r}: not one of the expected open data hosts "
+            f"({', '.join(sorted(ALLOWED_HOSTS))}). If Statistics Canada or the CRA "
+            f"has genuinely moved, add the host here deliberately."
+        )
+
 
 def _http(url: str, *, data: bytes | None = None, timeout: int = 120) -> bytes:
     """GET/POST with a timeout and a bounded retry on transient failures.
@@ -181,6 +206,8 @@ def _http(url: str, *, data: bytes | None = None, timeout: int = 120) -> bytes:
     }
     if data is not None:
         headers["Content-Type"] = "application/json"
+
+    _check_url(url)
 
     last: Exception | None = None
     for attempt in range(3):
