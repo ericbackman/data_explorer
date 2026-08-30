@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="shield">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Canadian Ledger — Data Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<script src="data.js"></script>
+<style>
+/* Colour comes entirely from tokens.css (brick: backman-design/dist/tokens.css).
+   Derived surfaces below are mixed from those tokens so both themes resolve. */
+:root {
+  --surface:   color-mix(in srgb, var(--bd-panel) 20%, var(--bd-ground));
+  --surface-2: color-mix(in srgb, var(--bd-panel) 34%, var(--bd-ground));
+  --track:     color-mix(in srgb, var(--bd-line) 30%, transparent);
+  --hairline:  color-mix(in srgb, var(--bd-line) 55%, transparent);
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --sans: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --slab: "Zilla Slab", Georgia, "Times New Roman", serif;
+}
+[data-theme="shield"] {
+  --surface:   var(--bd-panel);
+  --surface-2: color-mix(in srgb, var(--bd-raised) 20%, var(--bd-panel));
+  --track:     color-mix(in srgb, var(--bd-raised) 45%, transparent);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bd-ground);
+  color: var(--bd-ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  padding: 0 1.25rem 5rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 68rem; margin: 0 auto; }
+
+h1, h2, h3 { font-family: var(--slab); text-wrap: balance; }
+a { color: var(--bd-accent); }
+a:focus-visible, button:focus-visible, select:focus-visible {
+  outline: 2px solid var(--bd-accent-2); outline-offset: 2px;
+}
+
+.backlink {
+  display: inline-block;
+  margin: 1.4rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--bd-ink-2);
+  text-decoration: none;
+  border: 1px solid var(--bd-line);
+  border-radius: 100px;
+  padding: 0.3rem 0.8rem;
+}
+.backlink:hover { color: var(--bd-accent); border-color: var(--bd-accent); }
+
+/* ---------- masthead ---------- */
+.mast { padding: 2.2rem 0 1.6rem; border-bottom: 2px solid var(--bd-ink); }
+.eyebrow {
+  font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--bd-ink-2);
+}
+.mast h1 {
+  font-size: clamp(2rem, 5.2vw, 3rem); font-weight: 700; line-height: 1.07;
+  letter-spacing: -0.015em; margin: 0.5rem 0 0.6rem;
+}
+.mast .lede { color: var(--bd-ink-2); max-width: 60ch; }
+
+/* ---------- controls ---------- */
+.controls {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.1rem;
+  padding: 1.2rem 0 0;
+}
+.ctl { display: flex; flex-direction: column; gap: 0.3rem; }
+.ctl > label {
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--bd-ink-2);
+}
+select {
+  font-family: var(--sans); font-size: 0.95rem; color: var(--bd-ink);
+  background: var(--surface); border: 1px solid var(--bd-line);
+  border-radius: 3px; padding: 0.38rem 0.6rem; min-width: 9rem;
+}
+.seg { display: flex; border: 1px solid var(--bd-line); border-radius: 3px; overflow: hidden; }
+.seg button {
+  font-family: var(--sans); font-size: 0.86rem; color: var(--bd-ink-2);
+  background: var(--surface); border: none; cursor: pointer;
+  padding: 0.42rem 0.75rem; border-right: 1px solid var(--bd-line);
+}
+.seg button:last-child { border-right: none; }
+.seg button:hover { color: var(--bd-ink); }
+.seg button[aria-pressed="true"] {
+  background: var(--bd-accent); color: var(--bd-ground); font-weight: 600;
+}
+.themebtn {
+  margin-left: auto; font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  color: var(--bd-ink-2); background: none; border: 1px solid var(--bd-line);
+  border-radius: 100px; padding: 0.38rem 0.8rem;
+}
+.themebtn:hover { color: var(--bd-accent); border-color: var(--bd-accent); }
+
+/* ---------- headline numbers ---------- */
+.headline {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1px; background: var(--bd-line); border: 1px solid var(--bd-line);
+  border-radius: 4px; overflow: hidden; margin: 2.2rem 0 0;
+}
+.big { background: var(--surface); padding: 1.05rem 1.15rem; }
+.big dt {
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--bd-ink-2); margin-bottom: 0.3rem;
+}
+.big dd {
+  font-family: var(--slab); font-size: 1.72rem; font-weight: 600;
+  line-height: 1.1; font-variant-numeric: tabular-nums;
+}
+.big .sub { font-family: var(--sans); font-size: 0.8rem; font-weight: 400; color: var(--bd-ink-2); }
+.big--in dd  { color: var(--bd-gain); }
+.big--out dd { color: var(--bd-loss); }
+
+/* ---------- the ledger ---------- */
+.ledger {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+  gap: 1.6rem; margin-top: 2.6rem;
+}
+.col { display: flex; flex-direction: column; gap: 0.15rem; }
+.col__head {
+  display: flex; align-items: baseline; gap: 0.6rem;
+  padding-bottom: 0.5rem; margin-bottom: 0.75rem;
+  border-bottom: 2px solid var(--bd-line);
+}
+.col__head h2 { font-size: 1.15rem; font-weight: 600; }
+.col--in  .col__head { border-bottom-color: var(--bd-gain); }
+.col--out .col__head { border-bottom-color: var(--bd-loss); }
+.col__total {
+  margin-left: auto; font-family: var(--mono); font-size: 0.8rem;
+  font-variant-numeric: tabular-nums; color: var(--bd-ink-2);
+}
+
+.row { padding: 0.42rem 0; border-bottom: 1px solid var(--hairline); }
+.row:last-child { border-bottom: none; }
+.row__head { display: flex; align-items: baseline; gap: 0.6rem; }
+.row__name { font-size: 0.92rem; flex: 1; min-width: 0; }
+.row__val {
+  font-family: var(--mono); font-size: 0.82rem; font-variant-numeric: tabular-nums;
+  white-space: nowrap; color: var(--bd-ink);
+}
+.row__track { height: 0.42rem; margin-top: 0.3rem; background: var(--track); border-radius: 2px; }
+.row__fill { height: 100%; border-radius: 2px; }
+.col--in  .row__fill { background: var(--bd-gain); }
+.col--out .row__fill { background: var(--bd-loss); }
+
+button.row {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  background: none; border-top: none; border-left: none; border-right: none;
+  font: inherit; color: inherit;
+}
+button.row:hover .row__name { color: var(--bd-accent); }
+.row__caret {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--bd-ink-2);
+  width: 0.9rem; display: inline-block;
+}
+.row--kid { padding-left: 1.5rem; opacity: 0.92; }
+.row--kid .row__name { font-size: 0.85rem; color: var(--bd-ink-2); }
+.row--kid .row__val { font-size: 0.76rem; color: var(--bd-ink-2); }
+.row--kid .row__track { height: 0.28rem; }
+.row--kid .row__fill { opacity: 0.68; }
+
+/* ---------- bridge ---------- */
+.bridge {
+  margin-top: 2.6rem; background: var(--surface); border: 1px solid var(--bd-line);
+  border-left: 3px solid var(--bd-warn); border-radius: 4px; padding: 1.3rem 1.4rem;
+}
+.bridge h2 { font-size: 1.08rem; font-weight: 600; margin-bottom: 0.5rem; }
+.bridge p { color: var(--bd-ink); font-size: 0.95rem; max-width: 66ch; }
+.bridge dl {
+  display: grid; grid-template-columns: 1fr auto; gap: 0.3rem 1rem;
+  margin-top: 1rem; font-size: 0.9rem; max-width: 34rem;
+}
+.bridge dt { color: var(--bd-ink); }
+.bridge dd { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+.bridge .sum { border-top: 1px solid var(--bd-line); padding-top: 0.35rem; margin-top: 0.2rem; }
+.bridge .sum dt, .bridge .sum dd { font-weight: 700; color: var(--bd-ink); }
+
+/* ---------- distribution ---------- */
+.dist-stats {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; margin: 0.4rem 0 1.2rem;
+  font-size: 0.9rem; color: var(--bd-ink-2);
+}
+.dist-stats b {
+  font-family: var(--mono); color: var(--bd-ink); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dist-legend {
+  display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--bd-ink-2); margin-bottom: 0.5rem;
+}
+.dist-legend span { display: flex; align-items: center; gap: 0.4rem; }
+.dist-legend i { width: 0.85rem; height: 0.55rem; border-radius: 2px; display: inline-block; }
+.dist-legend .k-filers {
+  background: color-mix(in srgb, var(--bd-accent-2) 32%, transparent);
+  box-shadow: inset 0 0 0 1px var(--bd-accent-2);
+}
+.dist-legend .k-tax { background: var(--bd-gain); }
+
+.dist {
+  display: grid;
+  grid-template-columns: 8.4rem 1fr 1fr 3.6rem;
+  align-items: center; gap: 0 0.5rem;
+  padding: 0.22rem 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.dist:last-of-type { border-bottom: none; }
+.dist__band {
+  font-family: var(--mono); font-size: 0.74rem; color: var(--bd-ink-2);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.dist__side { display: flex; height: 0.8rem; }
+.dist__side--l { justify-content: flex-end; border-right: 1px solid var(--bd-line); padding-right: 2px; }
+.dist__side--r { justify-content: flex-start; padding-left: 2px; }
+.dist__bar { height: 100%; border-radius: 2px; min-width: 2px; }
+/* The two series sit at almost the same luminance, so hue alone would not
+   separate them. The left side is outlined and translucent, the right solid --
+   position, fill style and colour all carry the distinction. */
+.dist__bar--filers {
+  background: color-mix(in srgb, var(--bd-accent-2) 32%, transparent);
+  box-shadow: inset 0 0 0 1px var(--bd-accent-2);
+}
+.dist__bar--tax { background: var(--bd-gain); }
+.dist__rate {
+  font-family: var(--mono); font-size: 0.74rem; text-align: right;
+  font-variant-numeric: tabular-nums; color: var(--bd-ink);
+}
+.dist--head {
+  border-bottom: 1px solid var(--bd-line); padding-bottom: 0.35rem; margin-bottom: 0.2rem;
+}
+.dist--head span {
+  font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--bd-ink-2);
+}
+.dist--head .c { text-align: center; }
+.dist--head .r { text-align: right; }
+
+.callout {
+  margin-top: 1.2rem; padding: 0.95rem 1.15rem;
+  background: var(--surface); border: 1px solid var(--bd-line);
+  border-left: 3px solid var(--bd-gain); border-radius: 4px;
+  font-size: 0.95rem; max-width: 66ch;
+}
+.callout b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.callout--warn { border-left-color: var(--bd-warn); }
+.callout:empty { display: none; }
+
+@media (max-width: 34rem) {
+  .dist { grid-template-columns: 6.6rem 1fr 1fr 3rem; }
+  .dist__band { font-size: 0.68rem; }
+}
+
+/* ---------- sankey ---------- */
+.sankey-wrap { overflow-x: auto; margin-top: 1.2rem; }
+.sankey { display: block; width: 100%; min-width: 46rem; height: auto; }
+.sankey text { font-family: var(--sans); fill: var(--bd-ink); }
+.sk-label { font-size: 12px; }
+.sk-val { font-size: 11px; fill: var(--bd-ink-2); font-family: var(--mono); }
+.sk-side {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; fill: var(--bd-ink-2);
+}
+.sk-node { cursor: default; }
+.sk-node rect { stroke: var(--bd-ground); stroke-width: 0.5; }
+.sk-leader { fill: none; stroke: var(--bd-line); stroke-width: 0.75; }
+.sk-ribbon { fill-opacity: 0.24; transition: fill-opacity 0.12s ease; }
+.sankey.is-hovering .sk-ribbon { fill-opacity: 0.07; }
+.sankey.is-hovering .sk-ribbon.is-lit { fill-opacity: 0.7; }
+.sankey.is-hovering .sk-node:not(.is-lit) rect { opacity: 0.35; }
+.sankey.is-hovering .sk-node:not(.is-lit) text { opacity: 0.4; }
+.sk-readout {
+  margin-top: 0.7rem; min-height: 2.9em; font-size: 0.94rem;
+  color: var(--bd-ink); max-width: 70ch;
+}
+.sk-readout .muted { color: var(--bd-ink-2); }
+@media (prefers-reduced-motion: reduce) { .sk-ribbon { transition: none; } }
+
+/* ---------- provinces ---------- */
+
+.provinces { margin-top: 3rem; }
+.sec__head {
+  display: flex; align-items: baseline; gap: 0.8rem; flex-wrap: wrap;
+  padding-bottom: 0.55rem; border-bottom: 1px solid var(--bd-line); margin-bottom: 0.6rem;
+}
+.sec__head h2 { font-size: 1.25rem; font-weight: 600; }
+.basis {
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--bd-ink);
+  background: color-mix(in srgb, var(--bd-warn) 18%, var(--bd-ground));
+  border: 1px solid color-mix(in srgb, var(--bd-warn) 60%, transparent);
+  border-radius: 2px; padding: 0.14rem 0.45rem;
+}
+.sec__note { color: var(--bd-ink-2); font-size: 0.92rem; max-width: 66ch; margin-bottom: 1.1rem; }
+
+.prov { display: grid; grid-template-columns: 3.2rem 1fr 5.2rem; align-items: center;
+        gap: 0.7rem; padding: 0.3rem 0; }
+.prov__abbr { font-family: var(--mono); font-size: 0.78rem; color: var(--bd-ink-2); }
+.prov__track { height: 0.85rem; background: var(--track); border-radius: 2px; }
+.prov__fill { height: 100%; background: var(--bd-accent-2); border-radius: 2px; }
+.prov--natl .prov__fill { background: var(--bd-accent); }
+.prov--natl .prov__abbr { color: var(--bd-accent); font-weight: 600; }
+.prov__val { font-family: var(--mono); font-size: 0.8rem; text-align: right;
+             font-variant-numeric: tabular-nums; }
+
+/* ---------- footer ---------- */
+footer.notes {
+  margin-top: 3.4rem; padding-top: 1.3rem; border-top: 1px solid var(--bd-line);
+  color: var(--bd-ink-2); font-size: 0.86rem;
+}
+footer.notes h2 { font-size: 1rem; font-weight: 600; color: var(--bd-ink); margin-bottom: 0.5rem; }
+footer.notes ul { margin: 0 0 1.1rem 1.1rem; }
+footer.notes li { margin-bottom: 0.4rem; max-width: 68ch; }
+footer.notes p { max-width: 68ch; margin-bottom: 0.7rem; }
+.srcline { font-family: var(--mono); font-size: 0.76rem; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="backlink" href="../../">&larr; Data Lab</a>
+
+<header class="mast">
+  <p class="eyebrow">Public finance · Statistics Canada</p>
+  <h1>The Canadian Ledger</h1>
+  <p class="lede">
+    Every dollar collected by every level of government in Canada, and every dollar
+    it buys — side by side, on a single consolidation basis, for one year at a time.
+  </p>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="year">Year</label>
+      <select id="year"></select>
+    </div>
+    <div class="ctl">
+      <label id="unitlabel">Show as</label>
+      <div class="seg" role="group" aria-labelledby="unitlabel" id="units"></div>
+    </div>
+    <button class="themebtn" id="theme" type="button">Light</button>
+  </div>
+</header>
+
+<dl class="headline" id="headline"></dl>
+
+<div class="ledger">
+  <section class="col col--in">
+    <div class="col__head">
+      <h2>Where it comes from</h2>
+      <span class="col__total" id="rev-total"></span>
+    </div>
+    <div id="rev-rows"></div>
+  </section>
+
+  <section class="col col--out">
+    <div class="col__head">
+      <h2>What it buys</h2>
+      <span class="col__total" id="spend-total"></span>
+    </div>
+    <div id="spend-rows"></div>
+  </section>
+</div>
+
+<section class="bridge">
+  <h2>Why the two columns don't match</h2>
+  <p id="bridge-note"></p>
+  <dl id="bridge-lines"></dl>
+</section>
+
+<section class="sankey-section">
+  <div class="sec__head">
+    <h2>One year, end to end</h2>
+    <span class="basis">follows the year above</span>
+  </div>
+  <p class="sec__note">
+    Everything that came in beside everything it became, for the year selected at the top
+    of the page. Both sides are the same total by construction: a deficit enters on the
+    left as borrowing, a surplus leaves on the right, and the spending that functions
+    don't capture — buying and building things, and the wear on what governments already
+    own — is its own band rather than a gap.
+  </p>
+  <p class="sec__note">
+    <strong>The ribbons show scale, not tracking.</strong> Money is fungible: no tax is
+    tied to a programme, and nothing in the public accounts says which dollar paid for
+    what. Each ribbon is a source's share of one use, in proportion — the honest reading
+    is the width of the bands at each end, not the path between them.
+  </p>
+  <div class="sankey-wrap">
+    <svg class="sankey" id="sankey" viewBox="0 0 1000 640"
+         preserveAspectRatio="xMidYMid meet" role="img"
+         aria-label="Flow diagram from revenue sources to spending by function"></svg>
+  </div>
+  <p class="sk-readout" id="sankey-readout"></p>
+</section>
+
+<section class="distribution">
+  <div class="sec__head">
+    <h2>Who paid the income tax</h2>
+    <span class="basis">personal income tax only</span>
+    <div class="ctl" style="margin-left:auto">
+      <label for="taxgeo">Where</label>
+      <select id="taxgeo"></select>
+    </div>
+    <div class="ctl">
+      <label for="taxyear">Tax year</label>
+      <select id="taxyear"></select>
+    </div>
+  </div>
+  <p class="sec__note">
+    Every individual return filed and assessed, grouped by total income. This is one
+    slice of the ledger above — personal income tax, not the sales, payroll, corporate
+    and property taxes that make up most of the rest. Administrative tax-year counts
+    also don't reconcile line-for-line with the national accounts, so read this for its
+    shape rather than against the totals above.
+  </p>
+  <p class="sec__note">
+    <strong>The bands are nominal dollars and are never re-indexed.</strong> $100,000 in
+    2018 is not $100,000 in 2024, so a rising share of filers in the upper bands is
+    partly inflation moving people across fixed lines rather than incomes genuinely
+    pulling away. Compare the shape of a single year confidently; compare across years
+    only with that in mind.
+  </p>
+
+  <div class="dist-stats" id="dist-stats"></div>
+  <p class="callout callout--warn" id="dist-warn"></p>
+
+  <div class="dist-legend">
+    <span><i class="k-filers"></i>Share of filers</span>
+    <span><i class="k-tax"></i>Share of income tax paid</span>
+  </div>
+
+  <div class="dist dist--head" aria-hidden="true">
+    <span>Total income</span><span class="r">Filers</span>
+    <span>Tax paid</span><span class="r">Rate</span>
+  </div>
+  <div id="dist-rows"></div>
+
+  <p class="callout" id="dist-callout"></p>
+
+  <div class="sec__head" style="margin-top:2.4rem">
+    <h2>The same income, taxed by province</h2>
+    <div class="ctl" style="margin-left:auto">
+      <label for="taxband">Income band</label>
+      <select id="taxband"></select>
+    </div>
+  </div>
+  <p class="sec__note">
+    Effective rate on total income for filers in one band, wherever they filed. Federal
+    tax is the same everywhere, so the spread here is provincial rates, provincial credits,
+    and the different mix of incomes inside a band that is thousands of dollars wide.
+  </p>
+  <div id="rate-rows"></div>
+  <p class="callout callout--warn" id="rate-omitted"></p>
+</section>
+
+<section class="provinces">
+  <div class="sec__head">
+    <h2>Spending per person, by province</h2>
+    <span class="basis">different basis</span>
+  </div>
+  <p class="sec__note">
+    Federal money is <strong>not</strong> in these bars. Statistics Canada publishes the
+    all-levels view for Canada only; every province is available solely as provincial +
+    local government combined. That cut is designed to be comparable across provinces —
+    consolidation absorbs the differences in how each one organises service delivery — but
+    it is a smaller pot than the ledger above, and the two should never be read against
+    each other.
+  </p>
+  <div class="ctl" style="margin-bottom:1.1rem">
+    <label for="fn">Function</label>
+    <select id="fn"></select>
+  </div>
+  <div id="prov-rows"></div>
+</section>
+
+<footer class="notes">
+  <h2>How to read this without fooling yourself</h2>
+  <ul id="caveats"></ul>
+  <h2>Sources</h2>
+  <div id="sources"></div>
+  <p id="built"></p>
+  <p>
+    Statistics Canada information used with permission. Palette from
+    <span class="srcline">backman-design</span> — theme Shield / Window Wall.
+  </p>
+</footer>
+
+</div>
+
+<script>
+/* ── DOM helpers (createElement/textContent only — never innerHTML w/ data) ── */
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = String(txt);
+  return e;
+}
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+const DATA = window.LEDGER_DATA;
+const NATIONAL = "Canada";
+
+/* ── state ── */
+const state = {
+  year: DATA.years[DATA.years.length - 1],
+  unit: "total",                 // total | percap | share
+  fn: "__all__",
+  taxYear: DATA.distribution.years[DATA.distribution.years.length - 1],
+  taxGeo: NATIONAL,
+  taxBand: DATA.distribution.bands.length - 1,
+  open: new Set(),               // expanded parent rows, keyed "rev:3" / "sp:7"
+};
+
+/* ── formatting ── */
+const UNITS = [
+  { key: "total",  label: "Dollars" },
+  { key: "percap", label: "Per person" },
+  { key: "share",  label: "Share" },
+];
+
+function pop(geo, year) { return DATA.population[geo][year]; }
+
+/** Values arrive as millions of current dollars.
+ *  `mode` defaults to the toggle; the headline overrides it, because a grand
+ *  total rendered as a share of itself is just "100.0%". */
+function fmt(millions, total, geo, mode) {
+  const unit = mode || state.unit;
+  if (millions == null) return "—";
+  if (unit === "percap") {
+    const people = pop(geo || NATIONAL, state.year);
+    return "$" + Math.round(millions * 1e6 / people).toLocaleString("en-CA");
+  }
+  if (unit === "share") {
+    if (!total) return "—";
+    return (100 * millions / total).toFixed(1) + "%";
+  }
+  const b = millions / 1000;
+  if (Math.abs(b) >= 100) return "$" + Math.round(b).toLocaleString("en-CA") + "B";
+  if (Math.abs(b) >= 1)   return "$" + b.toFixed(1) + "B";
+  return "$" + Math.round(millions).toLocaleString("en-CA") + "M";
+}
+
+/** Always dollars, regardless of the unit toggle — used by the bridge. */
+function fmtDollars(millions) {
+  if (millions == null) return "—";
+  const b = millions / 1000;
+  const n = Math.abs(b).toLocaleString("en-CA",
+    { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return (b < 0 ? "-$" : "$") + n + "B";
+}
+
+/* ── tree assembly ── */
+/** Roots (parent === -1) with their children, each summed and sorted desc. */
+function tree(names, parents, values) {
+  const nodes = names.map((name, i) => ({
+    i, name, parent: parents[i], value: values[i], kids: [],
+  }));
+  const roots = [];
+  for (const n of nodes) {
+    if (n.parent === -1) roots.push(n);
+    else if (nodes[n.parent]) nodes[n.parent].kids.push(n);
+  }
+  // Consolidation eliminates transfers between governments entirely, so those
+  // lines come back empty. Drop a category only when it and all of its children
+  // are empty — an absent row is honest here, a row reading "—" is not.
+  const alive = n => n.value != null || n.kids.some(k => k.value != null);
+
+  const byValue = (a, b) => (b.value || 0) - (a.value || 0);
+  const live = roots.filter(alive);
+  live.sort(byValue);
+  live.forEach(r => { r.kids = r.kids.filter(k => k.value != null); r.kids.sort(byValue); });
+  return live;
+}
+
+function sumRoots(roots) {
+  return roots.reduce((acc, r) => acc + (r.value || 0), 0);
+}
+
+/* ── rendering: one ledger column ── */
+function renderColumn(container, roots, total, keyPrefix) {
+  clear(container);
+  const max = Math.max(...roots.map(r => r.value || 0), 1);
+
+  for (const node of roots) {
+    const key = keyPrefix + ":" + node.i;
+    const hasKids = node.kids.length > 0;
+    const isOpen = state.open.has(key);
+
+    const row = el(hasKids ? "button" : "div", "row");
+    if (hasKids) {
+      row.type = "button";
+      row.setAttribute("aria-expanded", String(isOpen));
+      row.setAttribute("aria-label",
+        (isOpen ? "Collapse " : "Expand ") + node.name + ", " + fmt(node.value, total));
+      row.addEventListener("click", () => {
+        if (state.open.has(key)) state.open.delete(key); else state.open.add(key);
+        render();
+      });
+    }
+
+    const head = el("div", "row__head");
+    if (hasKids) head.appendChild(el("span", "row__caret", isOpen ? "−" : "+"));
+    head.appendChild(el("span", "row__name", node.name));
+    head.appendChild(el("span", "row__val", fmt(node.value, total)));
+    row.appendChild(head);
+
+    const track = el("div", "row__track");
+    const fill = el("div", "row__fill");
+    fill.style.width = Math.max(0, 100 * (node.value || 0) / max) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    container.appendChild(row);
+
+    if (hasKids && isOpen) {
+      const kidMax = Math.max(...node.kids.map(k => k.value || 0), 1);
+      for (const kid of node.kids) {
+        const kr = el("div", "row row--kid");
+        const kh = el("div", "row__head");
+        kh.appendChild(el("span", "row__name", kid.name));
+        kh.appendChild(el("span", "row__val", fmt(kid.value, total)));
+        kr.appendChild(kh);
+        const kt = el("div", "row__track");
+        const kf = el("div", "row__fill");
+        kf.style.width = Math.max(0, 100 * (kid.value || 0) / kidMax) + "%";
+        kt.appendChild(kf);
+        kr.appendChild(kt);
+        container.appendChild(kr);
+      }
+    }
+  }
+}
+
+/* ── rendering: headline ── */
+function bridgeValue(name) {
+  const i = DATA.bridge.names.indexOf(name);
+  return DATA.bridge.series[NATIONAL][state.year][i];
+}
+
+function renderHeadline(revTotal, spendTotal) {
+  const box = document.getElementById("headline");
+  clear(box);
+
+  const revenue = bridgeValue("revenue");
+  const expenditure = bridgeValue("expenditure");
+  const balance = bridgeValue("balance");
+  const people = pop(NATIONAL, state.year);
+
+  // A total has no meaningful "share", so that toggle falls back to dollars.
+  const headMode = state.unit === "share" ? "total" : state.unit;
+
+  const cards = [
+    { cls: "big--in", label: "Revenue", value: fmt(revenue, null, null, headMode),
+      sub: "all levels, consolidated" },
+    { cls: "big--out", label: "Expenditure", value: fmt(expenditure, null, null, headMode),
+      sub: "all levels, consolidated" },
+    { cls: "", label: balance >= 0 ? "Surplus" : "Deficit", value: fmtDollars(Math.abs(balance)),
+      sub: (100 * Math.abs(balance) / revenue).toFixed(1) + "% of revenue" },
+    { cls: "", label: "Population", value: (people / 1e6).toFixed(1) + "M",
+      sub: "July 1 estimate" },
+  ];
+
+  for (const c of cards) {
+    const d = el("div", "big " + c.cls);
+    d.appendChild(el("dt", null, c.label));
+    const dd = el("dd", null, c.value);
+    dd.appendChild(el("div", "sub", c.sub));
+    d.appendChild(dd);
+    box.appendChild(d);
+  }
+}
+
+/* ── rendering: the bridge ── */
+function renderBridge(fnTotal) {
+  const expenditure = bridgeValue("expenditure");
+  const cfc = bridgeValue("cfc");
+  const capital = bridgeValue("capital");
+  const gap = expenditure - fnTotal;
+
+  document.getElementById("bridge-note").textContent =
+    "The right-hand column is " + (100 * fnTotal / expenditure).toFixed(0) +
+    "% of total expenditure. Spending-by-function excludes what governments spend " +
+    "buying and building things — every hospital wing, transit line and fighter jet — " +
+    "along with the depreciation on what they already own. Those two lines are shown " +
+    "here so the shortfall is visible rather than quietly absorbed.";
+
+  const dl = document.getElementById("bridge-lines");
+  clear(dl);
+  const lines = [
+    ["Total expenditure (36-10-0450)", expenditure],
+    ["Sum of the ten functions (10-10-0005)", fnTotal],
+    ["Unexplained by function", gap, true],
+    ["Memo: non-financial capital acquisition", capital],
+    ["Memo: consumption of fixed capital", cfc],
+  ];
+  for (const [label, value, isSum] of lines) {
+    const dt = el("dt", null, label);
+    const dd = el("dd", null, fmtDollars(value));
+    if (isSum) { dt.classList.add("sum"); dd.classList.add("sum"); }
+    dl.appendChild(dt);
+    dl.appendChild(dd);
+  }
+}
+
+/* ── the sankey ──────────────────────────────────────────────────────────────
+   Both sides balance exactly, in every year, from published figures:
+
+     left   revenue + borrowing (when the year ran a deficit)
+     right  spending by function + capital and depreciation + any surplus
+
+   There is deliberately no level-of-government column in the middle. Splitting
+   function spending between federal and provincial needs an allocation
+   Statistics Canada does not publish: the non-consolidated table double-counts
+   $543B of transfers between governments in 2024, and no published series
+   attributes each level's final spending to a function. Drawing that column
+   would mean inventing the numbers, so the diagram stops where the data does.
+   ────────────────────────────────────────────────────────────────────────── */
+const SVG_NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+const SK = { W: 1000, H: 640, top: 34, bot: 18, nodeW: 13,
+             labelL: 176, labelR: 176, gap: 6 };
+
+/** A ramp between two theme tokens — colour is derived here, never invented. */
+function ramp(fromVar, toVar, i, n) {
+  const pct = n < 2 ? 50 : Math.round(100 * i / (n - 1));
+  return "color-mix(in srgb, var(" + toVar + ") " + pct + "%, var(" + fromVar + "))";
+}
+
+function sankeyModel() {
+  const y = state.year;
+  const names = DATA.bridge.names;
+  const at = k => DATA.bridge.series[NATIONAL][y][names.indexOf(k)];
+
+  const revenue = at("revenue"), expenditure = at("expenditure"), balance = at("balance");
+
+  const revRoots = tree(DATA.revenue.names, DATA.revenue.parents,
+                        DATA.revenue.series[NATIONAL][y]);
+  const fnRoots = tree(DATA.spending.names, DATA.spending.parents,
+                       DATA.spending.national[NATIONAL][y]);
+  const fnTotal = sumRoots(fnRoots);
+
+  const sources = revRoots.map(n => ({ name: n.name, value: n.value || 0 }));
+  if (balance < 0) sources.push({ name: "Borrowing", value: -balance, special: "debt" });
+
+  const uses = fnRoots.map(n => ({ name: n.name, value: n.value || 0 }));
+  const residual = expenditure - fnTotal;
+  if (residual > 0) uses.push({ name: "Capital, and wear on what we own",
+                                value: residual, special: "capital" });
+  if (balance > 0) uses.push({ name: "Surplus", value: balance, special: "surplus" });
+
+  // A category can survive `tree()` with an empty total when only its children
+  // carry values -- true of the inter-government transfer lines in some years.
+  // It has no ribbon to draw, and leaving it in divides by zero.
+  const real = n => n.value > 0;
+  const src = sources.filter(real), use = uses.filter(real);
+
+  src.sort((a, b) => b.value - a.value);
+  use.sort((a, b) => b.value - a.value);
+
+  const total = src.reduce((t, n) => t + n.value, 0);
+  const sources_ = src, uses_ = use;
+  return { sources: sources_, uses: uses_, total, revenue, expenditure, balance, year: y };
+}
+
+function renderSankey() {
+  const root = document.getElementById("sankey");
+  clear(root);
+  const m = sankeyModel();
+  if (!m.total) return;
+
+  const plotTop = SK.top, plotH = SK.H - SK.top - SK.bot;
+  const xL = SK.labelL, xR = SK.W - SK.labelR - SK.nodeW;
+
+  // Both columns must occupy the same vertical extent, or two totals that are
+  // equal by construction would not look equal. The bar height is fixed from
+  // whichever column has more nodes; the other column widens its gaps to match.
+  const maxCount = Math.max(m.sources.length, m.uses.length);
+  const barTotal = plotH - SK.gap * (maxCount - 1);
+
+  const lay = (nodes, x) => {
+    const gap = nodes.length > 1 ? (plotH - barTotal) / (nodes.length - 1) : 0;
+    let cursor = plotTop;
+    return nodes.map(n => {
+      const h = Math.max(1, barTotal * n.value / m.total);
+      const box = Object.assign({}, n, { x: x, y: cursor, h: h, used: 0 });
+      cursor += h + gap;
+      return box;
+    });
+  };
+
+  const L = lay(m.sources, xL);
+  const R = lay(m.uses, xR);
+
+  const colourOf = (n, i, arr, side) => {
+    if (n.special === "debt") return "var(--bd-loss)";
+    if (n.special === "surplus") return "var(--bd-gain)";
+    if (n.special === "capital") return "var(--bd-line-2)";
+    return side === "L" ? ramp("--bd-gain", "--bd-accent-2", i, arr.length)
+                        : ramp("--bd-loss", "--bd-warn", i, arr.length);
+  };
+  L.forEach((n, i) => { n.fill = colourOf(n, i, L, "L"); n.side = "L"; });
+  R.forEach((n, i) => { n.fill = colourOf(n, i, R, "R"); n.side = "R"; });
+
+  const head = (text, x, anchor) => {
+    const t = svgEl("text", { x: x, y: 16, class: "sk-side", "text-anchor": anchor });
+    t.textContent = text;
+    root.appendChild(t);
+  };
+  head("Where it came from", SK.labelL + SK.nodeW, "end");
+  head("What it became", SK.W - SK.labelR - SK.nodeW, "start");
+
+  // Every source contributes to every use in proportion — that IS the point
+  // being made about fungibility, not a shortcut around missing data.
+  const gRib = svgEl("g", {});
+  root.appendChild(gRib);
+  const ribbons = [];
+  for (const a of L) {
+    let ay = a.y;
+    for (const b of R) {
+      const flow = a.value * b.value / m.total;
+      const ah = a.h * flow / a.value;
+      const bh = b.h * flow / b.value;
+      const by = b.y + b.used;
+      b.used += bh;
+
+      const xa = a.x + SK.nodeW, xb = b.x, c = (xa + xb) / 2;
+      const d = "M" + xa + "," + ay
+              + " C" + c + "," + ay + " " + c + "," + by + " " + xb + "," + by
+              + " L" + xb + "," + (by + bh)
+              + " C" + c + "," + (by + bh) + " " + c + "," + (ay + ah) + " " + xa + "," + (ay + ah)
+              + " Z";
+      const path = svgEl("path", { d: d, class: "sk-ribbon" });
+      path.style.fill = a.fill;
+      path.dataset.from = a.name;
+      path.dataset.to = b.name;
+      gRib.appendChild(path);
+      ribbons.push(path);
+      ay += ah;
+    }
+  }
+
+  const readout = document.getElementById("sankey-readout");
+  const share = v => (100 * v / m.total).toFixed(1) + "%";
+
+  function describe(node) {
+    clear(readout);
+    if (!node) {
+      const bal = m.balance < 0
+        ? "borrowed " + fmtDollars(-m.balance) + " to cover the difference"
+        : "ran a surplus of " + fmtDollars(m.balance);
+      readout.appendChild(document.createTextNode(
+        "In " + m.year + " Canadian governments took in " + fmtDollars(m.revenue)
+        + ", spent " + fmtDollars(m.expenditure) + ", and " + bal + ". "));
+      readout.appendChild(el("span", "muted",
+        "Hover any band to follow it. Both columns total " + fmtDollars(m.total) + "."));
+      return;
+    }
+    const side = node.side === "L" ? "of everything that came in during "
+                                   : "of everything it became in ";
+    readout.appendChild(el("strong", null, node.name + " — " + fmtDollars(node.value)));
+    readout.appendChild(document.createTextNode(
+      ", " + share(node.value) + " " + side + m.year + "."));
+    if (node.special === "debt") readout.appendChild(el("span", "muted",
+      " This is the year's deficit — spending that no revenue covered."));
+    if (node.special === "capital") readout.appendChild(el("span", "muted",
+      " Spending by function excludes buying and building assets, and the wear on those "
+      + "already owned. This band is that gap, so both sides still balance."));
+    if (node.special === "surplus") readout.appendChild(el("span", "muted",
+      " Revenue the year did not spend."));
+  }
+
+  function light(name) {
+    root.classList.add("is-hovering");
+    for (const p of ribbons)
+      p.classList.toggle("is-lit", p.dataset.from === name || p.dataset.to === name);
+    for (const g of root.querySelectorAll(".sk-node"))
+      g.classList.toggle("is-lit", g.dataset.name === name);
+  }
+  function unlight() {
+    root.classList.remove("is-hovering");
+    for (const p of ribbons) p.classList.remove("is-lit");
+    for (const g of root.querySelectorAll(".sk-node")) g.classList.remove("is-lit");
+    describe(null);
+  }
+
+  // Four of the revenue lines are under 0.1% of the total, so their bands are a
+  // pixel tall and their labels would overlap. Push labels apart from the top
+  // down and draw a leader to the band whenever one had to move.
+  const placeLabels = nodes => {
+    const MIN = 13;
+    let prev = -Infinity;
+    for (const n of nodes) {
+      const wanted = n.y + n.h / 2;
+      n.labelY = Math.max(wanted, prev + MIN);
+      n.moved = Math.abs(n.labelY - wanted) > 1.5;
+      prev = n.labelY;
+    }
+  };
+
+  const drawNodes = nodes => {
+    placeLabels(nodes);
+    for (const n of nodes) {
+      const g = svgEl("g", { class: "sk-node", tabindex: "0", role: "listitem" });
+      g.dataset.name = n.name;
+      const rect = svgEl("rect", { x: n.x, y: n.y, width: SK.nodeW, height: n.h, rx: 1.5 });
+      rect.style.fill = n.fill;
+      g.appendChild(rect);
+
+      const isL = n.side === "L";
+      const tx = isL ? n.x - 8 : n.x + SK.nodeW + 8;
+      const anchor = isL ? "end" : "start";
+
+      if (n.moved) {
+        const edge = isL ? n.x : n.x + SK.nodeW;
+        const lead = svgEl("path", {
+          class: "sk-leader",
+          d: "M" + edge + "," + (n.y + n.h / 2)
+            + " L" + (tx + (isL ? 4 : -4)) + "," + n.labelY,
+        });
+        g.appendChild(lead);
+      }
+
+      const label = svgEl("text", { x: tx, class: "sk-label", "text-anchor": anchor });
+      label.textContent = n.name;
+
+      // a band thinner than two lines of type gets one line, not overlapping text
+      if (n.h < 26) {
+        label.setAttribute("y", n.labelY + 4);
+        g.appendChild(label);
+      } else {
+        label.setAttribute("y", n.labelY - 1);
+        const value = svgEl("text", { x: tx, y: n.labelY + 12,
+                                      class: "sk-val", "text-anchor": anchor });
+        value.textContent = fmtDollars(n.value) + "   " + share(n.value);
+        g.appendChild(label);
+        g.appendChild(value);
+      }
+
+      const title = svgEl("title", {});
+      title.textContent = n.name + " — " + fmtDollars(n.value) + ", " + share(n.value);
+      g.appendChild(title);
+
+      g.addEventListener("mouseenter", () => { light(n.name); describe(n); });
+      g.addEventListener("mouseleave", unlight);
+      g.addEventListener("focus", () => { light(n.name); describe(n); });
+      g.addEventListener("blur", unlight);
+      root.appendChild(g);
+    }
+  };
+  drawNodes(L);
+  drawNodes(R);
+  describe(null);
+}
+
+/* ── rendering: who paid the income tax ── */
+/** Years this geography actually has — Alberta and Quebec have no 2021 file. */
+function taxYearsFor(geo) {
+  const entry = DATA.distribution.geos.find(g => g.name === geo);
+  return entry ? entry.years : DATA.distribution.years;
+}
+
+function renderDistribution() {
+  const D = DATA.distribution;
+  const d = D.series[state.taxGeo][state.taxYear];
+  const total = d.total;
+
+  // Shares, computed against the published totals rather than the band sums —
+  // per-cell rounding makes those differ slightly.
+  const shareFilers = d.filers.map(v => 100 * v / total.filers);
+  const shareTax = d.tax.map(v => 100 * v / total.tax);
+  const max = Math.max(...shareFilers, ...shareTax, 1);
+
+  const stats = document.getElementById("dist-stats");
+  clear(stats);
+  const add = (label, value) => {
+    const s = el("span", null, label + " ");
+    s.appendChild(el("b", null, value));
+    stats.appendChild(s);
+  };
+  add("Filers", (total.filers / 1e6).toFixed(1) + "M");
+  add("Total income", fmtDollars(total.income));
+  add("Income tax paid", fmtDollars(total.tax));
+  add("Overall effective rate", (100 * total.tax / total.income).toFixed(1) + "%");
+
+  // A province that collects its own income tax shows only the federal half here.
+  const geoMeta = D.geos.find(g => g.name === state.taxGeo);
+  const warn = document.getElementById("dist-warn");
+  clear(warn);
+  if (geoMeta && geoMeta.selfAdmin) {
+    warn.appendChild(el("strong", null, "Federal tax only. "));
+    warn.appendChild(document.createTextNode(
+      state.taxGeo + " collects its own income tax, so a return filed with the CRA "
+      + "carries almost no provincial tax. Every rate below understates what someone "
+      + "here actually pays, by roughly the provincial return they file separately."));
+  }
+
+  const box = document.getElementById("dist-rows");
+  clear(box);
+  D.bands.forEach((band, i) => {
+    const row = el("div", "dist");
+    row.appendChild(el("span", "dist__band", band));
+
+    const left = el("div", "dist__side dist__side--l");
+    const lb = el("div", "dist__bar dist__bar--filers");
+    lb.style.width = (100 * shareFilers[i] / max) + "%";
+    lb.title = shareFilers[i].toFixed(1) + "% of filers";
+    left.appendChild(lb);
+    row.appendChild(left);
+
+    const right = el("div", "dist__side dist__side--r");
+    const rb = el("div", "dist__bar dist__bar--tax");
+    rb.style.width = (100 * shareTax[i] / max) + "%";
+    rb.title = shareTax[i].toFixed(1) + "% of the tax";
+    right.appendChild(rb);
+    row.appendChild(right);
+
+    const rate = d.income[i] ? 100 * d.tax[i] / d.income[i] : 0;
+    const cell = el("span", "dist__rate", rate.toFixed(1) + "%");
+    cell.title = band + ": " + shareFilers[i].toFixed(1) + "% of filers paid "
+      + shareTax[i].toFixed(1) + "% of the income tax";
+    row.appendChild(cell);
+    box.appendChild(row);
+  });
+
+  // Walk down from the top band until the accumulated tax passes half.
+  let filersPct = 0, taxPct = 0, bands = 0;
+  for (let i = D.bands.length - 1; i >= 0 && taxPct < 50; i--) {
+    filersPct += shareFilers[i];
+    taxPct += shareTax[i];
+    bands++;
+  }
+  // The claim covers every band from this one up, so it is the LOWER bound of
+  // the lowest included band that belongs in the sentence — not its full range.
+  const lowest = D.bands[D.bands.length - bands];
+  const floor = lowest.split("–")[0].replace("+", "");
+
+  const callout = document.getElementById("dist-callout");
+  clear(callout);
+  callout.appendChild(document.createTextNode("Filers earning "));
+  callout.appendChild(el("b", null, floor + " or more"));
+  callout.appendChild(document.createTextNode(" are "));
+  callout.appendChild(el("b", null, filersPct.toFixed(1) + "%"));
+  callout.appendChild(document.createTextNode(" of everyone who filed, and paid "));
+  callout.appendChild(el("b", null, taxPct.toFixed(1) + "%"));
+  callout.appendChild(document.createTextNode(
+    " of all personal income tax "
+    + (state.taxGeo === NATIONAL ? "in Canada" : "in " + state.taxGeo)
+    + " in " + state.taxYear + "."));
+}
+
+/** One band, every province — the question per-province data exists to answer. */
+function renderRateByProvince() {
+  const D = DATA.distribution;
+  const box = document.getElementById("rate-rows");
+  clear(box);
+
+  const rows = D.geos
+    .filter(g => g.name !== NATIONAL && !g.selfAdmin
+                 && g.years.includes(state.taxYear))
+    .map(g => {
+      const d = D.series[g.name][state.taxYear];
+      const income = d.income[state.taxBand];
+      return { ...g, rate: income ? 100 * d.tax[state.taxBand] / income : 0,
+               filers: d.filers[state.taxBand] };
+    })
+    .filter(r => r.filers > 0);
+
+  const national = D.series[NATIONAL][state.taxYear];
+  const natIncome = national.income[state.taxBand];
+  if (natIncome) {
+    rows.push({ name: NATIONAL, abbr: "CAN",
+                rate: 100 * national.tax[state.taxBand] / natIncome, filers: 1 });
+  }
+
+  rows.sort((a, b) => b.rate - a.rate);
+  const max = Math.max(...rows.map(r => r.rate), 1);
+
+  for (const r of rows) {
+    const row = el("div", "prov" + (r.name === NATIONAL ? " prov--natl" : ""));
+    const abbr = el("span", "prov__abbr", r.abbr);
+    abbr.title = r.name;
+    row.appendChild(abbr);
+    const track = el("div", "prov__track");
+    const fill = el("div", "prov__fill");
+    fill.style.width = (100 * r.rate / max) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("span", "prov__val", r.rate.toFixed(1) + "%"));
+    box.appendChild(row);
+  }
+
+  const omitted = D.geos.filter(g => g.selfAdmin).map(g => g.name);
+  const note = document.getElementById("rate-omitted");
+  clear(note);
+  if (omitted.length) {
+    note.appendChild(el("strong", null, omitted.join(", ") + " is not on this chart. "));
+    note.appendChild(document.createTextNode(
+      "It collects its own income tax rather than having the CRA collect it, so the "
+      + "provincial tax on a return filed with the CRA is close to nil — $0.1B in 2024 "
+      + "against Ontario's $54.0B on a base barely half the size. Charting it here would "
+      + "show it as the lowest-taxing province in Canada, which is the reverse of the "
+      + "truth. The build flags this from the data, by spotting a province whose "
+      + "provincial tax is under 5% of its total, rather than by naming one."));
+  }
+}
+
+/* ── rendering: provinces ── */
+function renderProvinces() {
+  const box = document.getElementById("prov-rows");
+  clear(box);
+
+  const { names, parents, provincial } = DATA.spending;
+  const rootIdx = names.map((_, i) => i).filter(i => parents[i] === -1);
+  const pick = state.fn === "__all__" ? rootIdx : [names.indexOf(state.fn)];
+
+  const rows = DATA.geos.map(g => {
+    const vals = provincial[g.name][state.year];
+    const total = pick.reduce((acc, i) => acc + (vals[i] || 0), 0);
+    return { ...g, perPerson: total * 1e6 / pop(g.name, state.year), total };
+  }).filter(r => r.total > 0);
+
+  rows.sort((a, b) => b.perPerson - a.perPerson);
+  const max = Math.max(...rows.map(r => r.perPerson), 1);
+
+  for (const r of rows) {
+    const row = el("div", "prov" + (r.name === NATIONAL ? " prov--natl" : ""));
+    const abbr = el("span", "prov__abbr", r.abbr);
+    abbr.title = r.name;
+    row.appendChild(abbr);
+    const track = el("div", "prov__track");
+    const fill = el("div", "prov__fill");
+    fill.style.width = (100 * r.perPerson / max) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("span", "prov__val",
+      "$" + Math.round(r.perPerson).toLocaleString("en-CA")));
+    box.appendChild(row);
+  }
+}
+
+/* ── master render ── */
+function render() {
+  const revRoots = tree(
+    DATA.revenue.names, DATA.revenue.parents,
+    DATA.revenue.series[NATIONAL][state.year],
+  );
+  const spendRoots = tree(
+    DATA.spending.names, DATA.spending.parents,
+    DATA.spending.national[NATIONAL][state.year],
+  );
+
+  const revTotal = sumRoots(revRoots);
+  const spendTotal = sumRoots(spendRoots);
+
+  renderHeadline(revTotal, spendTotal);
+  renderColumn(document.getElementById("rev-rows"), revRoots, revTotal, "rev");
+  renderColumn(document.getElementById("spend-rows"), spendRoots, spendTotal, "sp");
+
+  document.getElementById("rev-total").textContent = fmt(revTotal, revTotal);
+  document.getElementById("spend-total").textContent = fmt(spendTotal, spendTotal);
+
+  renderBridge(spendTotal);
+  renderSankey();
+  renderDistribution();
+  renderRateByProvince();
+  renderProvinces();
+}
+
+/* ── controls ── */
+function buildControls() {
+  const yearSel = document.getElementById("year");
+  for (const y of [...DATA.years].reverse()) {
+    const o = el("option", null, y);
+    o.value = y;
+    yearSel.appendChild(o);
+  }
+  yearSel.value = state.year;
+  yearSel.addEventListener("change", e => { state.year = e.target.value; render(); });
+
+  const seg = document.getElementById("units");
+  for (const u of UNITS) {
+    const b = el("button", null, u.label);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(u.key === state.unit));
+    b.addEventListener("click", () => {
+      state.unit = u.key;
+      for (const sib of seg.children) sib.setAttribute("aria-pressed", String(sib === b));
+      render();
+    });
+    seg.appendChild(b);
+  }
+
+  const geoSel = document.getElementById("taxgeo");
+  for (const g of DATA.distribution.geos) {
+    const o = el("option", null, g.name === NATIONAL ? "All of Canada" : g.name);
+    o.value = g.name;
+    geoSel.appendChild(o);
+  }
+  geoSel.value = state.taxGeo;
+
+  const taxSel = document.getElementById("taxyear");
+
+  /** Rebuild the year list for the current geography, keeping the year if it
+   *  exists there and falling back to the newest one that does. */
+  function syncTaxYears() {
+    const years = taxYearsFor(state.taxGeo);
+    if (!years.includes(state.taxYear)) state.taxYear = years[years.length - 1];
+    clear(taxSel);
+    for (const y of [...years].reverse()) {
+      const o = el("option", null, y);
+      o.value = y;
+      taxSel.appendChild(o);
+    }
+    taxSel.value = state.taxYear;
+  }
+  syncTaxYears();
+
+  geoSel.addEventListener("change", e => {
+    state.taxGeo = e.target.value;
+    syncTaxYears();
+    renderDistribution();
+    renderRateByProvince();
+  });
+  taxSel.addEventListener("change", e => {
+    state.taxYear = e.target.value;
+    renderDistribution();
+    renderRateByProvince();
+  });
+
+  const bandSel = document.getElementById("taxband");
+  DATA.distribution.bands.forEach((b, i) => {
+    const o = el("option", null, b);
+    o.value = String(i);
+    bandSel.appendChild(o);
+  });
+  bandSel.value = String(state.taxBand);
+  bandSel.addEventListener("change", e => {
+    state.taxBand = Number(e.target.value);
+    renderRateByProvince();
+  });
+
+  const fnSel = document.getElementById("fn");
+  const all = el("option", null, "All functions");
+  all.value = "__all__";
+  fnSel.appendChild(all);
+  DATA.spending.names.forEach((n, i) => {
+    if (DATA.spending.parents[i] !== -1) return;
+    const o = el("option", null, n);
+    o.value = n;
+    fnSel.appendChild(o);
+  });
+  fnSel.addEventListener("change", e => { state.fn = e.target.value; renderProvinces(); });
+
+  const themeBtn = document.getElementById("theme");
+  themeBtn.addEventListener("click", () => {
+    const dark = document.documentElement.getAttribute("data-theme") === "shield";
+    document.documentElement.setAttribute("data-theme", dark ? "windowwall" : "shield");
+    themeBtn.textContent = dark ? "Dark" : "Light";
+  });
+}
+
+/* ── provenance ── */
+function renderNotes() {
+  const ul = document.getElementById("caveats");
+  for (const c of DATA.meta.caveats) ul.appendChild(el("li", null, c));
+
+  const box = document.getElementById("sources");
+  for (const s of DATA.meta.sources) {
+    const p = el("p", "srcline");
+    const a = el("a", null, s.pid);
+    a.href = s.url;
+    a.rel = "noopener";
+    p.appendChild(a);
+    p.appendChild(document.createTextNode(
+      " · " + s.title + (s.released ? " · released " + s.released : "")));
+    box.appendChild(p);
+  }
+
+  document.getElementById("built").textContent =
+    "Built " + DATA.meta.generated + ". " + DATA.meta.basis;
+}
+
+buildControls();
+renderNotes();
+render();
+</script>
+</body>
+</html>
