@@ -58,6 +58,35 @@ geography whose provincial tax is under 5% of its total tax, so the rule is a pr
 of the data rather than a province hardcoded by name, and the page both drops it from
 the comparison and warns when it is selected on its own.
 
+**The Sankey has no level-of-government column, and that was the finding.** The obvious
+diagram is tax source → federal/provincial/local → function. It cannot be drawn from
+published data. Statistics Canada publishes function spending two ways: consolidated for
+all governments together (`10-10-0005`), and non-consolidated by component
+(`10-10-0024`). The non-consolidated components sum to $1,680B against a consolidated
+$1,137B in 2024 — **$543B, or 32%, is one government handing money to another**, counted
+once when it is transferred and again when it is spent. Federal "Health" of $65B is
+mostly the Canada Health Transfer, which provinces then spend and report as their own
+health spending.
+
+Three routes out were tried and all leave an unexplained residual. Subtracting each
+level's transfers out (`36-10-0450`) accounts for $255B of the $543B — the rest is
+provinces funding hospitals, universities and school boards, which `36-10-0450` treats
+as internal to the provincial level. Decomposing as federal + consolidated-provincial +
+CPP + RRQ leaves $233B of overlap against $155B of measured federal transfers. And
+`A − B` across the two consolidated components is not federal, because the two
+consolidations cover different universes.
+
+So the diagram stops where the data does: revenue source on the left, function on the
+right, no middle column. What it gains instead is that **both sides balance exactly, in
+every one of the 17 years**, because borrowing enters on the left, surplus leaves on the
+right, and the capital spending that CCOFOG excludes is its own band rather than a
+silent gap.
+
+**The ribbons are proportional, and the page says so twice.** Money is fungible; no tax
+is tied to a programme and nothing in the public accounts says which dollar paid for
+what. Any tax-to-spending Sankey is an allocation, so this one states that the honest
+reading is the width of the bands at each end, not the path between them.
+
 ## Traps, and what the code does about them
 
 **Estimate labels are not unique — join on the member id.** Table 36-10-0450 carries
@@ -146,6 +175,8 @@ sides, so they are consistently excluded.
   every complete year; they land at 99.46–99.56%, and the residual is non-residents.
   This is the check that the right column was read out of all 91 downloads
 - filer counts and the overall effective rate land in plausible ranges
+- the Sankey's two columns balance to the same total in every year — checked as
+  revenue + borrowing against functions + capital + surplus, exact to the dollar
 
 Latest build: 2024 revenue $1,312B, expenditure $1,356B, functions $1,137B (84%),
 population 41.3M, $31,808 revenue per person. Distribution: 2024 tax year, 31.6M
@@ -162,9 +193,10 @@ surfaces, per the gate gap recorded in `BRICKS.md`.
 
 ## Not done yet
 
-- **The Sankey.** Tax source → level of government → function is the better picture, but
-  the two tables share no classification, so it needs a deliberate bridge rather than a join.
 - **The 2009-2017 tax years.** Six have rotted catalogue links, and 2009-2011 would each
   need their own parser.
+- **A level-of-government column in the Sankey.** Would need Statistics Canada to publish
+  each level's final functional spending net of transfers, or an allocation assumption
+  this page is not willing to make silently.
 - **Federal-only functions.** Published separately on a non-consolidated basis, not derivable
   by subtracting the provincial component from the national one.

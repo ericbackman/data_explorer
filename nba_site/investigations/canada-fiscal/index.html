@@ -267,7 +267,33 @@ button.row:hover .row__name { color: var(--bd-accent); }
   .dist__band { font-size: 0.68rem; }
 }
 
+/* ---------- sankey ---------- */
+.sankey-wrap { overflow-x: auto; margin-top: 1.2rem; }
+.sankey { display: block; width: 100%; min-width: 46rem; height: auto; }
+.sankey text { font-family: var(--sans); fill: var(--bd-ink); }
+.sk-label { font-size: 12px; }
+.sk-val { font-size: 11px; fill: var(--bd-ink-2); font-family: var(--mono); }
+.sk-side {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; fill: var(--bd-ink-2);
+}
+.sk-node { cursor: default; }
+.sk-node rect { stroke: var(--bd-ground); stroke-width: 0.5; }
+.sk-leader { fill: none; stroke: var(--bd-line); stroke-width: 0.75; }
+.sk-ribbon { fill-opacity: 0.24; transition: fill-opacity 0.12s ease; }
+.sankey.is-hovering .sk-ribbon { fill-opacity: 0.07; }
+.sankey.is-hovering .sk-ribbon.is-lit { fill-opacity: 0.7; }
+.sankey.is-hovering .sk-node:not(.is-lit) rect { opacity: 0.35; }
+.sankey.is-hovering .sk-node:not(.is-lit) text { opacity: 0.4; }
+.sk-readout {
+  margin-top: 0.7rem; min-height: 2.9em; font-size: 0.94rem;
+  color: var(--bd-ink); max-width: 70ch;
+}
+.sk-readout .muted { color: var(--bd-ink-2); }
+@media (prefers-reduced-motion: reduce) { .sk-ribbon { transition: none; } }
+
 /* ---------- provinces ---------- */
+
 .provinces { margin-top: 3rem; }
 .sec__head {
   display: flex; align-items: baseline; gap: 0.8rem; flex-wrap: wrap;
@@ -357,6 +383,32 @@ footer.notes p { max-width: 68ch; margin-bottom: 0.7rem; }
   <h2>Why the two columns don't match</h2>
   <p id="bridge-note"></p>
   <dl id="bridge-lines"></dl>
+</section>
+
+<section class="sankey-section">
+  <div class="sec__head">
+    <h2>One year, end to end</h2>
+    <span class="basis">follows the year above</span>
+  </div>
+  <p class="sec__note">
+    Everything that came in beside everything it became, for the year selected at the top
+    of the page. Both sides are the same total by construction: a deficit enters on the
+    left as borrowing, a surplus leaves on the right, and the spending that functions
+    don't capture — buying and building things, and the wear on what governments already
+    own — is its own band rather than a gap.
+  </p>
+  <p class="sec__note">
+    <strong>The ribbons show scale, not tracking.</strong> Money is fungible: no tax is
+    tied to a programme, and nothing in the public accounts says which dollar paid for
+    what. Each ribbon is a source's share of one use, in proportion — the honest reading
+    is the width of the bands at each end, not the path between them.
+  </p>
+  <div class="sankey-wrap">
+    <svg class="sankey" id="sankey" viewBox="0 0 1000 640"
+         preserveAspectRatio="xMidYMid meet" role="img"
+         aria-label="Flow diagram from revenue sources to spending by function"></svg>
+  </div>
+  <p class="sk-readout" id="sankey-readout"></p>
 </section>
 
 <section class="distribution">
@@ -667,6 +719,261 @@ function renderBridge(fnTotal) {
   }
 }
 
+/* ── the sankey ──────────────────────────────────────────────────────────────
+   Both sides balance exactly, in every year, from published figures:
+
+     left   revenue + borrowing (when the year ran a deficit)
+     right  spending by function + capital and depreciation + any surplus
+
+   There is deliberately no level-of-government column in the middle. Splitting
+   function spending between federal and provincial needs an allocation
+   Statistics Canada does not publish: the non-consolidated table double-counts
+   $543B of transfers between governments in 2024, and no published series
+   attributes each level's final spending to a function. Drawing that column
+   would mean inventing the numbers, so the diagram stops where the data does.
+   ────────────────────────────────────────────────────────────────────────── */
+const SVG_NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+const SK = { W: 1000, H: 640, top: 34, bot: 18, nodeW: 13,
+             labelL: 176, labelR: 176, gap: 6 };
+
+/** A ramp between two theme tokens — colour is derived here, never invented. */
+function ramp(fromVar, toVar, i, n) {
+  const pct = n < 2 ? 50 : Math.round(100 * i / (n - 1));
+  return "color-mix(in srgb, var(" + toVar + ") " + pct + "%, var(" + fromVar + "))";
+}
+
+function sankeyModel() {
+  const y = state.year;
+  const names = DATA.bridge.names;
+  const at = k => DATA.bridge.series[NATIONAL][y][names.indexOf(k)];
+
+  const revenue = at("revenue"), expenditure = at("expenditure"), balance = at("balance");
+
+  const revRoots = tree(DATA.revenue.names, DATA.revenue.parents,
+                        DATA.revenue.series[NATIONAL][y]);
+  const fnRoots = tree(DATA.spending.names, DATA.spending.parents,
+                       DATA.spending.national[NATIONAL][y]);
+  const fnTotal = sumRoots(fnRoots);
+
+  const sources = revRoots.map(n => ({ name: n.name, value: n.value || 0 }));
+  if (balance < 0) sources.push({ name: "Borrowing", value: -balance, special: "debt" });
+
+  const uses = fnRoots.map(n => ({ name: n.name, value: n.value || 0 }));
+  const residual = expenditure - fnTotal;
+  if (residual > 0) uses.push({ name: "Capital, and wear on what we own",
+                                value: residual, special: "capital" });
+  if (balance > 0) uses.push({ name: "Surplus", value: balance, special: "surplus" });
+
+  // A category can survive `tree()` with an empty total when only its children
+  // carry values -- true of the inter-government transfer lines in some years.
+  // It has no ribbon to draw, and leaving it in divides by zero.
+  const real = n => n.value > 0;
+  const src = sources.filter(real), use = uses.filter(real);
+
+  src.sort((a, b) => b.value - a.value);
+  use.sort((a, b) => b.value - a.value);
+
+  const total = src.reduce((t, n) => t + n.value, 0);
+  const sources_ = src, uses_ = use;
+  return { sources: sources_, uses: uses_, total, revenue, expenditure, balance, year: y };
+}
+
+function renderSankey() {
+  const root = document.getElementById("sankey");
+  clear(root);
+  const m = sankeyModel();
+  if (!m.total) return;
+
+  const plotTop = SK.top, plotH = SK.H - SK.top - SK.bot;
+  const xL = SK.labelL, xR = SK.W - SK.labelR - SK.nodeW;
+
+  // Both columns must occupy the same vertical extent, or two totals that are
+  // equal by construction would not look equal. The bar height is fixed from
+  // whichever column has more nodes; the other column widens its gaps to match.
+  const maxCount = Math.max(m.sources.length, m.uses.length);
+  const barTotal = plotH - SK.gap * (maxCount - 1);
+
+  const lay = (nodes, x) => {
+    const gap = nodes.length > 1 ? (plotH - barTotal) / (nodes.length - 1) : 0;
+    let cursor = plotTop;
+    return nodes.map(n => {
+      const h = Math.max(1, barTotal * n.value / m.total);
+      const box = Object.assign({}, n, { x: x, y: cursor, h: h, used: 0 });
+      cursor += h + gap;
+      return box;
+    });
+  };
+
+  const L = lay(m.sources, xL);
+  const R = lay(m.uses, xR);
+
+  const colourOf = (n, i, arr, side) => {
+    if (n.special === "debt") return "var(--bd-loss)";
+    if (n.special === "surplus") return "var(--bd-gain)";
+    if (n.special === "capital") return "var(--bd-line-2)";
+    return side === "L" ? ramp("--bd-gain", "--bd-accent-2", i, arr.length)
+                        : ramp("--bd-loss", "--bd-warn", i, arr.length);
+  };
+  L.forEach((n, i) => { n.fill = colourOf(n, i, L, "L"); n.side = "L"; });
+  R.forEach((n, i) => { n.fill = colourOf(n, i, R, "R"); n.side = "R"; });
+
+  const head = (text, x, anchor) => {
+    const t = svgEl("text", { x: x, y: 16, class: "sk-side", "text-anchor": anchor });
+    t.textContent = text;
+    root.appendChild(t);
+  };
+  head("Where it came from", SK.labelL + SK.nodeW, "end");
+  head("What it became", SK.W - SK.labelR - SK.nodeW, "start");
+
+  // Every source contributes to every use in proportion — that IS the point
+  // being made about fungibility, not a shortcut around missing data.
+  const gRib = svgEl("g", {});
+  root.appendChild(gRib);
+  const ribbons = [];
+  for (const a of L) {
+    let ay = a.y;
+    for (const b of R) {
+      const flow = a.value * b.value / m.total;
+      const ah = a.h * flow / a.value;
+      const bh = b.h * flow / b.value;
+      const by = b.y + b.used;
+      b.used += bh;
+
+      const xa = a.x + SK.nodeW, xb = b.x, c = (xa + xb) / 2;
+      const d = "M" + xa + "," + ay
+              + " C" + c + "," + ay + " " + c + "," + by + " " + xb + "," + by
+              + " L" + xb + "," + (by + bh)
+              + " C" + c + "," + (by + bh) + " " + c + "," + (ay + ah) + " " + xa + "," + (ay + ah)
+              + " Z";
+      const path = svgEl("path", { d: d, class: "sk-ribbon" });
+      path.style.fill = a.fill;
+      path.dataset.from = a.name;
+      path.dataset.to = b.name;
+      gRib.appendChild(path);
+      ribbons.push(path);
+      ay += ah;
+    }
+  }
+
+  const readout = document.getElementById("sankey-readout");
+  const share = v => (100 * v / m.total).toFixed(1) + "%";
+
+  function describe(node) {
+    clear(readout);
+    if (!node) {
+      const bal = m.balance < 0
+        ? "borrowed " + fmtDollars(-m.balance) + " to cover the difference"
+        : "ran a surplus of " + fmtDollars(m.balance);
+      readout.appendChild(document.createTextNode(
+        "In " + m.year + " Canadian governments took in " + fmtDollars(m.revenue)
+        + ", spent " + fmtDollars(m.expenditure) + ", and " + bal + ". "));
+      readout.appendChild(el("span", "muted",
+        "Hover any band to follow it. Both columns total " + fmtDollars(m.total) + "."));
+      return;
+    }
+    const side = node.side === "L" ? "of everything that came in during "
+                                   : "of everything it became in ";
+    readout.appendChild(el("strong", null, node.name + " — " + fmtDollars(node.value)));
+    readout.appendChild(document.createTextNode(
+      ", " + share(node.value) + " " + side + m.year + "."));
+    if (node.special === "debt") readout.appendChild(el("span", "muted",
+      " This is the year's deficit — spending that no revenue covered."));
+    if (node.special === "capital") readout.appendChild(el("span", "muted",
+      " Spending by function excludes buying and building assets, and the wear on those "
+      + "already owned. This band is that gap, so both sides still balance."));
+    if (node.special === "surplus") readout.appendChild(el("span", "muted",
+      " Revenue the year did not spend."));
+  }
+
+  function light(name) {
+    root.classList.add("is-hovering");
+    for (const p of ribbons)
+      p.classList.toggle("is-lit", p.dataset.from === name || p.dataset.to === name);
+    for (const g of root.querySelectorAll(".sk-node"))
+      g.classList.toggle("is-lit", g.dataset.name === name);
+  }
+  function unlight() {
+    root.classList.remove("is-hovering");
+    for (const p of ribbons) p.classList.remove("is-lit");
+    for (const g of root.querySelectorAll(".sk-node")) g.classList.remove("is-lit");
+    describe(null);
+  }
+
+  // Four of the revenue lines are under 0.1% of the total, so their bands are a
+  // pixel tall and their labels would overlap. Push labels apart from the top
+  // down and draw a leader to the band whenever one had to move.
+  const placeLabels = nodes => {
+    const MIN = 13;
+    let prev = -Infinity;
+    for (const n of nodes) {
+      const wanted = n.y + n.h / 2;
+      n.labelY = Math.max(wanted, prev + MIN);
+      n.moved = Math.abs(n.labelY - wanted) > 1.5;
+      prev = n.labelY;
+    }
+  };
+
+  const drawNodes = nodes => {
+    placeLabels(nodes);
+    for (const n of nodes) {
+      const g = svgEl("g", { class: "sk-node", tabindex: "0", role: "listitem" });
+      g.dataset.name = n.name;
+      const rect = svgEl("rect", { x: n.x, y: n.y, width: SK.nodeW, height: n.h, rx: 1.5 });
+      rect.style.fill = n.fill;
+      g.appendChild(rect);
+
+      const isL = n.side === "L";
+      const tx = isL ? n.x - 8 : n.x + SK.nodeW + 8;
+      const anchor = isL ? "end" : "start";
+
+      if (n.moved) {
+        const edge = isL ? n.x : n.x + SK.nodeW;
+        const lead = svgEl("path", {
+          class: "sk-leader",
+          d: "M" + edge + "," + (n.y + n.h / 2)
+            + " L" + (tx + (isL ? 4 : -4)) + "," + n.labelY,
+        });
+        g.appendChild(lead);
+      }
+
+      const label = svgEl("text", { x: tx, class: "sk-label", "text-anchor": anchor });
+      label.textContent = n.name;
+
+      // a band thinner than two lines of type gets one line, not overlapping text
+      if (n.h < 26) {
+        label.setAttribute("y", n.labelY + 4);
+        g.appendChild(label);
+      } else {
+        label.setAttribute("y", n.labelY - 1);
+        const value = svgEl("text", { x: tx, y: n.labelY + 12,
+                                      class: "sk-val", "text-anchor": anchor });
+        value.textContent = fmtDollars(n.value) + "   " + share(n.value);
+        g.appendChild(label);
+        g.appendChild(value);
+      }
+
+      const title = svgEl("title", {});
+      title.textContent = n.name + " — " + fmtDollars(n.value) + ", " + share(n.value);
+      g.appendChild(title);
+
+      g.addEventListener("mouseenter", () => { light(n.name); describe(n); });
+      g.addEventListener("mouseleave", unlight);
+      g.addEventListener("focus", () => { light(n.name); describe(n); });
+      g.addEventListener("blur", unlight);
+      root.appendChild(g);
+    }
+  };
+  drawNodes(L);
+  drawNodes(R);
+  describe(null);
+}
+
 /* ── rendering: who paid the income tax ── */
 /** Years this geography actually has — Alberta and Quebec have no 2021 file. */
 function taxYearsFor(geo) {
@@ -875,6 +1182,7 @@ function render() {
   document.getElementById("spend-total").textContent = fmt(spendTotal, spendTotal);
 
   renderBridge(spendTotal);
+  renderSankey();
   renderDistribution();
   renderRateByProvince();
   renderProvinces();
