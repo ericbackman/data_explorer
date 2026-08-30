@@ -44,6 +44,21 @@ scraper, a normalized schema, and analysis modules. Run python from this repo ro
   waterfall (YouTube captions, faster-whisper fallback) → SQLite FTS →
   mention-count queries by year. `podcasts/data/` gitignored (nested
   `.gitignore`). See `podcasts/README.md`.
+- **NBA CBA (`cba/`)** — folded in from the standalone `nba-cba` repo 2026-08-30.
+  An agentic knowledge layer over the Collective Bargaining Agreement: ask a cap
+  question in plain English and get an answer that **routes to and quotes the
+  governing text** instead of hallucinating cap rules. `semantic/` holds the
+  DERIVED navigation artifacts (Article/Section → corpus line + page, an 88-term
+  Article I glossary, the §2(e)(4) second-apron hard-cap table) for both the 2017
+  and 2023 agreements, so `tools/diff_cbas.py` can show what actually changed.
+  `trade-machine/` is a separate TS trade-legality engine + Vite app — **not** the
+  same thing as `trades/` below, which is about draft-pick protections; this one
+  is about whether a trade is legal under the apron rules.
+  ⚠ **`cba/corpus/` (PDFs + extracted text) is © NBA/NBPA and is gitignored via a
+  nested `.gitignore`** — the same pattern as `podcasts/data/`, but load-bearing
+  here in a way it was not in the standalone repo, because **this repo is public**.
+  Re-download it with `python cba/tools/fetch_cba.py`; commit only derived analysis.
+  Tools resolve paths `__file__`-relative, so they run from anywhere. See `cba/README.md`.
 - **Trades (`trades/`)** — pure-logic (no DB) tool that turns an NBA draft-pick
   trade (protections, rolling conditions, swaps) into flowcharts / a slot map /
   an ownership board. Pipeline: `model` → `expand`/`board` → `render` (Mermaid,

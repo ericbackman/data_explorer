@@ -1,0 +1,27 @@
+# ── Copyrighted source material — NEVER commit ─────────────────────────────
+# The CBA PDFs and their full extracted text are © NBA / NBPA. They are large,
+# re-downloadable (see tools/fetch_cba.py), and reproducing the full text is a
+# copyright concern. Keep the raw corpus local; commit only DERIVED analysis.
+#
+# This rule is load-bearing here in a way it was not in the standalone nba-cba
+# repo: data_explorer is PUBLIC. Same nested-.gitignore pattern as podcasts/.
+corpus/
+corpus/pdf/
+corpus/text/
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ── OS / editor ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# The Article I glossary is VERBATIM CBA text (88 terms, ~20 KB per agreement),
+# not derived analysis -- so it falls under the same rule as the corpus above.
+# It was committable in the private nba-cba repo; it is not here. Regenerate with
+#   python cba/tools/fetch_cba.py && python cba/tools/build_index.py
+# which writes it back into semantic/ (build_index.py:249).
+semantic/*.definitions.json
