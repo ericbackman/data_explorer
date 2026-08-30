@@ -4,10 +4,10 @@ _An onboarding explainer for someone seeing this for the first time._
 
 ## What this is
 
-A collection of **local SQLite databases across sports** — NBA, NFL, golf, betting
-odds, and more — that you can **query in plain English**. Ask "who's the best par-5
-scorer since 2005?" or "how often does the 54-hole major leader win?" and get a
-real, validated answer. Everything is built from **free** data sources; there are
+A collection of **local SQLite databases across sports** — golf, NBA, NFL, NHL,
+MLB, sumo and more — that you can **query in plain English**. Ask "who's the best
+par-5 scorer since 2005?" or "how often does the 54-hole major leader win?" and get
+a real, validated answer. Everything is built from **free** data sources; there are
 no paid API subscriptions anywhere in it.
 
 The goal: *one computer that can answer any sports question*, adding sports one at
@@ -52,7 +52,16 @@ free sources  →  cached scrapers  →  SQLite DBs  →  analysis modules  → 
 | **Golf** (`pga/`) | 2005–2026 + majors back to 1960 | event → results → rounds → **7M holes** → strokes-gained → player bios |
 | **NBA** (`nba/`) | 1946–present | box scores (13.5M rows) |
 | **NFL** (`nfl/`) | 1999–present | box scores + play-by-play |
-| Betting odds, MTG, … | recent | supporting datasets |
+| **NHL** (`nhl/`) | 1997–present | box scores + derived `playoff_series` |
+| **MLB** (`mlb/`) | modern era | schedule, box scores |
+| **Sumo** (`sumo/`) | 1960–present | every sekitori bout + ranks, physicals, awards |
+| **OSRS** (`osrs/`) | current | read-only clan stats |
+| **Podcasts** (`podcasts/`) | current | RSS → transcripts → full-text search |
+
+Betting odds used to sit here too. The `betting/`, `sharp-edge/` and `polymarket/`
+subtrees were **split out to the private `betting-lab` repo on 2026-08-09** so this
+one could be published — see `PLAYBOOK.md`. The golf `betting` module (`pga/betting.py`,
+course history and form) is unrelated and still here.
 
 ## The golf deep-dive (the flagship)
 
