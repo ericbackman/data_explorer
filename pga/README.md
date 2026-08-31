@@ -12,7 +12,7 @@ A `data_explorer` sub-project (mirrors `nba/`). Run all commands **from the
 | Tier | Coverage | Granularity | Source |
 |------|----------|-------------|--------|
 | **1** | 2005–present, every PGA Tour stroke-play event | Full field, round-by-round (front/back nine), positions, earnings, venue | ESPN public JSON API |
-| **1h** | 2005–present | **Hole-by-hole** (7M+ rows): every player, round, hole — strokes + derived par | re-parsed from the same cached scoreboards |
+| **1h** | 2005–present | **Hole-by-hole** (7M+ rows): every player, round, hole, strokes + derived par | re-parsed from the same cached scoreboards |
 | **1b** | player dimension | **Bios**: age, turned-pro, birthplace, citizenship, hand, college, ht/wt | ESPN athlete endpoint |
 | **1s** | derived | **Strokes-gained vs field**: SG-Total per hole/round/event, par-3/4/5 splits | computed from the hole data |
 | **2** | Majors 1960–2004 | Winner + 36/54-hole leaders | Wikipedia (scrapekit) |
@@ -28,10 +28,10 @@ Total size is tens of MB — the whole DB and JSON cache fit comfortably under 1
 Raw facts only; analysis is derived at query time so "leader" can be redefined
 without re-scraping.
 
-- `tournaments` — one row per event (season, venue, par, purse, `is_major`, winner)
-- `players` — id, name, country
-- `player_rounds` — one row per player per round (strokes, to-par, front/back nine, playoff flag)
-- `player_results` — final position, total, status (finished/cut/wd/dq), earnings
+- `tournaments`: one row per event (season, venue, par, purse, `is_major`, winner)
+- `players`: id, name, country
+- `player_rounds`: one row per player per round (strokes, to-par, front/back nine, playoff flag)
+- `player_results`: final position, total, status (finished/cut/wd/dq), earnings
 
 ## Usage
 
@@ -69,13 +69,13 @@ The scraper is **resumable**: every API response is cached to disk and every loa
 is an idempotent upsert, so re-running re-fetches nothing and converges to the
 same DB.
 
-### Tier 2 — majors 1960–2004 (Wikipedia)
+### Tier 2: majors 1960–2004 (Wikipedia)
 
 ESPN has no pre-2005 data, so the deep major history comes from Wikipedia. The
 **primary, free** path uses [scrapekit](../scrapekit/) (`pandas.read_html`): the
 36-/54-hole leaders are computed deterministically from each page's per-round
 leaderboard tables (`70-68=138` after R2), and the champion comes from the
-infobox. No API key, no credits, and *more precise* than prose extraction — it
+infobox. No API key, no credits, and *more precise* than prose extraction: it
 reads the `Place` column, so it distinguishes solo leaders from co-leaders.
 
 ```bash
@@ -98,7 +98,7 @@ matches the historical record player-for-player; Nicklaus 18, Watson 8, …).
 
 ## Data quirks handled
 
-- Team / match-play events (Presidents Cup, exhibitions) are skipped — no stroke-play leader.
+- Team / match-play events (Presidents Cup, exhibitions) are skipped: no stroke-play leader.
 - Withdrawals leave a `value: 0` placeholder round; these are nulled so they never
   pollute leader math (this is why a naive query once crowned a WD as Masters leader).
 - The Open Championship is labelled simply **"The Open"** in ESPN's feed.

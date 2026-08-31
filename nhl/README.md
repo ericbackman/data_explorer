@@ -1,13 +1,13 @@
-# NHL — local box-score + playoff database
+# NHL: local box-score + playoff database
 
 Free, local NHL data for answering hockey questions and feeding the
-[video-essay pipeline](../../video-essays) — mirrors `nba/` and `nfl/`: a cached
+[video-essay pipeline](../../video-essays): mirrors `nba/` and `nfl/`: a cached
 API client, a normalized SQLite schema, and resumable backfills. Everything comes
 from the **free** modern NHL endpoints (no key):
 
-- `api.nhle.com/stats/rest/en/game` — the master game index (every game ever, one call)
-- `api-web.nhle.com/v1/gamecenter/{id}/boxscore` — per-game skater/goalie stats
-- `api-web.nhle.com/v1/gamecenter/{id}/play-by-play` — event stream (optional)
+- `api.nhle.com/stats/rest/en/game`: the master game index (every game ever, one call)
+- `api-web.nhle.com/v1/gamecenter/{id}/boxscore`: per-game skater/goalie stats
+- `api-web.nhle.com/v1/gamecenter/{id}/play-by-play`: event stream (optional)
 
 ## Build it
 
@@ -22,7 +22,7 @@ python schema_doc.py                               # refresh SCHEMA.md
 
 `--team-id 10` (Toronto) backfills only games that team played (~1,300 for the
 Leafs 2012→now, ~9 min) instead of the whole league (~18k, ~2 hrs). Drop it to
-backfill everything. Backfills are **resumable** — interrupt and re-run; each
+backfill everything. Backfills are **resumable.** Interrupt and re-run; each
 game flips a `boxscore_loaded` / `pbp_loaded` flag and is never re-fetched.
 
 ## Tables
@@ -36,15 +36,15 @@ game flips a `boxscore_loaded` / `pbp_loaded` flag and is never re-fetched.
 | `goalie_boxscores` | goalie × game | saves, save%, decision, strength splits |
 | `team_game` | team × game | score + shots straight from the boxscore |
 | `plays` | event × game | wide table; coords only from 2009-10+ (optional, via `pbp`) |
-| `playoff_series` | series × team | **derived** — score, round, Game-7 + blown-lead flags |
+| `playoff_series` | series × team | **derived.** Score, round, Game-7 + blown-lead flags |
 
-## `playoff_series` — the essay's spine
+## `playoff_series`: the essay's spine
 
 `series.py` groups a team's playoff games by opponent (teams never face two at
 once) into series, then computes the score, round, `went_to_game7`, and a
 **blown-lead detector**: `blew_lead = 1` when the team *lost* a series it once led
 by ≥ 2 games. On the Leafs it fires on exactly the 2021 (3-1 vs Montreal) and 2025
-(vs Florida) collapses and stays quiet on the tight Game-7 losses — a blown *series*
+(vs Florida) collapses and stays quiet on the tight Game-7 losses: a blown *series*
 lead is a different beast from a blown *game* (e.g. the 2013 Game-7 4-1 collapse,
 which is a game score, not a series lead). The raw facts live here; how to *rank*
 "most devastating exit" is an essay-adapter judgment, deliberately downstream.
@@ -58,5 +58,5 @@ which is a game score, not a series lead). The raw facts live here; how to *rank
 - **`api-web.nhle.com` is lenient** but the client still retries 429/5xx with
   backoff and a 25s timeout, per the workspace standard.
 - The `season` column is **text** (`'20122013'`); cast when doing range filters.
-- DB lives in `nhl/data/` and is **gitignored** — regenerate from the commands above.
+- DB lives in `nhl/data/` and is gitignored. Regenerate from the commands above.
 ```

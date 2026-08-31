@@ -1,7 +1,7 @@
-# Kaggle setup — the "for dummies" guide
+# Kaggle setup: the "for dummies" guide
 
 Goal: put your NBA/NFL/PGA DBs on Kaggle so you get **free hosted notebooks, private
-behind your Kaggle login**, connected to your data — nothing to host. ~15 minutes,
+behind your Kaggle login**, connected to your data: nothing to host. ~15 minutes,
 most of it a one-time upload.
 
 Everything code-side is done and tested. You do 3 things: **get a token → push the
@@ -11,7 +11,7 @@ data → make a notebook.**
 
 ## Prerequisites (already done ✅)
 
-- `kaggle==1.6.17` is installed in your analysis venv. *(You don't need `uv` — it's
+- `kaggle==1.6.17` is installed in your analysis venv. *(You don't need `uv`, it's
   not on your PATH anyway.)*
 - Throughout this guide, `$py` is your Python. Paste this once per PowerShell window:
   ```powershell
@@ -20,21 +20,21 @@ data → make a notebook.**
 
 ---
 
-## Step 1 — Create a Kaggle account (skip if you have one)
+## Step 1: Create a Kaggle account (skip if you have one)
 
 1. Go to **https://www.kaggle.com/account/login** → **Register** (Google sign-in is
-   fine — use your Gmail).
-2. That's it. **You do NOT need to verify your phone** — that's only for GPUs and
+   fine: use your Gmail).
+2. That's it. **You do NOT need to verify your phone.** That's only for GPUs and
    notebook internet, neither of which this setup uses.
 
-## Step 2 — Get your API token
+## Step 2: Get your API token
 
 1. Go to **https://www.kaggle.com/settings/api**
 2. Scroll to **Legacy API Credentials** → click **Create Legacy API Key**. *(Not the
-   "API Tokens (Recommended) → Generate New Token" button above it — those new-style tokens
+   "API Tokens (Recommended) → Generate New Token" button above it: those new-style tokens
    need a newer Kaggle client than the working `kaggle==1.6.17` and don't produce a `kaggle.json`.)*
 3. Your browser downloads **`kaggle.json`** (username + secret key) to your Downloads folder.
-4. Move it to `$env:USERPROFILE\.kaggle\kaggle.json`. Easiest — paste into PowerShell:
+4. Move it to `$env:USERPROFILE\.kaggle\kaggle.json`. Easiest: paste into PowerShell:
    ```powershell
    New-Item -ItemType Directory -Force "$env:USERPROFILE\.kaggle" | Out-Null
    Move-Item "$env:USERPROFILE\Downloads\kaggle.json" "$env:USERPROFILE\.kaggle\kaggle.json" -Force
@@ -44,7 +44,7 @@ data → make a notebook.**
 > 🔒 **The token is a password.** It lives in `~/.kaggle/`, never in a repo. If it ever
 > leaks, click **Expire Token** on the same settings page and make a new one.
 
-## Step 3 — Push your data (first time)
+## Step 3: Push your data (first time)
 
 Open PowerShell and run:
 
@@ -56,16 +56,16 @@ cd $env:USERPROFILE\Github\data_explorer\kaggle
 
 **What to expect:**
 - First it converts the three SQLite DBs into one compressed `sports.duckdb` (~a few
-  minutes, one-time), then uploads it — **~1.5 GB**, not the raw 6 GB. A progress bar
+  minutes, one-time), then uploads it: **~1.5 GB**, not the raw 6 GB. A progress bar
   streams; don't close the window.
 - When it finishes it prints:
   `Done. Dataset (PRIVATE): https://www.kaggle.com/datasets/<you>/sports-dbs`
 - Open that link → confirm the badge says **Private**.
 
-## Step 4 — Make your notebook
+## Step 4: Make your notebook
 
 1. On your dataset page (the link above), click **New Notebook** (top-right). This
-   opens a Kaggle notebook **with your dataset already attached** as input.
+   opens a Kaggle notebook with your dataset already attached as input.
 2. Delete the default cell and paste this to confirm it's wired up:
    ```python
    import sys
@@ -84,14 +84,14 @@ cd $env:USERPROFILE\Github\data_explorer\kaggle
        LIMIT 10
    """)
    ```
-4. Hit **Run All**. No internet toggle, no `pip install` — it uses the notebook's
+4. Hit **Run All**. No internet toggle, no `pip install`: it uses the notebook's
    built-in `sqlite3` + `pandas`.
 
 *(Prefer the ready-made notebook? In the editor: **File → Import Notebook** → upload
 `starter_notebook.ipynb`. You still need **Add Input → your `sports-dbs` dataset** so
 the files are mounted.)*
 
-**That's it — you now have a personal, private notebook over your DBs.** ✅
+**That's it: you now have a personal, private notebook over your DBs.** ✅
 
 ---
 
@@ -129,7 +129,7 @@ Then in the notebook, re-attach the newest dataset version (Kaggle prompts you) 
 | Notebook: `No module named 'kaggle_sportsdb'` | The dataset isn't attached (**Add Input**), or its slug isn't `sports-dbs` (then change the `sys.path.append` path to match). |
 | Notebook: `ModuleNotFoundError: duckdb` | Turn **Internet** ON (right sidebar) and run `!pip install duckdb` in a cell. |
 | Upload died halfway | Just re-run the same command; it resumes/replaces. |
-| Prompted to "verify phone" | Optional — only needed for GPUs/internet, not this setup. Ignore it. |
+| Prompted to "verify phone" | Optional: only needed for GPUs/internet, not this setup. Ignore it. |
 
 **All the links in one place:**
 - Sign up: https://www.kaggle.com/account/login

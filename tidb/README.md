@@ -1,4 +1,4 @@
-# TiDB — one table, both workloads (HTAP)
+# TiDB: one table, both workloads (HTAP)
 
 Puts `player_game` (1.48M rows) on [TiDB Cloud Starter](https://tidbcloud.com)
 and gives it **both** a row store (TiKV) and a columnar store (TiFlash), kept in
@@ -79,7 +79,7 @@ ALTER TABLE player_game SET TIFLASH REPLICA 1;
 
 No ETL, no second system, and no window where the two representations disagree.
 Replica building is asynchronous, so `load.py` polls
-`information_schema.tiflash_replica` until it reports available — an `EXPLAIN`
+`information_schema.tiflash_replica` until it reports available: an `EXPLAIN`
 run too early simply will not choose TiFlash, and the demo would look broken
 when it had merely not finished.
 
@@ -94,7 +94,7 @@ wrong. A natural composite key spreads writes across the keyspace for free, and
 `CLUSTERED` keeps the row data in the primary key's B-tree so a box-score read
 touches one structure instead of two.
 
-**`idx_player_date (player_id, game_date DESC)`** is the OLTP access path — a
+**`idx_player_date (player_id, game_date DESC)`** is the OLTP access path: a
 player's game log, newest first. **`idx_season (season, season_type)`** narrows
 seasonal analytics before any scan is needed.
 
@@ -123,7 +123,7 @@ homebase, not just written:
   intended rather than silently non-clustered;
 - all three indexes exist with the right column order;
 - a point lookup plans as `IndexRangeScan` on `idx_player_date` reading
-  `cop[tikv]`, with the `LIMIT` pushed into the index scan — the OLTP path works
+  `cop[tikv]`, with the `LIMIT` pushed into the index scan: the OLTP path works
   as designed.
 
 **Not verified, and cannot be locally:** anything TiFlash. A standalone TiDB

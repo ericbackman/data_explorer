@@ -12,7 +12,7 @@ single source of truth and analysis can never corrupt them.
 | **uv** | env + deps | One committed `uv.lock` → identical installs everywhere. |
 | **DuckDB** | query engine | Columnar speed + joins *across* SQLite DBs, zero data duplication, read-only. |
 | **Jupyter** | notebook | Your default; `01_explore.ipynb` is the starter. |
-| **marimo** | notebook (sample) | The 2026 reactive, pure-`.py`, git-friendly style — `marimo_sample.py` to compare. |
+| **marimo** | notebook (sample) | The 2026 reactive, pure-`.py`, git-friendly style: `marimo_sample.py` to compare. |
 | pandas / Polars | dataframes | `sportsdb.q()` → pandas, `sportsdb.pl()` → Polars. |
 
 ## First-time setup
@@ -57,5 +57,5 @@ Add one line to `MANIFEST` in [`sportsdb.py`](sportsdb.py), then
 ## Discipline
 
 Agent-written or hand-written SQL that *executes* is not necessarily *correct*.
-Validate every derived number against a known fact before trusting it — the same
+Validate every derived number against a known fact before trusting it: the same
 rule `data_explorer/CLAUDE.md` already enforces.

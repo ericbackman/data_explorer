@@ -1,7 +1,7 @@
 # nba-cba
 
-An **agentic knowledge layer over the NBA Collective Bargaining Agreement.** The goal: make
-the CBA queryable in plain English by an AI agent that always routes to — and quotes — the
+An agentic knowledge layer over the NBA Collective Bargaining Agreement. The goal: make
+the CBA queryable in plain English by an AI agent that always routes to, and quotes, the
 governing text, instead of hallucinating from half-remembered cap rules. Almost nobody
 (reporters included) reads the actual document; this project does, and builds the scaffolding
 to navigate it reliably.
@@ -40,7 +40,7 @@ Then point an agent at [`SEMANTIC_LAYER.md`](SEMANTIC_LAYER.md).
 - **2017 CBA** (prior): NBPA mirror.
 
 The raw corpus is copyrighted by the NBA/NBPA and is **git-ignored**. Only *derived* analysis
-(indexes, the plain-English explainers, tooling) is committed. **Keep this repo private** while
+(indexes, the plain-English explainers, tooling) is committed. Keep this repo private while
 it stores verbatim excerpts; the explainers use only short attributed quotes.
 
 ## Why the CBA is hard (and the design that handles it)
@@ -54,8 +54,8 @@ all of this as a routing table so an agent can find the governing text every tim
 
 ## Roadmap
 
-1. **Corpus + semantic layer** ✅ — sourced, indexed, navigation manual written.
-2. **Explainers** ✅ — trades, contracts, team restrictions, and a
+1. **Corpus + semantic layer** ✅: sourced, indexed, navigation manual written.
+2. **Explainers** ✅: trades, contracts, team restrictions, and a
    [CBA-history / who-won-and-why analysis](explainers/cba-history-and-leverage.md) (`explainers/`).
 3. **Trade rule engine + "Trade Universe" web app** ✅ — [`trade-machine/`](trade-machine): a
    tested TypeScript engine (§6(j) matching, §2(e) apron ceilings, the apron-cost verdict

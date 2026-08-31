@@ -1,7 +1,7 @@
 # The Canadian Ledger
 
 Every dollar collected by every level of government in Canada beside every dollar it
-buys — one year at a time, on a single consolidation basis.
+buys: one year at a time, on a single consolidation basis.
 
 **Live:** `investigations/canada-fiscal/` on the Data Lab hub.
 
@@ -30,7 +30,7 @@ accounts years are different things. Raw CSVs cache to `.cache/` (21 MB, gitigno
 ## The decisions that shaped this
 
 **The ledger is national-only, and that is forced by the data.** CCOFOG publishes
-"Consolidated Canadian general government" for Canada alone — every province carries
+"Consolidated Canadian general government" for Canada alone: every province carries
 only the provincial-territorial-and-local component. The revenue table, meanwhile,
 has no consolidated provincial+local level, and summing "Provincial and territorial"
 with "Local" would double-count the transfers running between them. So exactly one
@@ -44,7 +44,7 @@ of fixed capital. Rather than hide that, the bridge section shows the shortfall 
 both excluded lines, which the revenue table publishes itself.
 
 **The distributional layer is a slice, not a total.** CRA Table 2 covers personal
-income tax from assessed returns — one part of the ledger's "Taxes on incomes", not
+income tax from assessed returns: one part of the ledger's "Taxes on incomes", not
 sales, payroll, corporate or property tax. It is administrative tax-year data against
 the ledger's national accounts, so the two will not reconcile; the section is framed
 to be read for its shape.
@@ -63,7 +63,7 @@ diagram is tax source → federal/provincial/local → function. It cannot be dr
 published data. Statistics Canada publishes function spending two ways: consolidated for
 all governments together (`10-10-0005`), and non-consolidated by component
 (`10-10-0024`). The non-consolidated components sum to $1,680B against a consolidated
-$1,137B in 2024 — **$543B, or 32%, is one government handing money to another**, counted
+$1,137B in 2024: **$543B, or 32%, is one government handing money to another**, counted
 once when it is transferred and again when it is spent. Federal "Health" of $65B is
 mostly the Canada Health Transfer, which provinces then spend and report as their own
 health spending.
@@ -89,30 +89,30 @@ reading is the width of the bands at each end, not the path between them.
 
 ## Traps, and what the code does about them
 
-**Estimate labels are not unique — join on the member id.** Table 36-10-0450 carries
+**Estimate labels are not unique: join on the member id.** Table 36-10-0450 carries
 `Capital transfers` and `From households` twice each, once under revenue and once under
 expenditure. Joining the CSV on the label pairs a revenue line with an expenditure value:
 the first build of this page reported revenue capital transfers as **$47,421M** when the
 true figure is **$459M**, and it looked entirely plausible. `series_matrix()` now keys on
 the member id parsed out of `COORDINATE`, and `validate()` asserts the revenue categories
-sum to the published revenue total in every year — the check that would have caught it.
+sum to the published revenue total in every year: the check that would have caught it.
 
 **Metadata labels and CSV labels differ.** Cube metadata gives `Defence`; the CSV gives
 `Defence [702]`. Only display names are stripped; the join never depends on them.
 
-**The CRA is the mirror image — join on the name, never the row number.** Row 104 is
+**The CRA is the mirror image: join on the name, never the row number.** Row 104 is
 "Net provincial or territorial tax" in the 2022 edition and "Eligible educator school
 supply tax credit" in the 2023 one. Statistics Canada has stable ids and duplicated
 names; the CRA has stable names and unstable numbering. Neither source can be joined
 the way the other one must be.
 
-**canada.ca stalls any request without an `Accept` header.** urllib sends none by
+**canada.ca stalls any request without an `Accept` header.** Urllib sends none by
 default, so every CRA download failed with a read timeout that looked exactly like the
-server being down — while curl fetched the same URL in two seconds, because curl always
+server being down, while curl fetched the same URL in two seconds, because curl always
 sends `Accept: */*`. One header turned a 40-second timeout into 0.13 seconds. A first
 guess that the culprit was Windows proxy detection was wrong.
 
-**A 200 is not proof of a CSV.** canada.ca answers unknown paths with a styled HTML
+**A 200 is not proof of a CSV.** Canada.ca answers unknown paths with a styled HTML
 page under a 200, and the Table 2 filename drifts by edition (`t02ca`, `tbl2`,
 `tbl2ac`, `table2_ac`, `tbl2_ac`, `tbl2_ac_en`), so a constructed URL will cheerfully
 cache a web page as data. URLs come from the open data catalogue and every download is
@@ -125,7 +125,7 @@ too. And per-province resources cannot be identified by name: in the 2024 editio
 provincial file is called simply "Alberta" whether it is Table 2 (income ranges) or
 Table 4 (age and gender), while in 2021 they are "Final Table 2 – Alberta" and "Final
 Table 3 – Alberta". Only the filename says which table it is. Matching on the name alone
-silently loaded Table 3 — returns by *source* of income — whose nine columns the band
+silently loaded Table 3, returns by *source* of income, whose nine columns the band
 check then rejected.
 
 **Two provinces are missing a year.** Neither Alberta nor Quebec has an English Table 2
@@ -148,7 +148,7 @@ carrying people across fixed lines. The page says so where the numbers are.
 
 **Consolidation means you cannot add levels together.** Transfers between governments are
 already netted out. `Current transfers from general governments` therefore comes back
-empty at the national level — the page drops fully-empty categories rather than rendering
+empty at the national level: the page drops fully-empty categories rather than rendering
 a row that reads "—".
 
 **A 2023 reclassification breaks one series.** Federal Indigenous programs moved into
@@ -173,13 +173,13 @@ sides, so they are consistently excluded.
   arrive in a response; the check pins them, and a moved source fails loudly instead of
   being fetched and cached as data
 - each CRA file's income bands sum to its own published totals, for all 14 geographies
-  and 7 years, within 1% or the accumulated rounding bound — whichever is looser, because
+  and 7 years, within 1% or the accumulated rounding bound: whichever is looser, because
   per-cell rounding is worth more than 1% on a base as small as Nunavut's
 - the 13 provincial files sum to between 98% and 100.5% of the national filer count in
   every complete year; they land at 99.46–99.56%, and the residual is non-residents.
   This is the check that the right column was read out of all 91 downloads
 - filer counts and the overall effective rate land in plausible ranges
-- the Sankey's two columns balance to the same total in every year — checked as
+- the Sankey's two columns balance to the same total in every year: checked as
   revenue + borrowing against functions + capital + surplus, exact to the dollar
 
 Latest build: 2024 revenue $1,312B, expenditure $1,356B, functions $1,137B (84%),
@@ -191,7 +191,7 @@ filers, $331B personal income tax, 16.4% effective rate, top band 2.0% of filers
 
 Vanilla JS, no build step, runs from `file://`. DOM is built with `createElement` +
 `textContent`, never `innerHTML` with data. Colour comes from `tokens.css`, vendored from
-`backman-design` — themes Shield (dark, default) and Window Wall (light), toggled in the
+`backman-design`: themes Shield (dark, default) and Window Wall (light), toggled in the
 header. Contrast was measured in both themes; secondary text stays off `--bd-panel`
 surfaces, per the gate gap recorded in `BRICKS.md`.
 

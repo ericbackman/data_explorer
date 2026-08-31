@@ -1,14 +1,14 @@
 # Data Lab
 
 A manifest-driven hub for data investigations. The landing page (`index.html`)
-renders itself from `investigations.js` — each investigation is a self-contained
+renders itself from `investigations.js`: each investigation is a self-contained
 folder under `investigations/`. Two wings: NBA arguments settled with nba_api
-numbers, and **The Registry** — a curated catalog of where the big public
+numbers, and **The Registry.** A curated catalog of where the big public
 datasets live (folded in from the standalone `public-data-lab` repo, 2026-08-07).
 
 **Live:** https://datalab.ericbackman.com
 
-Source lives here in the private `data_explorer` repo — **this folder is the
+Source lives here in the private `data_explorer` repo: **this folder is the
 source of truth; never edit the `nba-data-lab` clone directly** (a deploy wipes
 and re-mirrors it). `deploy.py` publishes just this folder to the
 `nba-data-lab` repo, whose own workflow deploys to Cloudflare Pages.
@@ -28,7 +28,7 @@ nba_site/
 
 ## Adding a new investigation
 
-**Option A — scaffold script (fastest):**
+**Option A: scaffold script (fastest):**
 
 ```powershell
 python nba_site/new_investigation.py clutch-kings-2025 "Clutch Kings"
@@ -37,13 +37,13 @@ python nba_site/new_investigation.py clutch-kings-2025 "Clutch Kings"
 This creates `investigations/clutch-kings-2025/` from the template and prints a
 manifest entry to paste into `investigations.js`.
 
-**Option B — by hand:**
+**Option B: by hand:**
 
 1. Create `investigations/<slug>/index.html` (copy an existing one as a starting point).
 2. Add a data-collection script at the repo root that writes `investigations/<slug>/data.js`.
 3. Add one object to the `INVESTIGATIONS` array in `investigations.js`.
 
-That's it — the hub picks it up automatically and sorts newest-first.
+That's it: the hub picks it up automatically and sorts newest-first.
 
 ## Manifest fields
 
@@ -54,16 +54,16 @@ That's it — the hub picks it up automatically and sorts newest-first.
 | `subtitle`    |          | Kicker above the title                               |
 | `description` | ✓        | 1–2 sentence summary                                 |
 | `date`        | ✓        | `YYYY-MM-DD`, used for newest-first sorting          |
-| `tags`        | ✓        | Category strings — populate the filter bar           |
+| `tags`        | ✓        | Category strings: populate the filter bar           |
 | `accent`      |          | Hex color for the card border/stat (per-page theme)  |
-| `headline`    |          | `{ stat, label }` — the card's big number            |
+| `headline`    |          | `{ stat, label }`: the card's big number            |
 | `status`      |          | `"live"` (default) or `"draft"` (dimmed, no link)    |
 
 ## Data conventions (inherited from the project)
 
 - Cache API responses to each investigation's `.cache.json` (gitignored).
 - Data scripts write `data.js` as `const <NAME>_DATA = {...};` so the page loads it
-  via a plain `<script>` tag — no fetch, no CORS, works from `file://`.
+  via a plain `<script>` tag: no fetch, no CORS, works from `file://`.
 - NBA stat columns use NBA API conventions (uppercase: PTS, REB, AST, …).
 
 ## Local preview

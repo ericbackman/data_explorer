@@ -1,4 +1,4 @@
-# v1/ — archived first-generation work (learning material)
+# v1/: archived first-generation work (learning material)
 
 **⚠ Claude/agents: do NOT read into context in routine sessions.** This tree is
 retained to learn from (old essays pipeline: beats/claims/compose + media

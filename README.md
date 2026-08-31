@@ -24,7 +24,7 @@ Python 3.10+ is required.
 
 ---
 
-## Claude Code Skill — `/nba-dashboard`
+## Claude Code Skill: `/nba-dashboard`
 
 This repo ships a [project-scoped Claude Code skill](https://docs.anthropic.com/en/docs/claude-code/slash-commands)
 that lets you pull up a full NBA player dashboard inside Claude Code.
@@ -45,11 +45,11 @@ automatically available as `/nba-dashboard` because it lives in
 
 The skill runs `nba_dashboard.py` and presents a formatted summary covering:
 
-1. **Season averages** — PPG, RPG, APG, SPG, BPG, FG%, 3P%, FT%
-2. **Last 5 & Last 10 game averages** — rolling per-game stats
-3. **Quarter-by-quarter breakdown** — PTS per quarter with hot/cold pattern detection
-4. **Recent game log** — last 5 games with box score stats
-5. **Team injury report** — current injuries via the ESPN public API
+1. **Season averages.** PPG, RPG, APG, SPG, BPG, FG%, 3P%, FT%
+2. **Last 5 & Last 10 game averages.** Rolling per-game stats
+3. **Quarter-by-quarter breakdown.** PTS per quarter with hot/cold pattern detection
+4. **Recent game log.** Last 5 games with box score stats
+5. **Team injury report.** Current injuries via the ESPN public API
 
 ---
 
@@ -110,7 +110,7 @@ Interactive version of the player dashboard. Run cells top-to-bottom, setting
 the `PLAYER_NAME` and `SEASON` variables at the top.
 
 ### `sportsrc_importer.ipynb`
-Explores the free [SportSRC public API](https://api.sportsrc.org/) — sports
+Explores the free [SportSRC public API](https://api.sportsrc.org/), sports
 categories, match schedules, league standings, and historical scores. No API
 key required.
 

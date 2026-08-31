@@ -1,4 +1,4 @@
-# Neon — Postgres serving layer, with a database per pull request
+# Neon: Postgres serving layer, with a database per pull request
 
 Puts a compact NBA **serving** slice on [Neon](https://neon.com) serverless
 Postgres, and gives every pull request its own copy-on-write database.
@@ -21,20 +21,20 @@ Neither replaces the local SQLite/DuckDB path, which stays the default.
 
 1. **Sign up** — <https://console.neon.tech/signup>. No card.
 2. **Create a project** (region: pick the closest; the data is tiny).
-3. **Copy the connection string** — Connect → connection string. It looks like
+3. **Copy the connection string.** Connect → connection string. It looks like
    `postgresql://USER:PASSWORD@HOST/neondb?sslmode=require`.
-4. **Save it to `%USERPROFILE%\.neon\database-url`** — one line, the URL alone,
+4. **Save it to `%USERPROFILE%\.neon\database-url`.** One line, the URL alone,
    no surrounding quotes and no `psql ` prefix. Same convention as
    `~\.cloudflare\token`, `~\.aiven\token`, `~\.gcp\service-account.json`.
    ⚠ "Save as type: All Files" so it does not become `database-url.txt`.
-5. **API key** — Account settings → API keys → Create. Then wire CI:
+5. **API key.** Account settings → API keys → Create. Then wire CI:
 
    ```powershell
    gh secret set NEON_API_KEY --repo ericbackman/data_explorer          # paste the key
    gh variable set NEON_PROJECT_ID --repo ericbackman/data_explorer     # paste the project id
    ```
 
-The connection string embeds a password, so nothing here ever echoes it — it is
+The connection string embeds a password, so nothing here ever echoes it: it is
 only ever assigned into `$env:DATABASE_URL` for a child process.
 
 ---
@@ -59,21 +59,21 @@ python -m pytest test_schema.py -v
 [`.github/workflows/neon-pr.yml`](../.github/workflows/neon-pr.yml). On any PR
 touching `neon/`:
 
-1. **create** a Neon branch `pr-<number>` — a copy-on-write clone of production,
+1. **create** a Neon branch `pr-<number>`: a copy-on-write clone of production,
    with production's data, in seconds;
 2. **migrate** it;
-3. **test** against it — real Postgres, real constraints, real planner;
+3. **test** against it: real Postgres, real constraints, real planner;
 4. **comment** the result on the PR (updated in place, not one per push);
 5. **delete** the branch when the PR closes, merged or not.
 
 **Why not a shared staging database.** Two PRs cannot corrupt each other's
 schema if they are not sharing one. A migration gets proven against
-production-shaped *data* rather than an empty schema — which is where migrations
+production-shaped *data* rather than an empty schema, which is where migrations
 actually fail. And teardown is total, so no drift accumulates.
 
 **Two free-plan limits shape the workflow, and both bite quietly:**
 
-- **10 branches per project.** The cleanup job is not tidiness — it is what stops
+- **10 branches per project.** The cleanup job is not tidiness: it is what stops
   the 11th open PR from failing outright.
 - **0.5 GB storage per project, shared across every branch**, and **100
   CU-hours/month**. Writes *fail* past the storage cap. Hence the serving-slice
@@ -96,7 +96,7 @@ inputs. The `games > 0` CHECK on the base table is what makes the division safe.
 
 **`team_id` is nullable on purpose.** `teams` holds 45 modern franchises while
 the data reaches back to 1946, so some historical team ids have nothing to point
-at. `seed.py` sets those NULL and **counts** them rather than dropping the row —
+at. `seed.py` sets those NULL and **counts** them rather than dropping the row:
 losing a season because a franchise folded in 1949 would be a silent data bug.
 
 **`idx_player_season_team` is partial** (`WHERE team_id IS NOT NULL`): rows
@@ -108,11 +108,11 @@ out of the index.
 ## Migrations
 
 Plain `NNN_description.sql` applied in numeric order, tracked in
-`schema_migrations`. No framework — this same script runs in CI on a throwaway
+`schema_migrations`. No framework: this same script runs in CI on a throwaway
 branch, so it stays readable and dependency-free.
 
 Each migration runs in **one transaction together with its bookkeeping row**, so
-a failure leaves nothing behind — never a half-applied schema recorded as
+a failure leaves nothing behind: never a half-applied schema recorded as
 complete. Postgres has transactional DDL, so that is actually true here in a way
 it would not be on MySQL.
 
