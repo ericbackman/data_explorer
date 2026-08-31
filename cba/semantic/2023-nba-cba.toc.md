@@ -1,11 +1,11 @@
-# 2023-nba-cba — Structural Index
+# 2023-nba-cba: Structural Index
 
 42 Articles. `line` = line in `corpus/text/2023-nba-cba.raw.txt`; `p` = printed PDF page. Cite as *Article <roman>, Section <n>*.
 
-## Article I — Definitions  ·  p.1  ·  line 1288
+## Article I: Definitions  ·  p.1  ·  line 1288
 - §1. Definitions  ·  p.None  ·  line 1290
 
-## Article II — Uniform Player Contract  ·  p.15  ·  line 1435
+## Article II: Uniform Player Contract  ·  p.15  ·  line 1435
 - §1. Required Form  ·  p.15  ·  line 1437
 - §2. Limitation on Amendments  ·  p.15  ·  line 1439
 - §3. Allowable Amendments  ·  p.15  ·  line 1443
@@ -22,11 +22,11 @@
 - §14. Void Contracts  ·  p.64  ·  line 1805
 - §15. Moratorium Period  ·  p.65  ·  line 1813
 
-## Article III — Player Expenses  ·  p.67  ·  line 1830
+## Article III: Player Expenses  ·  p.67  ·  line 1830
 - §1. Moving Expenses  ·  p.67  ·  line 1832
 - §2. Meal Expense Allowance  ·  p.68  ·  line 1841
 
-## Article IV — Benefits  ·  p.70  ·  line 1855
+## Article IV: Benefits  ·  p.70  ·  line 1855
 - §1. Player Pension Benefits  ·  p.70  ·  line 1857
 - §2. Player 401(k) Benefits  ·  p.78  ·  line 1910
 - §3. Player Health and Welfare Benefits  ·  p.81  ·  line 1930
@@ -37,11 +37,11 @@
 - §8. Projected Benefits  ·  p.104  ·  line 2098
 - §9. Benefit Exclusion Amount  ·  p.105  ·  line 2105
 
-## Article V — Compensation And Expenses In Connection With Military Duty  ·  p.111  ·  line 2143
+## Article V: Compensation And Expenses In Connection With Military Duty  ·  p.111  ·  line 2143
 - §1. Salary  ·  p.111  ·  line 2145
 - §2. Travel Expenses  ·  p.111  ·  line 2147
 
-## Article VI — Player Conduct  ·  p.112  ·  line 2152
+## Article VI: Player Conduct  ·  p.112  ·  line 2152
 - §1. Games  ·  p.112  ·  line 2154
 - §2. Practices  ·  p.114  ·  line 2168
 - §3. Promotional Appearances  ·  p.114  ·  line 2171
@@ -64,7 +64,7 @@
 - §20. Player Involvement with Cannabis Companies  ·  p.126  ·  line 2273
 - §21. Gambling by Former NBAGL Players  ·  p.129  ·  line 2299
 
-## Article VII — Basketball Related Income, Salary Cap, Minimum Team Salary, Tax Level, Apron Levels, And Designated Share Arrangement  ·  p.131  ·  line 2307
+## Article VII: Basketball Related Income, Salary Cap, Minimum Team Salary, Tax Level, Apron Levels, And Designated Share Arrangement  ·  p.131  ·  line 2307
 - §1. Definitions  ·  p.131  ·  line 2310
 - §2. Salary Cap, Minimum Team Salary, Tax Level, Apron Levels, and Draft Pick Penalty  ·  p.169  ·  line 2539
 - §3. Determination of Salary  ·  p.198  ·  line 2870
@@ -78,16 +78,16 @@
 - §11. Players Association Audit Rights  ·  p.271  ·  line 3430
 - §12. Designated Share Arrangement  ·  p.275  ·  line 3448
 
-## Article VIII — Rookie Scale  ·  p.290  ·  line 3574
+## Article VIII: Rookie Scale  ·  p.290  ·  line 3574
 - §1. Rookie Scale Contracts for First Round Picks  ·  p.290  ·  line 3576
 - §2. Rookie Contracts for Later-Signed First Round Picks  ·  p.293  ·  line 3601
 - §3. Loss of Draft Rights  ·  p.294  ·  line 3605
 
-## Article IX — Length Of Player Contracts  ·  p.295  ·  line 3609
+## Article IX: Length Of Player Contracts  ·  p.295  ·  line 3609
 - §1. Maximum Term  ·  p.295  ·  line 3611
 - §2. Computation of Time  ·  p.295  ·  line 3613
 
-## Article X — Player Eligibility And Nba Draft  ·  p.296  ·  line 3617
+## Article X: Player Eligibility And Nba Draft  ·  p.296  ·  line 3617
 - §1. Player Eligibility  ·  p.296  ·  line 3619
 - §2. Term and Timing of Draft Provisions  ·  p.298  ·  line 3639
 - §3. Number of Choices  ·  p.298  ·  line 3641
@@ -99,21 +99,21 @@
 - §9. NBA Draft Combine  ·  p.306  ·  line 3712
 - §10. Combine-Related Eligibility Disputes  ·  p.307  ·  line 3721
 
-## Article XI — Free Agency  ·  p.310  ·  line 3737
+## Article XI: Free Agency  ·  p.310  ·  line 3737
 - §1. General Rules  ·  p.310  ·  line 3739
 - §2. No Individually-Negotiated Right of First Refusal  ·  p.317  ·  line 3801
 - §3. Withholding Services  ·  p.317  ·  line 3804
 - §4. Qualifying Offers to Make Certain Players Restricted Free Agents  ·  p.318  ·  line 3809
 - §5. Restricted Free Agency  ·  p.321  ·  line 3840
 
-## Article XII — Option Clauses  ·  p.336  ·  line 3940
+## Article XII: Option Clauses  ·  p.336  ·  line 3940
 - §1. Team Options  ·  p.336  ·  line 3942
 - §2. Player Options  ·  p.336  ·  line 3944
 - §3. No Conditional Options  ·  p.338  ·  line 3957
 - §4. Exercise Period  ·  p.338  ·  line 3959
 - §5. Option Exercise Notices  ·  p.338  ·  line 3961
 
-## Article XIII — Circumvention  ·  p.339  ·  line 3965
+## Article XIII: Circumvention  ·  p.339  ·  line 3965
 - §1. General Prohibitions  ·  p.339  ·  line 3967
 - §2. No Unauthorized Agreements  ·  p.340  ·  line 3974
 - §3. Penalties  ·  p.341  ·  line 3986
@@ -121,7 +121,7 @@
 - §5. Transactions with Retired Players  ·  p.344  ·  line 4015
 - §6. Charitable Contributions  ·  p.346  ·  line 4030
 
-## Article XIV — Anti-Collusion Provisions  ·  p.347  ·  line 4035
+## Article XIV: Anti-Collusion Provisions  ·  p.347  ·  line 4035
 - §1. No Collusion  ·  p.347  ·  line 4037
 - §2. Non-Collusive Conduct  ·  p.347  ·  line 4039
 - §3. Individual Negotiations  ·  p.348  ·  line 4050
@@ -140,16 +140,16 @@
 - §16. Discovery  ·  p.354  ·  line 4109
 - §17. Time Limits  ·  p.354  ·  line 4112
 
-## Article XV — Certifications  ·  p.355  ·  line 4116
+## Article XV: Certifications  ·  p.355  ·  line 4116
 - §1. Contract Certification  ·  p.355  ·  line 4118
 - §2. End of Season Certification  ·  p.357  ·  line 4132
 - §3. False Certification  ·  p.357  ·  line 4135
 
-## Article XVI — Mutual Reservation Of Rights  ·  p.358  ·  line 4139
+## Article XVI: Mutual Reservation Of Rights  ·  p.358  ·  line 4139
 
-## Article XVII — Procedure With Respect To Playing Conditions At Various Facilities  ·  p.359  ·  line 4144
+## Article XVII: Procedure With Respect To Playing Conditions At Various Facilities  ·  p.359  ·  line 4144
 
-## Article XVIII — Travel Accommodations, Locker Room Facilities, And Parking  ·  p.360  ·  line 4149
+## Article XVIII: Travel Accommodations, Locker Room Facilities, And Parking  ·  p.360  ·  line 4149
 - §1. Hotel Arrangements  ·  p.360  ·  line 4151
 - §2. First Class Travel  ·  p.360  ·  line 4158
 - §3. Locker Room Facilities  ·  p.361  ·  line 4163
@@ -157,13 +157,13 @@
 - §5. Hotel Incidentals  ·  p.361  ·  line 4167
 - §6. Two-Way Players  ·  p.361  ·  line 4169
 
-## Article XIX — Union Security, Dues, And Check-Off  ·  p.362  ·  line 4173
+## Article XIX: Union Security, Dues, And Check-Off  ·  p.362  ·  line 4173
 - §1. Membership  ·  p.362  ·  line 4175
 - §2. Check-off  ·  p.362  ·  line 4177
 - §3. Enforcement  ·  p.362  ·  line 4179
 - §4. No Liability  ·  p.363  ·  line 4187
 
-## Article XX — Scheduling  ·  p.364  ·  line 4191
+## Article XX: Scheduling  ·  p.364  ·  line 4191
 - §1. Training Camp  ·  p.364  ·  line 4193
 - §2. Exhibition Games  ·  p.367  ·  line 4229
 - §3. Regular Season Games  ·  p.367  ·  line 4232
@@ -174,7 +174,7 @@
 - §8. Travel  ·  p.372  ·  line 4280
 - §9. Days Off  ·  p.372  ·  line 4282
 
-## Article XXI — Nba All-Star Game  ·  p.375  ·  line 4300
+## Article XXI: Nba All-Star Game  ·  p.375  ·  line 4300
 - §1. Participation  ·  p.375  ·  line 4302
 - §2. Awards  ·  p.377  ·  line 4321
 - §3. Player Guests  ·  p.378  ·  line 4416
@@ -182,7 +182,7 @@
 - §5. All-Star Skills Competitions  ·  p.378  ·  line 4420
 - §6. All-Star Committee  ·  p.379  ·  line 4425
 
-## Article XXII — Player Health And Wellness  ·  p.380  ·  line 4429
+## Article XXII: Player Health And Wellness  ·  p.380  ·  line 4429
 - §1. Requirements for Certain Team Player Health Professionals  ·  p.380  ·  line 4431
 - §2. One Surgeon  ·  p.381  ·  line 4438
 - §3. NBA Physicians Association  ·  p.381  ·  line 4440
@@ -198,39 +198,39 @@
 - §13. Wearables  ·  p.397  ·  line 4549
 - §14. NBA Draft Combine  ·  p.400  ·  line 4567
 
-## Article XXIII — Exhibition Games And Off-Season Games And Events  ·  p.408  ·  line 4632
+## Article XXIII: Exhibition Games And Off-Season Games And Events  ·  p.408  ·  line 4632
 - §1. Exhibition Games  ·  p.408  ·  line 4634
 - §2. Inter-squad Scrimmage  ·  p.408  ·  line 4639
 - §3. Off-Season Basketball Events  ·  p.408  ·  line 4641
 - §4. Summer Leagues  ·  p.412  ·  line 4680
 
-## Article XXIV — Prohibition Of No-Trade Contracts  ·  p.414  ·  line 4693
+## Article XXIV: Prohibition Of No-Trade Contracts  ·  p.414  ·  line 4693
 - §1. General Limitation  ·  p.414  ·  line 4695
 - §2. Exceptions to General Limitation  ·  p.414  ·  line 4697
 
-## Article XXV — Limitation On Deferred Compensation  ·  p.418  ·  line 4722
+## Article XXV: Limitation On Deferred Compensation  ·  p.418  ·  line 4722
 - §1. General Limitation  ·  p.418  ·  line 4724
 - §2. Attribution  ·  p.418  ·  line 4726
 
-## Article XXVI — Team Rules  ·  p.419  ·  line 4730
+## Article XXVI: Team Rules  ·  p.419  ·  line 4730
 - §1. Establishment of Team Rules  ·  p.419  ·  line 4732
 - §2. Notice  ·  p.419  ·  line 4734
 - §3. Grievances Challenging Team Rules  ·  p.419  ·  line 4736
 
-## Article XXVII — Right Of Set-Off  ·  p.420  ·  line 4740
+## Article XXVII: Right Of Set-Off  ·  p.420  ·  line 4740
 - §1. Set-off Calculation  ·  p.420  ·  line 4742
 - §2. Successive Terminations  ·  p.422  ·  line 4755
 - §3. Deferred Compensation  ·  p.422  ·  line 4757
 - §4. Waiver of Set-off Right  ·  p.422  ·  line 4759
 - §5. Stretched Protected Salary  ·  p.422  ·  line 4761
 
-## Article XXVIII — Media Rights  ·  p.425  ·  line 4776
+## Article XXVIII: Media Rights  ·  p.425  ·  line 4776
 - §1. League Rights  ·  p.425  ·  line 4778
 - §2. No Suit  ·  p.425  ·  line 4780
 - §3. Unauthorized Endorsement/Sponsor Promotion  ·  p.425  ·  line 4782
 - §4. Reservation of Rights  ·  p.428  ·  line 4798
 
-## Article XXIX — Miscellaneous  ·  p.429  ·  line 4802
+## Article XXIX: Miscellaneous  ·  p.429  ·  line 4802
 - §1. Active List  ·  p.429  ·  line 4804
 - §2. Roster Size  ·  p.429  ·  line 4806
 - §3. Two-Way Roster  ·  p.430  ·  line 4819
@@ -253,14 +253,14 @@
 - §20. Quarterly FIBA Meetings  ·  p.449  ·  line 4981
 - §21. Pro Days  ·  p.449  ·  line 4983
 
-## Article XXX — No-Strike And No-Lockout Provisions And Other Undertakings  ·  p.450  ·  line 4990
+## Article XXX: No-Strike And No-Lockout Provisions And Other Undertakings  ·  p.450  ·  line 4990
 - §1. No Strike  ·  p.450  ·  line 4992
 - §2. No Lockout  ·  p.450  ·  line 4994
 - §3. No Breach of Player Contracts  ·  p.450  ·  line 4996
 - §4. Best Efforts of Players Association  ·  p.451  ·  line 5000
 - §5. No Discrimination  ·  p.451  ·  line 5002
 
-## Article XXXI — Grievance And Arbitration Procedure And Special Procedures With Respect To Disputes Involving Player Discipline  ·  p.452  ·  line 5007
+## Article XXXI: Grievance And Arbitration Procedure And Special Procedures With Respect To Disputes Involving Player Discipline  ·  p.452  ·  line 5007
 - §1. Scope  ·  p.452  ·  line 5010
 - §2. Initiation  ·  p.453  ·  line 5021
 - §3. Pre-Hearing Motions  ·  p.454  ·  line 5028
@@ -277,7 +277,7 @@
 - §14. Threshold Amount for Certain Grievances  ·  p.467  ·  line 5128
 - §15. Miscellaneous  ·  p.468  ·  line 5133
 
-## Article XXXII — System Arbitration  ·  p.470  ·  line 5146
+## Article XXXII: System Arbitration  ·  p.470  ·  line 5146
 - §1. Jurisdiction and Authority  ·  p.470  ·  line 5148
 - §2. Initiation  ·  p.470  ·  line 5150
 - §3. Hearings  ·  p.471  ·  line 5157
@@ -289,7 +289,7 @@
 - §9. Special Procedure for Disputes with Respect to Interim Audit Reports  ·  p.476  ·  line 5192
 - §10. Special Procedure for Disputes with Respect to the Adjustment Schedules  ·  p.479  ·  line 5212
 
-## Article XXXIII — Anti-Drug Program And Substance Abuse Treatment  ·  p.481  ·  line 5222
+## Article XXXIII: Anti-Drug Program And Substance Abuse Treatment  ·  p.481  ·  line 5222
 - §1. Definitions  ·  p.481  ·  line 5224
 - §2. Administration  ·  p.484  ·  line 5256
 - §3. Confidentiality  ·  p.487  ·  line 5278
@@ -312,11 +312,11 @@
 - §20. No Significant Fault or Negligence by Player  ·  p.524  ·  line 5558
 - §21. G League Suspensions  ·  p.525  ·  line 5563
 
-## Article XXXIV — Recognition Clause  ·  p.526  ·  line 5567
+## Article XXXIV: Recognition Clause  ·  p.526  ·  line 5567
 
-## Article XXXV — Savings Clause  ·  p.527  ·  line 5572
+## Article XXXV: Savings Clause  ·  p.527  ·  line 5572
 
-## Article XXXVI — Player Agents  ·  p.528  ·  line 5577
+## Article XXXVI: Player Agents  ·  p.528  ·  line 5577
 - §1. Approval of Player Contracts  ·  p.528  ·  line 5579
 - §2. Fines  ·  p.528  ·  line 5581
 - §3. Prohibition on Players as Agents  ·  p.528  ·  line 5583
@@ -325,18 +325,18 @@
 - §6. Confirmation by the Players Association  ·  p.529  ·  line 5591
 - §7. Agent Rules Compliance  ·  p.530  ·  line 5595
 
-## Article XXXVII — Player Appearances And Additional Content Activities/Uniform  ·  p.531  ·  line 5600
+## Article XXXVII: Player Appearances And Additional Content Activities/Uniform  ·  p.531  ·  line 5600
 - §1. Player Activities on Behalf of the NBA  ·  p.531  ·  line 5602
 - §2. Additional Content Opportunities for the NBA and Players  ·  p.533  ·  line 5617
 - §3. Indemnity  ·  p.538  ·  line 5657
 - §4. Uniform  ·  p.539  ·  line 5662
 
-## Article XXXVIII — Integration, Entire Agreement, Interpretation, And Choice Of Law  ·  p.540  ·  line 5667
+## Article XXXVIII: Integration, Entire Agreement, Interpretation, And Choice Of Law  ·  p.540  ·  line 5667
 - §1. Integration, Entire Agreement  ·  p.540  ·  line 5669
 - §2. Interpretation  ·  p.540  ·  line 5671
 - §3. Choice of Law  ·  p.541  ·  line 5678
 
-## Article XXXIX — Term Of Agreement  ·  p.542  ·  line 5682
+## Article XXXIX: Term Of Agreement  ·  p.542  ·  line 5682
 - §1. Effective Date and Expiration Date  ·  p.542  ·  line 5684
 - §2. Mutual Options to Terminate Following Sixth Season  ·  p.542  ·  line 5686
 - §3. Termination by Players Association/Anti-Collusion  ·  p.542  ·  line 5688
@@ -348,11 +348,11 @@
 - §9. Mutual Right of Termination -- League Entity Transaction  ·  p.547  ·  line 5726
 - §10. No Obligation to Terminate; No Waiver  ·  p.548  ·  line 5735
 
-## Article XL — Expansion And Contraction  ·  p.549  ·  line 5739
+## Article XL: Expansion And Contraction  ·  p.549  ·  line 5739
 - §1. Expansion  ·  p.549  ·  line 5741
 - §2. Contraction  ·  p.549  ·  line 5743
 
-## Article XLI — Nba G League  ·  p.550  ·  line 5747
+## Article XLI: Nba G League  ·  p.550  ·  line 5747
 - §1. NBAGL Work Assignments  ·  p.550  ·  line 5749
 - §2. Reporting Requirements for NBAGL Work Assignments  ·  p.550  ·  line 5753
 - §3. Travel and Relocation Expenses  ·  p.551  ·  line 5758
@@ -360,7 +360,7 @@
 - §5. Miscellaneous  ·  p.557  ·  line 5803
 - §6. Career Opportunities for Former NBA Players  ·  p.558  ·  line 5813
 
-## Article XLII — Other  ·  p.560  ·  line 5823
+## Article XLII: Other  ·  p.560  ·  line 5823
 - §1. Headings and Organization  ·  p.560  ·  line 5825
 - §2. Time Periods  ·  p.560  ·  line 5827
 - §3. Exhibits  ·  p.560  ·  line 5829

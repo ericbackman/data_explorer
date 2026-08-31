@@ -1,4 +1,4 @@
-# NBA CBA — Agentic Semantic Layer
+# NBA CBA: Agentic Semantic Layer
 
 **Purpose.** This is the navigation manual an AI agent reads *before* answering a question
 about the NBA Collective Bargaining Agreement. The CBA is ~600 pages of interlocking defined
@@ -19,11 +19,11 @@ they look like. This layer is the translation and routing table between the two.
 |---|---|
 | `corpus/pdf/2023-nba-cba.pdf` | Official 2023 CBA (676 pp) — NBA CDN. **The current agreement** (in force 2023-24 → 2029-30, mutual opt-out after 2028-29). |
 | `corpus/pdf/2017-nba-cba.pdf` | Official 2017 CBA — the prior agreement (2017-18 → 2022-23). For "what changed" and legacy deals. |
-| `corpus/text/2023-nba-cba.raw.txt` | Extracted text of the 2023 CBA. **Line numbers are stable and match the `Read` tool** — they are the primary navigation unit. |
+| `corpus/text/2023-nba-cba.raw.txt` | Extracted text of the 2023 CBA. **Line numbers are stable and match the `Read` tool.** They are the primary navigation unit. |
 | `corpus/text/2017-nba-cba.raw.txt` | Extracted text of the 2017 CBA. |
 | `semantic/2023-nba-cba.toc.json` | Structural index: every Article & Section → `{line, page}`. Machine-readable routing table. |
 | `semantic/2023-nba-cba.definitions.json` | The Article I glossary (88 defined terms) → each term's `cross_refs` (the Articles it points to). |
-| `semantic/apron-transaction-restrictions.json` | The §2(e)(4) "Transaction Restrictions Table" encoded — the second-apron hard-cap rules. |
+| `semantic/apron-transaction-restrictions.json` | The §2(e)(4) "Transaction Restrictions Table" encoded: the second-apron hard-cap rules. |
 
 The `corpus/` folder is git-ignored (copyright); rebuild it with `python tools/fetch_cba.py`.
 
@@ -33,13 +33,13 @@ The `corpus/` folder is git-ignored (copyright); rebuild it with `python tools/f
 
 - **42 Articles** (I–XLII), each divided into numbered **Sections**, then lettered
   sub-clauses: `(a) (b) (c)…`, then `(1) (2)…`, then `(i) (ii)…`. The canonical citation is
-  **Article + Section + sub-clause**, e.g. *Article VII, § 6(j)(1)(iv)* — **not** a page.
+  **Article + Section + sub-clause**, e.g. *Article VII, § 6(j)(1)(iv)*: **not** a page.
 - **Article VII is the engine.** ~160 pages (pp. 131–290). It contains Basketball Related
   Income, the Salary Cap, the Tax, the **Apron Levels**, the cap **Exceptions**, extensions,
   and the trade rules. **Most questions about money, trades, and roster-building route into
   Article VII.** Everything else is comparatively self-contained.
 - **Two definition layers.** The master glossary is **Article I, § 1** (88 terms, lettered
-  `(a)…(iiii)`). But many operative terms are defined **inline** where they're used —
+  `(a)…(iiii)`). But many operative terms are defined **inline** where they're used:
   critically, the **Apron Levels and Tax Level are defined in Article VII § 2(a), not in the
   glossary.** Always check both.
 
@@ -60,7 +60,7 @@ To answer *"is X allowed / how does Y work"*:
    another Capitalized term you don't yet understand, resolve it (glossary or inline) before
    concluding. The rules are a graph, not a paragraph.
 5. **Quote and cite** Article + Section + sub-clause. If the text contradicts a "well-known"
-   rule, trust the text — it's probably been amended.
+   rule, trust the text: it's probably been amended.
 
 ---
 
@@ -68,12 +68,12 @@ To answer *"is X allowed / how does Y work"*:
 
 1. **The trade rules are not in "Trade Rules."** Legality of a trade is a *join* across three
    places in Article VII:
-   - **§ 2(e)** — apron restrictions (the "hard cap" behaviors; the Transaction Restrictions Table).
-   - **§ 6(j)** — the **Traded Player Exception**: how much salary you can take back (matching).
-   - **§ 8** — trade *procedure*: cash, timing windows, sign-and-trade, consent, definition of "trade."
+   - **§ 2(e).** Apron restrictions (the "hard cap" behaviors; the Transaction Restrictions Table).
+   - **§ 6(j).** The **Traded Player Exception**: how much salary you can take back (matching).
+   - **§ 8.** Trade *procedure*: cash, timing windows, sign-and-trade, consent, definition of "trade."
    A tool that reads only § 8 (labeled "Trade Rules") misses two-thirds of the machinery.
 2. **The apron/tax dollar figures are defined inline in § 2(a), not the glossary.** Diffing the
-   two CBAs' glossaries to find "what the second apron changed" returns **nothing** — the
+   two CBAs' glossaries to find "what the second apron changed" returns **nothing.** The
    change was made by rewriting § 2 and § 6's operative text, not by adding glossary terms.
 3. **Capitalized terms ≠ their English meaning.** "Salary" (§ 3), "Room" (`(kkk)`), "Team
    Salary", "Compensation" are precisely defined and differ from intuition. A number in the
@@ -88,7 +88,7 @@ To answer *"is X allowed / how does Y work"*:
 
 ---
 
-## 5. Concept Map — everyday term → CBA term → citation
+## 5. Concept Map: everyday term → CBA term → citation
 
 Citations are to the **2023 CBA**; `L####` is the line in `corpus/text/2023-nba-cba.raw.txt`.
 ✔ = verified against the text in-session; the rest are routed to the governing section (open
@@ -105,7 +105,7 @@ and confirm the sub-clause before quoting).
 | "Sign-and-trade" | Signed-and-traded Contract (7-part test) | Art VII, § 8(e)(1) | L3365 ✔ |
 | "Can't trade until Dec 15 / Jan 15 / 3 months" | Trade-eligibility timing | Art VII, § 8(d) | L3355 ✔ |
 | "No-trade after the deadline in a contract year" | § 8(c) | Art VII, § 8(c) | L3353 ✔ |
-| "Base Year Compensation / BYC" | **eliminated** — only a narrow sign-and-trade analog survives | Art VII, § 6(j)(5) | L3226 ✔ |
+| "Base Year Compensation / BYC" | **eliminated.** Only a narrow sign-and-trade analog survives | Art VII, § 6(j)(5) | L3226 ✔ |
 | "Why star trades wait until mid-January" | unprotected salary deemed protected Jan 8 | Art VII, § 6(j)(6) | L3231 ✔ |
 
 ### Contracts & quirks
@@ -140,18 +140,18 @@ and confirm the sub-clause before quoting).
 
 ---
 
-## 6. Worked example — the protocol in action
+## 6. Worked example: the protocol in action
 
 **Q: "The Suns are over the second apron. Can they combine two players' salaries to trade for a star?"**
 
 1. Translate: "combine two players' salaries" → **Aggregated** Traded Player Exception; "over
    the second apron" → **Apron Level restriction**.
-2. Route: two places — the exception itself (§ 6(j)(1)(ii)) and whether the apron blocks it
+2. Route: two places, the exception itself (§ 6(j)(1)(ii)) and whether the apron blocks it
    (§ 2(e), Transaction Restrictions Table, `apron-transaction-restrictions.json`).
 3. Jump/read: `apron-transaction-restrictions.json` → **Row H (Aggregated Standard TPE) hard-caps
    at the Second Apron.** Read corpus L2803 to confirm.
 4. Cross-reference: § 2(e)(2)(i) means a team already above the second apron *cannot* make a
-   move that requires exceeding it — and aggregating is such a move.
+   move that requires exceeding it, and aggregating is such a move.
 5. Answer: **No.** A team above the second apron cannot aggregate salaries in a trade
    (Art VII, § 2(e), Row H of the Transaction Restrictions Table; the Aggregated TPE is
    § 6(j)(1)(ii)). It may still take back salary for a *single* outgoing contract via the
@@ -159,7 +159,7 @@ and confirm the sub-clause before quoting).
 
 ---
 
-## 7. 2023 vs 2017 — which corpus to read
+## 7. 2023 vs 2017, which corpus to read
 
 - Default to **2023** for anything current.
 - Consult **2017** for: how a rule *used* to work, grandfathered contract terms, or to

@@ -4,9 +4,9 @@
 `L####` = line in `corpus/text/2023-nba-cba.raw.txt`. Where the source table was hard to
 extract cleanly, that's flagged.*
 
-The 2023 CBA layers **four spending thresholds**, and the higher two ("aprons") are the
+The 2023 CBA layers four spending thresholds, and the higher two ("aprons") are the
 famous new teeth. The single most important thing to understand: **the apron is not a number
-you're forbidden to exceed. It's a set of transactions that become forbidden — and once you
+you're forbidden to exceed. It's a set of transactions that become forbidden, and once you
 use one, it locks you below that line for the rest of the year.** That inversion is why the
 second apron behaves like a hard cap without the CBA ever using the words "hard cap."
 
@@ -32,13 +32,13 @@ is deliberately narrow.
 A team has **three** distinct salary totals in Article VII, each computed differently, each
 used for a different test. Conflating them is the #1 source of bad CBA takes:
 
-1. **Team Salary** — used for the **Salary Cap** test (§4).
-2. **Tax Team Salary** — used for the **luxury tax** test; measured at the start of the team's
+1. **Team Salary.** Used for the **Salary Cap** test (§4).
+2. **Tax Team Salary.** Used for the luxury tax test; measured at the start of the team's
    last regular-season game, with incentive bonuses trued-up (§2(d)(1)(i), L2626).
-3. **Apron Team Salary** — used for the **apron** tests (§2(e)(1), L2737). This is a *higher*
+3. **Apron Team Salary.** Used for the **apron** tests (§2(e)(1), L2737). This is a *higher*
    number: it **adds back** all "unlikely" performance bonuses, uses the **greater of** a
    restricted free agent's qualifying-offer or first-refusal amount, adds outstanding rookie
-   tenders — and **subtracts** the cap holds for *unused* exceptions.
+   tenders, and **subtracts** the cap holds for *unused* exceptions.
 
 > **Practical takeaway:** you cannot look at a team's cap-sheet Team Salary and conclude it's
 > "under the second apron." The apron is measured against Apron Team Salary, which can be
@@ -52,7 +52,7 @@ taxpayers in **3 of the prior 4 seasons** pay the harsher **Repeater** rates (§
 
 **Tax rate per $1 over the line, by bracket** *(reconstructed from the §2(d)(2) rate tables,
 which extract as garbled columns, then **validated against the three worked dollar examples the
-CBA embeds at L2723–2728** — treat as high-confidence but table-derived):*
+CBA embeds at L2723–2728**: treat as high-confidence but table-derived):*
 
 | Bracket over Tax Level | Standard 2023–25 | Standard 2025-26+ | Repeater 2023–25 | Repeater 2025-26+ |
 |---|---|---|---|---|
@@ -63,47 +63,47 @@ CBA embeds at L2723–2728** — treat as high-confidence but table-derived):*
 | 400%+ | $3.75 (+$0.50/100%) | $5.25 (+$0.50/100%) | $4.75 (+$0.50/100%) | $7.25 (+$0.50/100%) |
 
 The 2025-26 shift is the quiet story: rates get *cheaper* at the bottom two brackets but much
-*steeper* at the top — the tax curve was made more punitive for teams spending deep, reinforcing
+*steeper* at the top: the tax curve was made more punitive for teams spending deep, reinforcing
 the aprons from below.
 
-## First Apron — what you lose (Transaction Restrictions Table rows A–G)
+## First Apron: what you lose (Transaction Restrictions Table rows A–G)
 
 Cross the First Apron (or use one of these tools, which then hard-caps you there) and you lose:
 
-- **A** — the Bi-annual Exception (§2(e)(4), L2778)
-- **B** — the Non-Taxpayer Mid-Level Exception (you drop to the smaller *taxpayer* MLE) (L2779)
-- **C** — acquiring a player via **sign-and-trade** (L2780)
-- **D** — signing a **waived player whose prior salary was above the Non-Taxpayer MLE** (L2781)
-- **E** — the **Expanded** Traded Player Exception (the generous 125–200% match) (L2782)
-- **F** — using a **banked** Standard TPE from a prior season (L2783)
-- **G** — the Transition TPE (2023-24 only) (L2799)
+- **A**: the Bi-annual Exception (§2(e)(4), L2778)
+- **B**: the Non-Taxpayer Mid-Level Exception (you drop to the smaller *taxpayer* MLE) (L2779)
+- **C**: acquiring a player via sign-and-trade (L2780)
+- **D**: signing a waived player whose prior salary was above the Non-Taxpayer MLE (L2781)
+- **E**: the **Expanded** Traded Player Exception (the generous 125–200% match) (L2782)
+- **F**: using a **banked** Standard TPE from a prior season (L2783)
+- **G**: the Transition TPE (2023-24 only) (L2799)
 
-> **Widely-misreported:** rule **D** — no signing bought-out/waived players who out-earned the
-> mid-level — is a **First Apron** trigger that applies to *any* team, **not** a second-apron-only
+> **Widely-misreported:** rule **D**, no signing bought-out/waived players who out-earned the
+> mid-level, is a **First Apron** trigger that applies to *any* team, **not** a second-apron-only
 > rule as it's usually described. (Verified: Row D maps to "First Apron Level" in the table's
 > Applicable-Apron column, L2781/L2789.)
 
-There's also a **cross-contamination rule**: if a team ever uses the *taxpayer* MLE (a second-apron
+There's also a cross-contamination rule: if a team ever uses the *taxpayer* MLE (a second-apron
 tool, row K), it's *also* barred from rows A–E/A–F for the rest of the year regardless of its
 salary (§2(e)(2)(iii), L2759). The taxpayer MLE and the first-apron tools are mutually exclusive.
 
-## Second Apron — the hard-cap teeth (rows H–K + the pick freeze)
+## Second Apron: the hard-cap teeth (rows H–K + the pick freeze)
 
 Cross the Second Apron and, on top of everything above, you lose:
 
-- **H** — **aggregating** two or more players' salaries in a trade (the Aggregated TPE) (L2803).
+- **H** — aggregating two or more players' salaries in a trade (the Aggregated TPE) (L2803).
   This is the big one: second-apron teams can only match salary for **one outgoing contract at a
   time**, which severely limits blockbuster construction.
-- **I** — **sending cash** in a trade (L2807).
-- **J** — acquiring a player via a TPE that came from a sign-and-trade (L2813).
-- **K** — the **Taxpayer Mid-Level Exception** — so a second-apron team's *only* free-agent tool
+- **I** — sending cash in a trade (L2807).
+- **J**: acquiring a player via a TPE that came from a sign-and-trade (L2813).
+- **K**, the **Taxpayer Mid-Level Exception**, so a second-apron team's *only* free-agent tool
   above the minimum is… gone (L2817).
 
-### The frozen draft pick (§2(f)) — the long-tail penalty
+### The frozen draft pick (§2(f)): the long-tail penalty
 
 Beginning 2024-25, being a **Second Apron Team** (Apron Team Salary over the second apron as of
 your last regular-season game, §2(f)(1)(i), L2851) **freezes your first-round pick seven drafts
-out** — you can't trade it, even conditionally (§2(f)(2)(i), L2856). Then:
+out**: you can't trade it, even conditionally (§2(f)(2)(i), L2856). Then:
 
 - Second apron in **≥2 of the next 4 seasons** → that frozen pick is **moved to the end of the
   first round** (the "Draft Pick Penalty," §2(f)(1)(ii), L2854; §2(f)(2)(ii)(A), L2858).
@@ -115,14 +115,14 @@ round.*
 
 ## The mental model to keep
 
-1. It's a **ladder of consequences**, not one wall: tax → lose first-apron tools → lose
+1. It's a ladder of consequences, not one wall: tax → lose first-apron tools → lose
    second-apron tools + pick.
 2. The line you're tested against is **Apron Team Salary**, not cap-sheet salary.
-3. The apron "hard cap" is **transaction-triggered**: you're not forbidden a dollar figure —
+3. The apron "hard cap" is transaction-triggered: you're not forbidden a dollar figure,
    you're forbidden the *moves* that would push you past it, and using such a move locks you
    under it for the year (§2(e)(2), L2751).
 4. When you read "second apron" in an article, check whether the rule is *actually* second-apron
-   (rows H–K + pick) or first-apron (rows A–G, incl. the buyout rule) — reporters routinely
+   (rows H–K + pick) or first-apron (rows A–G, incl. the buyout rule): reporters routinely
    mix these up.
 
 ---
