@@ -18,8 +18,8 @@ unavailable, player not found), explain the issue clearly and suggest fixes such
 - Verifying the season string format is `YYYY-YY`
 
 The dashboard covers:
-1. **Season averages** — PPG, RPG, APG, SPG, BPG, FG%, 3P%, FT%
-2. **Last 5 & Last 10 game averages** — rolling per-game stats
-3. **Quarter-by-quarter breakdown** — PTS per quarter for last 5 games, with hot/cold pattern detection
-4. **Recent game log** — last 5 games with box score stats
-5. **Team injury report** — current injuries going into the next game
+1. **Season averages.** PPG, RPG, APG, SPG, BPG, FG%, 3P%, FT%
+2. **Last 5 & Last 10 game averages.** Rolling per-game stats
+3. **Quarter-by-quarter breakdown.** PTS per quarter for last 5 games, with hot/cold pattern detection
+4. **Recent game log.** Last 5 games with box score stats
+5. **Team injury report.** Current injuries going into the next game

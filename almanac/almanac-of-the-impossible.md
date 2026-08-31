@@ -1,11 +1,11 @@
 # The Almanac of the Impossible: a cross-sport rarity study
 
-> **▶ [Open the interactive version](/almanac)** — the same findings plotted on one
+> **▶ [Open the interactive version](/almanac).** The same findings plotted on one
 > shared improbability scale, with tap-to-reveal odds. (Best on a wide screen, but
 > works on a phone.)
 
 **Question:** across five different sports, what are the single rarest things that
-ever actually happened — and can each one be normalised onto *one* honest scale of
+ever actually happened, and can each one be normalised onto *one* honest scale of
 improbability, so a golfer's 58 and a 100-point basketball game can sit on the same
 axis?
 
@@ -14,7 +14,7 @@ Each pass queried a **read-only** SQLite DB, quantified rarity with an actual `C
 over the full recorded population (player-games, goalie-games, rounds, seasons, or
 holes), and **validated every result against a famous known fact** before it was
 allowed in. Rarity is expressed as **"1 in N chances"**, where N is the size of the
-recorded population — so a once-ever feat in 2.4M skater-games sits further out than a
+recorded population, so a once-ever feat in 2.4M skater-games sits further out than a
 shocking upset the betting market still gave a 1-in-10 shot. Two different kinds of
 impossible, one axis.
 
@@ -50,14 +50,14 @@ Rarity = recorded chances per single occurrence in that sport's database.
 | 18 | PGA | The Double Eagle | 125 albatrosses | rarest shot in golf · 2005-2026 | 125 of 7,068,295 holes (≈1 per 56,500) |
 | 19 | PGA | Thirty-Five Under | −35 to par, 72 holes | Hideki Matsuyama · 2025 Sentry | 1 of 125,976 tournament results |
 
-**The single rarest thing here:** Sittler's 10-point game and Malone's 7-goal game —
+**The single rarest thing here:** Sittler's 10-point game and Malone's 7-goal game,
 each the only one of its kind in **2,432,543** recorded skater-games. The most
 *emotionally* shocking (the +957 Jets upset) is, honestly, the least statistically
-rare on the shared axis — which is the whole point of putting them on one scale.
+rare on the shared axis, which is the whole point of putting them on one scale.
 
 ---
 
-## Rejected — data that failed verification
+## Rejected: data that failed verification
 
 - **NBA · corrupt row.** A raw row showed an 83-point night in 2026 requiring **36
   made free throws**. The all-time FT record in a game is 28 (Wilt, in the 100-point
@@ -65,9 +65,9 @@ rare on the shared axis — which is the whole point of putting them on one scal
   excluded, not believed.
 - **PGA · broken record.** A stray row implied a **hole-in-one on a par-4**. On
   inspection it was a partial round with the front nine missing and a null round
-  total — a data artifact, not a shot. Excluded.
+  total: a data artifact, not a shot. Excluded.
 - **MLB · rules artifact.** Raw all-time pitching leaderboards are owned by the
-  **1880s** (60-win seasons, 500+ strikeouts) — a different sport under different
+  **1880s** (60-win seasons, 500+ strikeouts): a different sport under different
   rules. Filtered to the live-ball era (≥162 IP, since 1920) so Gibson's 1.12 is
   compared to seasons that were actually comparable.
 
