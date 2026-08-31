@@ -108,3 +108,6 @@ almanac/*.html
 
 # World Cup scrape cache + DB (regenerable), matching the per-sport pattern above
 soccer/data/
+
+# Draft source cache (regenerable)
+draft/data/
