@@ -105,3 +105,6 @@ bigquery/export/*.parquet
 # Local HTML renders of the almanac study. The markdown is the source of truth
 # (and currently richer than any render); a committed copy only invites drift.
 almanac/*.html
+
+# World Cup scrape cache + DB (regenerable), matching the per-sport pattern above
+soccer/data/
