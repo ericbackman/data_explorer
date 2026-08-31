@@ -1,7 +1,7 @@
-# trades — NBA pick-trade flowcharts
+# trades: NBA pick-trade flowcharts
 
 Turn a confusing conditional draft-pick trade (protections, rolling
-conditions, swaps) into a clean flowchart of **every possible outcome**.
+conditions, swaps) into a clean flowchart of every possible outcome.
 
 Pure Python, no database, no external binary (no graphviz). The pipeline:
 
@@ -47,7 +47,7 @@ render.to_svg(tree, "phx_pick.svg")  # standalone shareable graphic
 | Asset | Meaning |
 |-------|---------|
 | `Pick` | An unconditional pick that changes hands outright. |
-| `ProtectedPick` | Conveys only if it lands outside a protected slot range; otherwise **rolls forward** a year (`schedule` = one `(year, Protection)` per year) until a `fallback`. |
+| `ProtectedPick` | Conveys only if it lands outside a protected slot range; otherwise rolls forward a year (`schedule` = one `(year, Protection)` per year) until a `fallback`. |
 | `Swap` | One team's right to exchange its pick for another's; optionally voided by a `voided_if` protection. |
 
 `Protection.top(n)` = protected in slots `1..n` (conveys `n+1..30`).
@@ -55,9 +55,9 @@ render.to_svg(tree, "phx_pick.svg")  # standalone shareable graphic
 
 ## Who owns what (real 2026 trades)
 
-`real_2026.py` encodes actual, **sourced** 2026-offseason trades (Giannis→Heat,
+`real_2026.py` encodes actual, sourced 2026-offseason trades (Giannis→Heat,
 Kessler→Lakers, plus protected picks). `ownership.py` rolls a set of trades up
-into a per-team ledger — which picks each team now controls, tagged
+into a per-team ledger, which picks each team now controls, tagged
 🟢 unconditional / 🟡 conditional / 🔵 swap.
 
 ```bash
@@ -74,7 +74,7 @@ led = ownership.ownership(RECENT_BLOCKBUSTERS)
 print(ownership.to_markdown(led))
 ```
 
-## Slot strip — where a pick conveys (best view for a protected pick)
+## Slot strip: where a pick conveys (best view for a protected pick)
 
 Shows one pick across **all 30 landing slots**: each cell is a draft slot,
 colored by the receiving team where it conveys and amber where it's protected.
@@ -93,7 +93,7 @@ open("strip.html", "w", encoding="utf-8").write(
     render.slot_strip_html(strips, "Blazers 1st to Chicago"))
 ```
 
-## Draft board — who controls each team's pick
+## Draft board: who controls each team's pick
 
 ```bash
 python -m trades --board --html board.html
@@ -104,7 +104,7 @@ live in `teams.py` (text color is computed for contrast, never hand-picked).
 
 ## Architecture
 
-The design is **intermediate-representation-in-the-middle**:
+The design is intermediate-representation-in-the-middle:
 
 - `expand.py` knows about protections and swaps but nothing about rendering.
   It produces a tree of `Decision` (a draft result that fans out) and
@@ -115,8 +115,8 @@ The design is **intermediate-representation-in-the-middle**:
 So the domain logic is written once, and adding a renderer (PNG, HTML,
 Graphviz) is just another function reading the same tree.
 
-Colour legend in the SVG: **blue** = draft-result decision, **green** =
-pick conveys / swap happens, **amber** = fallback / swap voided.
+Colour legend in the SVG: **blue** = draft-result decision, green =
+pick conveys / swap happens, amber = fallback / swap voided.
 
 ## Tests
 

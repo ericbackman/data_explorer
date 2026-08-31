@@ -1,7 +1,7 @@
 # podcast-lab
 
 *(Folded in as `data_explorer/podcasts/` from the standalone `podcast-lab` folder,
-2026-08-07 — it already followed this repo's conventions and gains version control
+2026-08-07: it already followed this repo's conventions and gains version control
 here. The database stays local via this directory's `.gitignore`.)*
 
 A queryable **semantic layer over podcasts**. Ingest a show's RSS feed, acquire
@@ -47,7 +47,7 @@ python -m podcastlab.count lonely-island Quaid    # mention rate by year
 | `episodes` | one row per episode; `published_at` drives all year-by-year stats |
 | `transcripts` | acquired text + word count + which tier produced it |
 | `transcripts_fts` | FTS5 index over transcript text (fast lexical search) |
-| `mentions` | cached per-(episode, term) counts — re-metric without re-transcribing |
+| `mentions` | cached per-(episode, term) counts: re-metric without re-transcribing |
 
 ## The one decision that's yours
 
