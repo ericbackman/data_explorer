@@ -3,6 +3,7 @@
 import datetime
 
 import pandas as pd
+import pytest
 
 from nba import parse
 
@@ -73,3 +74,51 @@ def test_derive_games_skips_incomplete_single_side():
         {"game_id": "x", "team_id": 1, "matchup": "LAL vs. MIN",
          "season": "s", "season_type": "t", "game_date": "d", "pts": 50},
     ]) == []
+
+
+DAL, DET = 1610612742, 1610612765
+
+
+def _team_rows_with_a_neutral_site_game():
+    # The real 2025-11-01 Mexico City game: both MATCHUP strings read "@".
+    return [
+        {"game_id": "0022500001", "team_id": 1, "matchup": "OKC vs. HOU",
+         "season": "2025-26", "season_type": "Regular Season",
+         "game_date": "2025-10-21", "pts": 125},
+        {"game_id": "0022500001", "team_id": 2, "matchup": "HOU @ OKC",
+         "season": "2025-26", "season_type": "Regular Season",
+         "game_date": "2025-10-21", "pts": 124},
+        {"game_id": "0022500147", "team_id": DAL, "matchup": "DAL @ DET",
+         "season": "2025-26", "season_type": "Regular Season",
+         "game_date": "2025-11-01", "pts": 116},
+        {"game_id": "0022500147", "team_id": DET, "matchup": "DET @ DAL",
+         "season": "2025-26", "season_type": "Regular Season",
+         "game_date": "2025-11-01", "pts": 121},
+    ]
+
+
+def test_unoriented_lists_the_neutral_site_game_derive_games_skipped():
+    rows = _team_rows_with_a_neutral_site_game()
+    games = parse.derive_games(rows)
+    assert [g["game_id"] for g in games] == ["0022500001"]
+    assert parse.unoriented(rows, games) == ["0022500147"]
+
+
+def test_unoriented_leaves_a_single_side_for_the_next_refetch():
+    in_progress = _team_rows_with_a_neutral_site_game()[2:3]
+    assert parse.unoriented(in_progress, []) == []
+
+
+def test_orient_takes_the_designated_home_side():
+    rows = _team_rows_with_a_neutral_site_game()[2:]
+    game = parse.orient(rows, DET, DAL)
+    assert (game["home_team_id"], game["home_pts"]) == (DET, 121)
+    assert (game["away_team_id"], game["away_pts"]) == (DAL, 116)
+    assert game["game_id"] == "0022500147" and game["game_date"] == "2025-11-01"
+    assert game["season_type"] == "Regular Season"
+
+
+def test_orient_refuses_a_designation_that_names_other_teams():
+    rows = _team_rows_with_a_neutral_site_game()[2:]
+    with pytest.raises(ValueError, match="do not match"):
+        parse.orient(rows, 1, DAL)
