@@ -16,18 +16,22 @@ All paths are relative to the workspace root (the directory containing this repo
 ## NBA
 
 ### NBA box scores: `data_explorer/nba/data/nba.db`
+> **`season_type` has three values:** `Regular Season`, `PlayIn` (2020-21 on) and `Playoffs`. Select playoffs with `season_type = 'Playoffs'`, never `!= 'Regular Season'`, which would count play-in games as playoff games.
+>
+> **Neutral-site games are in `games`** with the NBA's designated home team, so `games` holds one row per game with two `team_game` rows in every season.
+
 - **awards_fetched** (3,476 rows): person_id INTEGER
 - **drafts** (7,678 rows): season INTEGER, overall_pick INTEGER, round_number INTEGER, round_pick INTEGER, person_id INTEGER, player_name TEXT, team_id INTEGER, team_city TEXT, team_name TEXT, team_abbreviation TEXT, organization TEXT, organization_type TEXT, draft_type TEXT
 - **exec_fetch_log** (311 rows): exec_id TEXT
 - **executives** (1,801 rows): exec_id TEXT, name TEXT, season INT, team_abbrev TEXT, team_id INT
-- **games** (73,126 rows): game_id TEXT, season TEXT, season_type TEXT, game_date TEXT, home_team_id INTEGER, away_team_id INTEGER, home_pts INTEGER, away_pts INTEGER
+- **games** (73,172 rows): game_id TEXT, season TEXT, season_type TEXT, game_date TEXT, home_team_id INTEGER, away_team_id INTEGER, home_pts INTEGER, away_pts INTEGER
 - **hall_of_fame** (246 rows): inductee_name TEXT, inducted_year INTEGER, player_id INTEGER
 - **injuries** (126 rows): pulled_at TEXT, team_abbr TEXT, team_name TEXT, athlete_id TEXT, player_name TEXT, position TEXT, status TEXT, injury_type TEXT, injury_date TEXT, comment TEXT
 - **play_by_play** (18,280,064 rows): game_id TEXT, action_number INTEGER, period INTEGER, clock TEXT, team_id INTEGER, team_tricode TEXT, person_id INTEGER, player_name TEXT, action_type TEXT, sub_type TEXT, description TEXT, shot_result TEXT, is_field_goal INTEGER, shot_value INTEGER, shot_distance INTEGER, shot_x INTEGER, shot_y INTEGER, score_home INTEGER, score_away INTEGER, points_total INTEGER, location TEXT
 - **player_awards** (7,759 rows): person_id INTEGER, season TEXT, description TEXT, team_number INTEGER
-- **player_game** (1,481,840 rows): game_id TEXT, player_id INTEGER, team_id INTEGER, season TEXT, season_type TEXT, game_date TEXT, matchup TEXT, wl TEXT, min REAL, fgm INTEGER, fga INTEGER, fg_pct REAL, fg3m INTEGER, fg3a INTEGER, fg3_pct REAL, ftm INTEGER, fta INTEGER, ft_pct REAL, oreb INTEGER, dreb INTEGER, reb INTEGER, ast INTEGER, stl INTEGER, blk INTEGER, tov INTEGER, pf INTEGER, pts INTEGER, plus_minus REAL
+- **player_game** (1,482,588 rows): game_id TEXT, player_id INTEGER, team_id INTEGER, season TEXT, season_type TEXT, game_date TEXT, matchup TEXT, wl TEXT, min REAL, fgm INTEGER, fga INTEGER, fg_pct REAL, fg3m INTEGER, fg3a INTEGER, fg3_pct REAL, ftm INTEGER, fta INTEGER, ft_pct REAL, oreb INTEGER, dreb INTEGER, reb INTEGER, ast INTEGER, stl INTEGER, blk INTEGER, tov INTEGER, pf INTEGER, pts INTEGER, plus_minus REAL
 - **players** (5,103 rows): player_id INTEGER, player_name TEXT
-- **team_game** (146,272 rows): game_id TEXT, team_id INTEGER, season TEXT, season_type TEXT, game_date TEXT, matchup TEXT, wl TEXT, min REAL, fgm INTEGER, fga INTEGER, fg_pct REAL, fg3m INTEGER, fg3a INTEGER, fg3_pct REAL, ftm INTEGER, fta INTEGER, ft_pct REAL, oreb INTEGER, dreb INTEGER, reb INTEGER, ast INTEGER, stl INTEGER, blk INTEGER, tov INTEGER, pf INTEGER, pts INTEGER, plus_minus REAL
+- **team_game** (146,344 rows): game_id TEXT, team_id INTEGER, season TEXT, season_type TEXT, game_date TEXT, matchup TEXT, wl TEXT, min REAL, fgm INTEGER, fga INTEGER, fg_pct REAL, fg3m INTEGER, fg3a INTEGER, fg3_pct REAL, ftm INTEGER, fta INTEGER, ft_pct REAL, oreb INTEGER, dreb INTEGER, reb INTEGER, ast INTEGER, stl INTEGER, blk INTEGER, tov INTEGER, pf INTEGER, pts INTEGER, plus_minus REAL
 - **teams** (45 rows): team_id INTEGER, abbreviation TEXT, name TEXT
 
 ### NBA comebacks: `data_explorer/nba_comebacks.db`
