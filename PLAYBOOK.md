@@ -246,6 +246,13 @@ known-fact validation step, on any surface.
 
 Update this playbook in the SAME change as any operation change.
 
+- 2026-09-14: NBA scrape now pulls the `PlayIn` season type (2020-21 on) and
+  orients neutral-site games from BoxScoreSummaryV3; nfl/pull.py quotes drifted
+  column names (PR #4). Verified by re-scraping 2020-21..2025-26 with `--force`:
+  `games` equals distinct `team_game` games in all 80 seasons, 36 play-in and 10
+  neutral-site games added. sports-crons vendors `nba/client.py`, `nba/parse.py`
+  and `nfl/pull.py` byte-identical and needs a re-sync PR.
+
 - 2026-08-09: betting / sharp-edge / polymarket split out to the private
   `betting-lab` repo (with `nba/exec_scrape.py`) so this repo can be published;
   their operating rules moved to that repo's playbook. Removed the dangling
