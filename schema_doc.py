@@ -32,6 +32,13 @@ All paths are relative to the workspace root (the directory containing this repo
 # from the schema, and getting them wrong produces confidently wrong answers.
 # Keep each note to what changes the SQL you would write.
 NOTES: dict[str, list[str]] = {
+    "data_explorer/nba/data/nba.db": [
+        "**`season_type` has three values:** `Regular Season`, `PlayIn` (2020-21 on) and "
+        "`Playoffs`. Select playoffs with `season_type = 'Playoffs'`, never "
+        "`!= 'Regular Season'`, which would count play-in games as playoff games.",
+        "**Neutral-site games are in `games`** with the NBA's designated home team, so "
+        "`games` holds one row per game with two `team_game` rows in every season.",
+    ],
     "data_explorer/sumo/data/sumo.db": [
         "**Query `bout_wrestler`, not `bouts`.** It is the analysis-ready table: two rows "
         "per bout (one per wrestler's point of view), so win rate by any attribute is a "
