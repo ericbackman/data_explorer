@@ -4,8 +4,10 @@ The efficient backbone
 ----------------------
 LeagueGameLog returns *every* player-game (or team-game) row for an entire
 season in ONE request. So a full historical pull of traditional box scores is
-~4 requests per season (player/team x regular/playoffs), not one-per-game:
-~80 seasons => ~320 requests => minutes, not hours.
+~6 requests per season (player/team x regular season/play-in/playoffs), not
+one-per-game: ~80 seasons => ~480 requests => minutes, not hours. The one
+per-game exception is a neutral-site game, which costs one box-score summary
+request to learn which side the NBA designated as home.
 
 Per-game detail (advanced box scores, play-by-play, starters/bench) is a
 separate, expensive tier you add later — it joins onto the games this builds.
@@ -33,7 +35,10 @@ PKG_DIR = pathlib.Path(__file__).resolve().parent  # data_explorer/nba/
 DATA_DIR = PKG_DIR / "data"                         # gitignored: db + cache live here
 DB_PATH = DATA_DIR / "nba.db"
 CACHE_DIR = DATA_DIR / "cache"
-SEASON_TYPES = ["Regular Season", "Playoffs"]
+# "PlayIn" is a LeagueGameLog season type of its own from 2020-21 on (6 games in
+# 2025-26); it is in neither of the other two. Earlier seasons return an empty
+# frame for it, not an error.
+SEASON_TYPES = ["Regular Season", "PlayIn", "Playoffs"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -78,20 +83,34 @@ def seasons_to_refetch(
 
 def ingest_season(client: NBAClient, conn: sqlite3.Connection,
                   season: str, current_season: str) -> dict:
-    """Fetch + load one season (both season types). Returns a small stat summary."""
+    """Fetch + load one season (every season type). Returns a small stat summary.
+
+    All-or-nothing: a failure rolls back this season's upserts, so the next
+    season's commit cannot carry half of this one into the DB.
+    """
     # The live season's cached JSON goes stale intra-day, so force a network read.
     use_cache = season != current_season
-    counts = {"player_rows": 0, "team_rows": 0, "games": 0}
+    counts = {"player_rows": 0, "team_rows": 0, "games": 0, "neutral_site": 0}
 
-    for stype in SEASON_TYPES:
-        pdf = client.league_game_log(season, stype, "P", use_cache=use_cache)
-        prows = parse.parse_player_log(pdf, season, stype)
-        counts["player_rows"] += db.load_player_game(conn, prows)
+    try:
+        for stype in SEASON_TYPES:
+            pdf = client.league_game_log(season, stype, "P", use_cache=use_cache)
+            prows = parse.parse_player_log(pdf, season, stype)
+            counts["player_rows"] += db.load_player_game(conn, prows)
 
-        tdf = client.league_game_log(season, stype, "T", use_cache=use_cache)
-        trows = parse.parse_team_log(tdf, season, stype)
-        counts["team_rows"] += db.load_team_game(conn, trows)
-        counts["games"] += db.load_games(conn, parse.derive_games(trows))
+            tdf = client.league_game_log(season, stype, "T", use_cache=use_cache)
+            trows = parse.parse_team_log(tdf, season, stype)
+            counts["team_rows"] += db.load_team_game(conn, trows)
+
+            games = parse.derive_games(trows)
+            for gid in parse.unoriented(trows, games):
+                home, away = client.designated_teams(gid)
+                games.append(parse.orient([r for r in trows if r["game_id"] == gid], home, away))
+                counts["neutral_site"] += 1
+            counts["games"] += db.load_games(conn, games)
+    except Exception:
+        conn.rollback()
+        raise
 
     conn.commit()
     return counts
@@ -131,30 +150,32 @@ def main() -> None:
              len(requested), len(todo), current)
 
     if args.dry_run:
-        # ~4 requests/season at the client's min interval, very rough ETA.
-        est_min = len(todo) * 4 * 0.7 / 60
+        # Player + team log per season type at the client's min interval, very rough ETA.
+        est_min = len(todo) * len(SEASON_TYPES) * 2 * 0.7 / 60
         log.info("DRY RUN — would fetch: %s", ", ".join(todo) or "(nothing)")
         log.info("estimated ~%.1f min of requests", est_min)
         conn.close()
         return
 
     client = NBAClient(CACHE_DIR)
-    totals = {"player_rows": 0, "team_rows": 0, "games": 0}
+    totals = {"player_rows": 0, "team_rows": 0, "games": 0, "neutral_site": 0}
     failed = []
     for season in todo:
         try:
             c = ingest_season(client, conn, season, current)
         except Exception as e:  # one bad season must not abort an 80-season run
-            log.error("season %s failed: %s — skipping (re-run to retry)", season, e)
+            log.error("season %s failed, rolled back: %s — skipping (re-run to retry)", season, e)
             failed.append(season)
             continue
         for k in totals:
             totals[k] += c[k]
-        log.info("loaded %s: %d games, %d player-rows", season, c["games"], c["player_rows"])
+        log.info("loaded %s: %d games (%d neutral-site), %d player-rows",
+                 season, c["games"], c["neutral_site"], c["player_rows"])
 
     conn.close()
-    log.info("done: %d games, %d player-rows, %d team-rows across %d seasons",
-             totals["games"], totals["player_rows"], totals["team_rows"], len(todo) - len(failed))
+    log.info("done: %d games (%d neutral-site), %d player-rows, %d team-rows across %d seasons",
+             totals["games"], totals["neutral_site"], totals["player_rows"],
+             totals["team_rows"], len(todo) - len(failed))
     if failed:
         log.warning("%d season(s) failed (cache makes done seasons free on re-run): %s",
                     len(failed), ", ".join(failed))

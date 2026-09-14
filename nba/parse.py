@@ -8,6 +8,7 @@ never baked into storage.
 
 from __future__ import annotations
 
+import collections
 import datetime
 import math
 from typing import Any
@@ -156,30 +157,69 @@ def parse_player_awards(df: pd.DataFrame, person_id: int) -> list[dict]:
     return rows
 
 
+def _game_row(home: dict, away: dict) -> dict:
+    return {
+        "game_id": home["game_id"],
+        "season": home["season"],
+        "season_type": home["season_type"],
+        "game_date": home["game_date"],
+        "home_team_id": home["team_id"],
+        "away_team_id": away["team_id"],
+        "home_pts": home["pts"],
+        "away_pts": away["pts"],
+    }
+
+
 def derive_games(team_rows: list[dict]) -> list[dict]:
     """Collapse the two team rows of each game into one game row.
 
     In-progress games can appear with only one team row; we skip those rather
     than write a half-game (they'll be picked up complete on the next refetch).
+    A neutral-site game is skipped too, because both of its MATCHUP strings read
+    "@" and no side looks like home; `unoriented` lists those for the caller.
     """
     by_game: dict[str, list[dict]] = {}
     for r in team_rows:
         by_game.setdefault(r["game_id"], []).append(r)
 
     games = []
-    for game_id, sides in by_game.items():
+    for sides in by_game.values():
         home = next((s for s in sides if _is_home(s["matchup"])), None)
         away = next((s for s in sides if not _is_home(s["matchup"])), None)
         if home is None or away is None:
             continue
-        games.append({
-            "game_id": game_id,
-            "season": home["season"],
-            "season_type": home["season_type"],
-            "game_date": home["game_date"],
-            "home_team_id": home["team_id"],
-            "away_team_id": away["team_id"],
-            "home_pts": home["pts"],
-            "away_pts": away["pts"],
-        })
+        games.append(_game_row(home, away))
     return games
+
+
+TEAMS_PER_GAME = 2
+
+
+def unoriented(team_rows: list[dict], games: list[dict]) -> list[str]:
+    """Game ids with both team rows that derive_games could not orient.
+
+    These are neutral-site games (Mexico City, Paris, Berlin, London, the NBA
+    Cup semifinals in Las Vegas): 5 a season in 2024-25 and 2025-26, silently
+    missing from `games` until this existed. The designated home team has to
+    come from the box-score summary (NBAClient.designated_teams). A game with a
+    single row is still in progress; like derive_games, leave it for the next
+    refetch.
+    """
+    sides = collections.Counter(r["game_id"] for r in team_rows)
+    oriented = {g["game_id"] for g in games}
+    return sorted(gid for gid, n in sides.items()
+                  if n == TEAMS_PER_GAME and gid not in oriented)
+
+
+def orient(game_rows: list[dict], home_team_id: int, away_team_id: int) -> dict:
+    """The games row for one game, with the home side the NBA designated.
+
+    Raises ValueError when the designation names teams other than the two in
+    the game log, rather than writing a game between the wrong teams.
+    """
+    by_team = {r["team_id"]: r for r in game_rows}
+    if set(by_team) != {home_team_id, away_team_id}:
+        raise ValueError(
+            f"game {game_rows[0]['game_id']}: designated teams "
+            f"{home_team_id}/{away_team_id} do not match the game log's {sorted(by_team)}")
+    return _game_row(by_team[home_team_id], by_team[away_team_id])
