@@ -22,7 +22,7 @@ import time
 import pandas as pd
 import requests
 from nba_api.stats.endpoints import (
-    drafthistory, leaguegamelog, playbyplayv3, playerawards,
+    boxscoresummaryv3, drafthistory, leaguegamelog, playbyplayv3, playerawards,
 )
 
 log = logging.getLogger(__name__)
@@ -169,6 +169,27 @@ class NBAClient:
                 player_id=int(person_id), timeout=self.timeout_s),
             desc=f"awards_{person_id}",
         )
+
+    def designated_teams(self, game_id: str) -> tuple[int, int]:
+        """(home_team_id, away_team_id) as the NBA designates them, neutral site or not.
+
+        The game logs cannot say which side is home at a neutral site (both
+        MATCHUP strings read "@"); the box-score summary can. V3, not V2: V2
+        answers None for the NBA Cup semifinals in Las Vegas. One request per
+        game, and only for the few games parse.unoriented lists. Not disk-cached:
+        the games table is the durable store.
+        """
+        frame = self._fetch_df(
+            lambda: boxscoresummaryv3.BoxScoreSummaryV3(
+                game_id=str(game_id).zfill(10), timeout=self.timeout_s),
+            desc=f"summary_{game_id}",
+        )
+        if frame.empty:
+            raise NBAClientError(f"game {game_id}: BoxScoreSummaryV3 returned no summary")
+        home, away = frame.iloc[0].get("homeTeamId"), frame.iloc[0].get("awayTeamId")
+        if pd.isna(home) or pd.isna(away):
+            raise NBAClientError(f"game {game_id}: BoxScoreSummaryV3 names no home/away team")
+        return int(home), int(away)
 
     def play_by_play(self, game_id: str) -> pd.DataFrame:
         """All events for one game (PlayByPlayV3 — V2 was deprecated and now

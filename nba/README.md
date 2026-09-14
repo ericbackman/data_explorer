@@ -24,7 +24,18 @@ cd $env:USERPROFILE\Github\data_explorer
 
 ## Design notes
 - **Backbone is `LeagueGameLog`:** one request returns a whole season of
-  player/team rows (~320 requests for all history, vs ~65k fetched per game).
+  player/team rows (~480 requests for all history, vs ~65k fetched per game).
+- **Three season types:** `Regular Season`, `PlayIn` and `Playoffs`. The play-in
+  is its own LeagueGameLog season type from 2020-21 on and appears in neither of
+  the others, so it was never stored before 2026-09-14. Filter on
+  `season_type = 'Playoffs'`, never `!= 'Regular Season'`, or play-in games count
+  as playoff games.
+- **Neutral-site games:** `derive_games` finds the home side from MATCHUP ("LAL
+  vs. MIN" is home), but at a neutral site (Mexico City, Paris, Berlin, London,
+  the NBA Cup semifinals in Las Vegas) both rows read "@". Those games are
+  oriented from `BoxScoreSummaryV3`, one request each. V2 answers None for the
+  Las Vegas games. Until 2026-09-14 they were dropped from `games` silently:
+  1,225 games against 1,230 in `team_game` for 2024-25 and 2025-26.
 - **Refetch policy** (`scrape.py`): always re-pull the current + prior season
   (live games + late stat corrections), skip older loaded seasons; `--force`
   rebuilds everything.
