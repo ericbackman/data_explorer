@@ -43,6 +43,18 @@ def parse_seasons(value: str) -> list[int]:
     return list(range(start, int(end_str) + 1))
 
 
+def quote_ident(name: str) -> str:
+    """Quote a column name for SQL text. nflverse chose the name, not this code.
+
+    Column names come from downloaded parquet files, so an embedded double quote
+    is doubled; left alone it would end the identifier early. SQLite cannot hold
+    a NUL in an identifier, so that is refused rather than silently truncated.
+    """
+    if "\x00" in name:
+        raise ValueError(f"column name contains a NUL character: {name!r}")
+    return '"' + name.replace('"', '""') + '"'
+
+
 def load_season(conn: sqlite3.Connection, table: str, df, season: int) -> int:
     """Delete-then-insert one season, reconciling column drift across seasons.
 
@@ -60,7 +72,7 @@ def load_season(conn: sqlite3.Connection, table: str, df, season: int) -> int:
     tbl_cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})")]
     for c in df.columns:
         if c not in tbl_cols:
-            conn.execute(f'ALTER TABLE {table} ADD COLUMN "{c}"')
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {quote_ident(c)}")
             tbl_cols.append(c)
     conn.execute(f"DELETE FROM {table} WHERE season = ?", (int(season),))
     df.reindex(columns=tbl_cols).to_sql(table, conn, if_exists="append", index=False)
