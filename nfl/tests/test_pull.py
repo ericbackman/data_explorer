@@ -1,5 +1,7 @@
 """Pure-logic tests for the NFL pull (no network)."""
 
+import pytest
+
 from nfl import pull
 
 
@@ -32,3 +34,22 @@ def test_load_season_reconciles_drifting_columns_and_is_idempotent():
     assert conn.execute("SELECT b FROM t WHERE season=2024").fetchone()[0] == 9
     pull.load_season(conn, "t", pd.DataFrame({"season": [2024], "a": [2], "b": [9]}), 2024)  # re-load
     assert conn.execute("SELECT COUNT(*) FROM t").fetchone()[0] == 2                  # idempotent
+
+
+def test_load_season_quotes_a_drifted_column_name_it_did_not_choose():
+    import sqlite3
+    import pandas as pd
+    conn = sqlite3.connect(":memory:")
+    pull.load_season(conn, "t", pd.DataFrame({"season": [2023]}), 2023)
+    # Unescaped, this name would end the identifier early and splice SQL into the ALTER.
+    odd = 'x" INTEGER, "y'
+    pull.load_season(conn, "t", pd.DataFrame({"season": [2024], odd: [7]}), 2024)
+    assert [r[1] for r in conn.execute("PRAGMA table_info(t)")] == ["season", odd]
+    assert conn.execute(
+        f"SELECT {pull.quote_ident(odd)} FROM t WHERE season=2024").fetchone()[0] == 7
+
+
+def test_quote_ident_doubles_quotes_and_refuses_nul():
+    assert pull.quote_ident('a"b') == '"a""b"'
+    with pytest.raises(ValueError, match="NUL"):
+        pull.quote_ident("a\x00b")
