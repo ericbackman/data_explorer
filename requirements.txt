@@ -5,6 +5,6 @@ lxml
 beautifulsoup4  # pga tier2_scrapekit: infobox champion extraction
 nflreadpy       # nfl: free nflverse box scores + play-by-play
 pyarrow         # nfl: polars -> pandas conversion for nflreadpy
-mcp             # sports_mcp: local read-only MCP server over the DBs
+mcp<2           # sports_mcp: local read-only MCP server over the DBs; mcp 2.x drops the FastMCP import (1.30.0 verified 2026-09-22)
 matplotlib      # local/exploratory charts only — published investigations stay
                 # on the house pattern (script -> data.js -> Chart.js page)
