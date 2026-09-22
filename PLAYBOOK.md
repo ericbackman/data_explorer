@@ -23,33 +23,41 @@ AUTOMATION.md row exists for this repo.
   `cwd`=`data_explorer/`): read-only `list_databases`/`describe_schema`/`run_sql`.
 - **DB inventory:** `python db_dashboard.py --widget` or `/db-dashboard` skill.
 - **Main-checkout DBs** (`db_dashboard.py` MANIFEST): `nba/data/nba.db`,
-  `nfl/data/nfl.db`, `pga/data/pga.db`, root `nba_comebacks.db` /
-  `nba_playoff_comebacks.db`. All gitignored, regenerable.
+  `nfl/data/nfl.db`, `nhl/data/nhl.db`, `mlb/data/mlb_draft.db`,
+  `pga/data/pga.db`, `sumo/data/sumo.db`, root `nba_comebacks.db`. All gitignored.
+  `nba_playoff_comebacks.db` is listed but absent.
+- **Which copy is canonical.** NBA, NFL, NHL and MLB games live on homebase at
+  `/opt/data/sports/<league>/data/<league>.db`, written daily at 06:10 by
+  `sports-crons`, with freshness in `/opt/data/sports/_status/<league>.json`.
+  The PC's `nba`/`nfl`/`nhl` DBs are a frozen fork copied during the 2026-09-20
+  migration (mtimes reset to that day); the PC has no MLB game data. Measured
+  2026-09-22: NFL on homebase runs to 2026-09-21, the PC fork to 2026-02-08; NBA
+  and NHL still match because both leagues are in the offseason, and diverge in
+  October. PGA, sumo, MLB draft, NBA comebacks and podcasts exist only on the PC
+  with no scheduled writer. Full table and the tested ssh recipe:
+  [`CLAUDE.md`](CLAUDE.md) "Which copy is canonical".
+- **The MCP server reads the fork.** `sports_mcp.py` resolves paths through the
+  MANIFEST, so for NBA, NFL, NHL and MLB it serves stale data until a sync from
+  homebase exists. No sync job exists; adding one is Eric's call (§6).
 - **Branch state:** checkout is on `main`. The betting / sharp-edge / polymarket
   subtrees were split out to the private `betting-lab` repo on 2026-08-09 so this
   repo could be published; they are not here and should not come back.
-- **Worktree DBs: TRIBAL, do not prune** (6 worktrees; run `git worktree list`).
-  Branches unmerged, data gitignored: no other copy exists on disk:
-  - `elegant-lamport-1d5555/soccer/`: soccer DB
-  - `laughing-hugle-e9875d/mlb/`: mlb DB
-  - `zen-turing-c1e6df/nhl.db` (11 MB) **and** `gracious-antonelli-777d65/nhl.db`
-    RESOLVED 2026-08-09: the three NHL copies are different BUILDS, not
-    duplicates, so "which is canonical" depends on what you need:
-      * `nhl/data/nhl.db` (348 MB) is canonical for everything box-score:
-        70,352 games (1997-2026), 2.43M skater rows, drafts, playoff_series.
-        Schema uses `team_game` (SINGULAR). Its `plays` table exists but is EMPTY.
-      * `gracious-antonelli-777d65/nhl.db` (9 MB) is the ONLY play-by-play source
-        (29,710 `plays` over 7,085 games) and uses `team_games` (PLURAL): a
-        different schema, NOT a drop-in. `analysis/nhl_leafs_era.py` needs this one.
-      * `zen-turing-c1e6df/nhl.db` (11 MB) is a partial backfill superseded by the
-        canonical build (36,012 games but only 2,850 team_game / 51,300 skater
-        rows). Prunable once the owner confirms: no unique data found in it.
-  - `gracious-antonelli-777d65/nhl.db` shares that worktree with a root-level
-    `nfl.db` (432 MB), distinct from the main checkout's `nfl/data/nfl.db`:
-    purpose unidentified; do not prune until someone confirms what it is.
-  - `pedantic-meninsky-e2fee8/drafts.db` (22 MB): likely the `trades/` draft-pick
-    data; unconfirmed. Do not prune until someone confirms what it is.
-  - `epic-faraday-73f136`: parallel full checkout, no unique DB; don't prune blind.
+- **Worktree DBs: gone.** The six worktrees this section used to protect
+  (soccer, mlb, two NHL builds, a root `nfl.db`, `drafts.db`) no longer exist.
+  Verified 2026-09-22: `git worktree list` shows only the main checkout,
+  `.claude/worktrees/` does not exist, the migration staging copy
+  `~/from-old-pc/stage-ignored/data_explorer` holds none of them, and a search of
+  the PC profile (7 levels deep, AppData excluded) and homebase `/opt` finds no soccer, drafts or NHL play-by-play
+  database. What that costs:
+  - Soccer: the code is in `soccer/` on `main` and the DB rebuilds from ESPN
+    (`python -m soccer.scrape`, see `soccer/README.md`). The only surviving data
+    is `/opt/sleep-sports/vendor/soccer_slim.db` on homebase (548 KB,
+    2026-07-20): FIFA World Cup 1930-2026, 1,068 matches, a sleep-sports extract.
+  - MLB: superseded by homebase `mlb.db` (119,637 games from 1974).
+  - NHL play-by-play: lost. The canonical `nhl.db` has an empty `plays` table on
+    both machines, so `analysis/nhl_leafs_era.py`, which needed the worktree
+    build (`plays` plus `team_games`), cannot run until play-by-play is rebuilt.
+  - `drafts.db` and the worktree `nfl.db`: purpose was never confirmed; lost.
 - **Downstream publishes (optional):** private Kaggle dataset (`kaggle/`),
   curated Supabase serving tables (`load_to_supabase.py`).
 
@@ -64,12 +72,23 @@ missing DBs listed explicitly, not silently dropped.
 
 ```powershell
 git branch --show-current   # expect: main
-git worktree list            # expect: 6 worktrees (soccer/mlb/nhl×2/nfl/drafts + epic-faraday)
+git worktree list            # expect: the main checkout only (since 2026-09-22)
 ```
-If the branch changed, note it, don't act (§6). If a sport worktree row is
-missing, **stop.** See §7 (data is gitignored and unrecoverable).
+If the branch changed, note it, don't act (§6).
+
+Then check the canonical copies on homebase: the coverage one-liner in
+[`CLAUDE.md`](CLAUDE.md) ("Querying homebase") prints each league's last final
+game, `-wal` size and `_status` fields. **Expect:** `consecutive_failures` 0,
+`wal_bytes` 0, and `last_success` from this morning for any league in season
+(`skipped_out_of_season` explains an older one).
 
 ## 3. Operations
+
+> **OP-1 and OP-2 refresh the PC fork, not the canonical copy.** `sports-crons`
+> on homebase writes MLB daily since 2026-08-21 and NBA, NFL, NHL since
+> 2026-09-14. A PC
+> scrape makes the fork diverge further from homebase rather than catch it up;
+> for a current answer, query homebase instead (OP-8).
 
 ### OP-1: NBA DB refresh
 - **Trigger:** Eric asks / before betting analysis / current season stale.
@@ -171,20 +190,20 @@ missing, **stop.** See §7 (data is gitignored and unrecoverable).
 - **Verify:** extracted tables spot-checked vs the live page; fetches disk-cached.
 - **If it fails:** 403 on a non-browser UA -> already sends a real browser UA, handled.
 
-### OP-8: Worktree sport DBs (soccer / mlb / nhl): read only, never prune
-- **Trigger:** a soccer, MLB, or NHL question arrives.
-- **Steps:** `cd` into the specific worktree before querying, the main
-  checkout has no soccer/mlb/nhl tables:
-  ```powershell
-  cd $env:USERPROFILE\Github\data_explorer\.claude\worktrees\elegant-lamport-1d5555\soccer
-  cd $env:USERPROFILE\Github\data_explorer\.claude\worktrees\laughing-hugle-e9875d\mlb
-  # NHL: two copies exist — use zen-turing (11 MB) as the working copy:
-  cd $env:USERPROFILE\Github\data_explorer\.claude\worktrees\zen-turing-c1e6df
-  ```
-- **Verify:** sport dir + `data/*.db` (or root `nhl.db`) present under that worktree.
-- **If it fails:** "DB doesn't exist" -> wrong location (§4). For NHL, confirm
-  which build you need before trusting results: box scores vs play-by-play use
-  different copies with different schemas (§6).
+### OP-8: Homebase read path (NBA / NFL / NHL / MLB games)
+- **Trigger:** any NBA, NFL, NHL or MLB game or stat question.
+- **Steps:** paste the recipe in [`CLAUDE.md`](CLAUDE.md) ("Querying homebase"):
+  `ssh homebase python3 -` with the Python on stdin, opening
+  `file:/opt/data/sports/<league>/data/<league>.db?mode=ro&immutable=1`. Run the
+  coverage one-liner in the same session and report the league's last final
+  date with the answer.
+- **Verify:** the known-fact check from CLAUDE.md, plus `_status/<league>.json`
+  showing `consecutive_failures` 0.
+- **If it fails:** `attempt to write a readonly database` -> the URI lacks
+  `immutable=1` (§4). Recipe exits on a non-empty `-wal` -> `sports-crons` is
+  mid-write; retry after 06:30. ssh unreachable -> answer from the PC fork and
+  say so, with the fork's measured last date. Soccer questions: no soccer DB
+  exists (§1).
 
 ### OP-9: Answering a sports question (reference only, fully covered elsewhere)
 See [`CLAUDE.md`](CLAUDE.md) (SCHEMA.md -> read-only SQL -> validate) and
@@ -202,7 +221,10 @@ known-fact validation step, on any surface.
 | `ModuleNotFoundError: kagglesdk` | Default `pip install kaggle` broke import | Reinstall `kaggle==1.6.17` in `analysis/.venv` | `pip show kaggle` -> `1.6.17` |
 | Kaggle push re-uploads full ~6GB every time | `fingerprint()` unimplemented | Pending Eric (OP-5): don't implement yourself | `pytest -q` in `kaggle/` still red |
 | Supabase COPY rejects a row | Blank/whitespace in numeric SQLite column | Already handled: `make_conv()` -> NULL before COPY | Load completes, row count matches |
-| "soccer/MLB DB doesn't exist" | Searched main checkout, not the worktree | Re-run in the correct worktree (OP-8). NHL box scores ARE in main (`nhl/data/nhl.db`); only play-by-play lives in a worktree (§1) | `data/*.db` found under that worktree |
+| "MLB games DB doesn't exist" | MLB game data is on homebase only; the PC has `mlb_draft.db` | Query homebase `mlb.db` (OP-8) | Coverage one-liner prints an `mlb` last final date |
+| "soccer DB doesn't exist" | The worktree that held it is gone (§1) | Rebuild with `python -m soccer.scrape` if Eric wants it; `soccer_slim.db` on homebase covers World Cup matches only | `soccer/data/*.db` present |
+| `attempt to write a readonly database` on homebase | WAL-mode DB in a root-owned dir: `ericb` cannot create `-shm` under plain `?mode=ro` | Open `?mode=ro&immutable=1` with the `-wal` guard (CLAUDE.md recipe) | Query returns rows |
+| MCP `sports-data` fails to connect | `.venv` missing, or mcp 2.x installed (`FastMCP` renamed, dies on import) | `uv venv --python 3.12 .venv`, `uv pip install --python .venv/Scripts/python.exe -r requirements.txt "mcp<2"` | `.venv\Scripts\python.exe -c "import sports_mcp"` exits 0 |
 | Site 403s the scraper | Site rejects non-browser clients | `scrapekit` now identifies honestly by DEFAULT. Presenting as a browser is opt-in via `SCRAPEKIT_USER_AGENT`: check the target's robots.txt/terms FIRST; some sites prohibit automated access outright and a spoofed UA does not change that | Fetch succeeds, cached to disk |
 
 ## 5. Tuning knobs
@@ -225,16 +247,20 @@ known-fact validation step, on any surface.
   nba_api, nflverse) requiring scraper redesign — Opus/Eric territory.
 - Kaggle first push: token + `--create` are pending Eric (OP-5), don't create
   accounts/tokens on his behalf.
-- Merging any soccer/mlb/nhl worktree branch: branch strategy is Eric's call.
-- Pruning `.claude/worktrees/zen-turing-c1e6df`: its NHL copy looks superseded
-  by the canonical build (§1) but deleting data is Eric's call, not an agent's.
+- A sync from homebase to the PC fork (so the MCP server and PC analysis see
+  current NBA/NFL/NHL/MLB data) is a scheduled-job change: propose it, never
+  register it.
+- Rebuilding the lost soccer DB or NHL play-by-play: a multi-hour scrape and a
+  choice of where the canonical copy lives; Eric's call.
 
 ## 7. Do-not list
 
 - **Never** mutate a DB during analysis: read-only always; `<sport>/data/` is
   gitignored, never force-add.
-- **Never** prune `.claude/worktrees/elegant-lamport-1d5555` or
-  `laughing-hugle-e9875d`: only local copies of the soccer/mlb DBs, unrecoverable if deleted.
+- **Never** write to the homebase databases or `_status/` files; they belong to
+  `sports-crons`. Reads only, `?mode=ro&immutable=1`.
+- **Never** answer an NBA, NFL, NHL or MLB question from the PC fork without
+  saying so and giving the fork's measured last date.
 - **Never** let the Kaggle dataset go public: confirm **Private** after every `--create`.
 - **Never** default to Firecrawl/paid extraction: free sources first; paid is
   a deliberate exception, never a reflex.
@@ -245,6 +271,14 @@ known-fact validation step, on any surface.
 ## 8. Maintenance
 
 Update this playbook in the SAME change as any operation change.
+
+- 2026-09-22: pointed the read path at homebase. Its `sports-crons` databases
+  are canonical for NBA/NFL/NHL/MLB and the PC copies are a frozen fork from the
+  2026-09-20 migration (NFL 2026-02-08 vs 2026-09-21 on homebase; no MLB games on
+  the PC). Tested the ssh recipe from Git Bash and PowerShell; plain `mode=ro`
+  fails on the WAL-mode files, so it opens `immutable=1` behind a `-wal` guard.
+  Replaced the TRIBAL worktree section: all six worktrees are gone and none of
+  their DBs survives (§1). Rebuilt `.venv` for the MCP server with `mcp<2`.
 
 - 2026-09-14: NBA scrape now pulls the `PlayIn` season type (2020-21 on) and
   orients neutral-site games from BoxScoreSummaryV3; nfl/pull.py quotes drifted
