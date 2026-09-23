@@ -1,10 +1,17 @@
 """Read-only DuckDB query layer over the local sports SQLite databases.
 
 DuckDB attaches each SQLite file READ_ONLY and acts as a fast analytical
-front-end: the .db files stay the single source of truth and are never mutated.
-This mirrors, by hand, the read-only guarantee of the workspace ``sports_mcp.py``
-server — you get columnar speed and cross-database joins with zero risk to the
-originals.
+front-end: whichever copy it attaches is never mutated. This mirrors, by hand,
+the read-only guarantee of the workspace ``sports_mcp.py`` server — you get
+columnar speed and cross-database joins with zero risk to the originals.
+
+Correction (2026-09-23): these local .db files are NOT the single source of
+truth for NBA, NFL, NHL or MLB games. Since the 2026-09-14 homebase migration
+those four are written daily on homebase (``/opt/data/sports/<league>/data/
+<league>.db``) and the copies here are a frozen fork (see ``../CLAUDE.md``,
+"Which copy is canonical"). This module's attach map still points at the PC
+files, so query results here can be stale for those four leagues; pga, sumo,
+mlb_draft and the derived/local-only DBs are unaffected.
 
 Typical use inside a notebook::
 

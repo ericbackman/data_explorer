@@ -30,9 +30,15 @@ Freshness markers live beside the homebase data at
 `outcome` and `last_result`. An `outcome` of `skipped_out_of_season` means an old
 `last_success` is expected (NBA read 2026-09-14 on 2026-09-22).
 
-The `sports-data` MCP server (`sports_mcp.py`) reads the PC fork through
-`db_dashboard.py`'s MANIFEST, so its NBA, NFL, NHL answers are stale for those
-leagues and it has no MLB game data, until a sync from homebase exists.
+The `sports-data` MCP server (`sports_mcp.py`) read the PC fork through
+`db_dashboard.py`'s MANIFEST, so even connected its NBA, NFL, NHL answers were
+stale for those leagues and it had no MLB game data. It also failed to connect
+from the Claude Code harness at every session start; investigated 2026-09-23
+(mcp 1.30.0 confirmed installed, the script handshakes cleanly when launched
+standalone with the harness's own command/args/cwd — the failure only showed
+up under the real harness spawn and wasn't reproducible outside it). Removed
+from `.mcp.json` the same day: the `sports-analyst` agent replaces it and
+reads homebase directly instead of the stale fork.
 
 ### Querying homebase (read-only)
 
@@ -184,9 +190,17 @@ on homebase and is listed in [`SCHEMA.md`](SCHEMA.md).
 - `python db_dashboard.py --widget` / the `/db-dashboard` skill shows a live
   inventory of every DB.
 - `sports_mcp.py` is a local MCP server (read-only `list_databases` /
-  `describe_schema` / `run_sql`) registered as `sports-data` in the workspace
-  `.mcp.json`: it lets any Claude surface query these DBs without shell access.
-  It reads the PC copies only, so for NBA, NFL, NHL and MLB it serves the stale
-  fork (see "Which copy is canonical"). It needs `mcp<2`: mcp 2.x renamed
-  `FastMCP`, and the server dies on import under it. The venv rebuilt on
-  2026-09-22 holds mcp 1.30.0, and `requirements.txt` pins `mcp<2`.
+  `describe_schema` / `run_sql`) that let any Claude surface query these DBs
+  without shell access. It read the PC copies only, so for NBA, NFL, NHL and
+  MLB it served the stale fork (see "Which copy is canonical"). **Removed from
+  the workspace `.mcp.json` on 2026-09-23**: it failed to connect from the
+  Claude Code harness at every session start, even after the 2026-09-22 venv
+  rebuild confirmed the right dependency (mcp 1.30.0; mcp 2.x renames
+  `FastMCP` and the server dies on import under it, which is why
+  `requirements.txt` still pins `mcp<2`). The script itself is not the
+  problem — launched standalone with the harness's exact command/args/cwd it
+  handshakes cleanly and instantly — so the failure looks harness-spawn-
+  specific and wasn't reproducible outside it. The `sports-analyst` agent
+  supersedes it (reads homebase directly, not this repo's stale fork). The
+  file stays in the repo as a working, reusable artifact; re-add it to
+  `.mcp.json` if a surface without shell/agent access needs it again.

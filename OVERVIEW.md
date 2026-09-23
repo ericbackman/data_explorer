@@ -40,10 +40,14 @@ free sources  →  cached scrapers  →  SQLite DBs  →  analysis modules  → 
   `CLAUDE.md` tells Claude to read [`SCHEMA.md`](SCHEMA.md) (an auto-generated map
   of every table), write read-only SQL, and **validate the answer against a known
   fact** before reporting.
-- **Anywhere else (Claude Desktop, phone):** the `sports-data` MCP server
-  (`sports_mcp.py`) exposes three read-only tools, `list_databases`,
-  `describe_schema`, `run_sql`, so any Claude surface can query the DBs with no
-  shell access. Writes are rejected; the connection is opened read-only.
+- **Anywhere else (Claude Desktop, phone):** ask the `sports-analyst` agent,
+  which reads the canonical homebase databases directly. A `sports-data` MCP
+  server (`sports_mcp.py`) used to fill this role with three read-only tools,
+  `list_databases`, `describe_schema`, `run_sql`, but it only ever reached the
+  PC's stale fork and failed to connect from the Claude Code harness at every
+  session start, so it was removed from `.mcp.json` on 2026-09-23. The script
+  still runs standalone (writes rejected; connection opened read-only) and
+  stays in the repo as a reusable artifact.
 
 ## What's in it (the data)
 
@@ -100,6 +104,6 @@ data_explorer/
   scrapekit/              shared credit-free web-extraction toolkit
   db_dashboard.py         visual inventory of every DB
   schema_doc.py → SCHEMA.md   auto-generated schema reference (the query map)
-  sports_mcp.py           read-only MCP server (the "ask from anywhere" layer)
+  sports_mcp.py           read-only MCP server (unregistered 2026-09-23; sports-analyst agent replaces it)
   CLAUDE.md               how Claude answers sports questions here
 ```
