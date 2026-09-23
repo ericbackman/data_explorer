@@ -27,6 +27,48 @@ answer one:
 All paths are relative to the workspace root (the directory containing this repo).
 """
 
+# Static, because it describes databases this script cannot introspect: the
+# canonical NBA/NFL/NHL/MLB copies live on homebase, not on the PC. It was
+# hand-written into SCHEMA.md on 2026-09-22 until review caught that the next
+# regeneration (OP-4, mandatory after any refresh) would silently drop it.
+# Re-measure the dated figures when you change it.
+HOMEBASE = """\
+## Which copy is canonical
+
+The tables below are introspected from the PC copies. For NBA, NFL, NHL and MLB
+games those copies are a frozen fork from the 2026-09-20 migration; the canonical,
+daily-updated databases are on homebase, written at 06:10 by `sports-crons`.
+Query them with the recipe in [`CLAUDE.md`](CLAUDE.md) ("Querying homebase"),
+opened `?mode=ro&immutable=1`. Measured 2026-09-22:
+
+| League | Homebase (canonical) | Last final | PC fork | PC last final |
+|---|---|---|---|---|
+| NBA | `/opt/data/sports/nba/data/nba.db` | 2026-06-13 | `data_explorer/nba/data/nba.db` | 2026-06-13 (offseason; diverges in October) |
+| NFL | `/opt/data/sports/nfl/data/nfl.db` | 2026-09-21 | `data_explorer/nfl/data/nfl.db` | 2026-02-08 |
+| NHL | `/opt/data/sports/nhl/data/nhl.db` | 2026-06-14 | `data_explorer/nhl/data/nhl.db` | 2026-06-14 (offseason; diverges in October) |
+| MLB games | `/opt/data/sports/mlb/data/mlb.db` | 2026-09-21 | none | n/a |
+
+PGA, sumo, MLB draft, NBA comebacks and podcasts exist only on the PC and have no
+scheduled writer. Freshness: `/opt/data/sports/_status/<league>.json`
+(`last_success`, `consecutive_failures`, `outcome`). The `sports-data` MCP server
+reads the PC fork only.
+
+Homebase schemas match the PC tables for NBA and NHL. NFL `player_game` and
+`team_game` carry 35 extra columns on homebase. NFL and MLB `games` also hold
+scheduled and postponed rows with NULL scores (NFL 240, MLB 185 on 2026-09-22;
+NHL none), so filter `home_score IS NOT NULL`.
+
+### MLB games (homebase only): `/opt/data/sports/mlb/data/mlb.db`
+> `status` counts on 2026-09-22: `F` 119,485, `C` 149, `R` 2, `D` 1 (the `D` row is a 2026-09-22 game with no score yet). 35 `F` rows have NULL scores, so a completed-game filter is `status = 'F' AND home_score IS NOT NULL`. Games key on `game_pk`; join players and teams on `player_id` / `team_id`.
+
+- **games** (119,637 rows): game_pk INTEGER, season INTEGER, game_type TEXT, game_date TEXT, home_team_id INTEGER, away_team_id INTEGER, home_score INTEGER, away_score INTEGER, venue_id INTEGER, venue_name TEXT, day_night TEXT, doubleheader TEXT, game_number INTEGER, status TEXT
+- **player_game_batting** (2,532,647 rows): game_pk INTEGER, player_id INTEGER, team_id INTEGER, season INTEGER, game_date TEXT, game_type TEXT, batting_order INTEGER, position TEXT, at_bats INTEGER, runs INTEGER, hits INTEGER, doubles INTEGER, triples INTEGER, home_runs INTEGER, rbi INTEGER, base_on_balls INTEGER, intentional_walks INTEGER, strike_outs INTEGER, stolen_bases INTEGER, caught_stealing INTEGER, hit_by_pitch INTEGER, sac_flies INTEGER, sac_bunts INTEGER, ground_into_double_play INTEGER, plate_appearances INTEGER, total_bases INTEGER, left_on_base INTEGER
+- **player_game_pitching** (839,383 rows): game_pk INTEGER, player_id INTEGER, team_id INTEGER, season INTEGER, game_date TEXT, game_type TEXT, outs INTEGER, batters_faced INTEGER, hits INTEGER, runs INTEGER, earned_runs INTEGER, home_runs INTEGER, base_on_balls INTEGER, intentional_walks INTEGER, strike_outs INTEGER, hit_by_pitch INTEGER, number_of_pitches INTEGER, strikes INTEGER, balls INTEGER, games_started INTEGER, wins INTEGER, losses INTEGER, saves INTEGER, holds INTEGER, blown_saves INTEGER
+- **players** (11,287 rows): player_id INTEGER, player_name TEXT
+- **team_game** (239,274 rows): game_pk INTEGER, team_id INTEGER, opponent_team_id INTEGER, is_home INTEGER, season INTEGER, game_date TEXT, game_type TEXT, runs INTEGER, hits INTEGER, errors INTEGER, at_bats INTEGER, doubles INTEGER, triples INTEGER, home_runs INTEGER, rbi INTEGER, base_on_balls INTEGER, strike_outs INTEGER, stolen_bases INTEGER, left_on_base INTEGER, total_bases INTEGER
+- **teams** (30 rows): team_id INTEGER, abbreviation TEXT, name TEXT
+"""
+
 # Per-database query notes, keyed by the MANIFEST path. Table/column lists are
 # introspected, but the *join conventions and known confounds* are not knowable
 # from the schema, and getting them wrong produces confidently wrong answers.
@@ -77,7 +119,7 @@ def _tables(conn: sqlite3.Connection) -> list[tuple[str, object, list[str]]]:
 
 
 def main() -> None:
-    lines = [PREAMBLE]
+    lines = [PREAMBLE, HOMEBASE]
     by_cat: dict[str, list[tuple[str, str]]] = {}
     for label, cat, rel in MANIFEST:
         by_cat.setdefault(cat, []).append((label, rel))
