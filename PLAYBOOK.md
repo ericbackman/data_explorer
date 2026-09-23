@@ -46,9 +46,10 @@ AUTOMATION.md row exists for this repo.
   (soccer, mlb, two NHL builds, a root `nfl.db`, `drafts.db`) no longer exist.
   Verified 2026-09-22: `git worktree list` shows only the main checkout,
   `.claude/worktrees/` does not exist, the migration staging copy
-  `~/from-old-pc/stage-ignored/data_explorer` holds none of them, and a search of
-  the PC profile (7 levels deep, AppData excluded) and homebase `/opt` finds no soccer, drafts or NHL play-by-play
-  database. What that costs:
+  `~/from-old-pc/stage-ignored/data_explorer` holds none of them, and a
+  full-depth search of the PC profile and of homebase `/opt`, `/home/ericb` and
+  `/tmp` (re-run in review, 2026-09-22) finds no soccer, drafts or NHL
+  play-by-play database. What that costs:
   - Soccer: the code is in `soccer/` on `main` and the DB rebuilds from ESPN
     (`python -m soccer.scrape`, see `soccer/README.md`). The only surviving data
     is `/opt/sleep-sports/vendor/soccer_slim.db` on homebase (548 KB,
@@ -76,19 +77,18 @@ git worktree list            # expect: the main checkout only (since 2026-09-22)
 ```
 If the branch changed, note it, don't act (§6).
 
-Then check the canonical copies on homebase: the coverage one-liner in
+Then check the canonical copies on homebase: the coverage check in
 [`CLAUDE.md`](CLAUDE.md) ("Querying homebase") prints each league's last final
-game, `-wal` size and `_status` fields. **Expect:** `consecutive_failures` 0,
-`wal_bytes` 0, and `last_success` from this morning for any league in season
-(`skipped_out_of_season` explains an older one).
+game and `_status` fields, and refuses while any `-wal` file is non-empty.
+**Expect:** `consecutive_failures` 0 and `last_success` from this morning for
+any league in season (`skipped_out_of_season` explains an older one).
 
 ## 3. Operations
 
 > **OP-1 and OP-2 refresh the PC fork, not the canonical copy.** `sports-crons`
 > on homebase writes MLB daily since 2026-08-21 and NBA, NFL, NHL since
-> 2026-09-14. A PC
-> scrape makes the fork diverge further from homebase rather than catch it up;
-> for a current answer, query homebase instead (OP-8).
+> 2026-09-14. A PC scrape makes the fork diverge further from homebase rather
+> than catch it up; for a current answer, query homebase instead (OP-8).
 
 ### OP-1: NBA DB refresh
 - **Trigger:** Eric asks / before betting analysis / current season stale.
@@ -195,7 +195,7 @@ game, `-wal` size and `_status` fields. **Expect:** `consecutive_failures` 0,
 - **Steps:** paste the recipe in [`CLAUDE.md`](CLAUDE.md) ("Querying homebase"):
   `ssh homebase python3 -` with the Python on stdin, opening
   `file:/opt/data/sports/<league>/data/<league>.db?mode=ro&immutable=1`. Run the
-  coverage one-liner in the same session and report the league's last final
+  coverage check in the same session and report the league's last final
   date with the answer.
 - **Verify:** the known-fact check from CLAUDE.md, plus `_status/<league>.json`
   showing `consecutive_failures` 0.
@@ -221,7 +221,7 @@ known-fact validation step, on any surface.
 | `ModuleNotFoundError: kagglesdk` | Default `pip install kaggle` broke import | Reinstall `kaggle==1.6.17` in `analysis/.venv` | `pip show kaggle` -> `1.6.17` |
 | Kaggle push re-uploads full ~6GB every time | `fingerprint()` unimplemented | Pending Eric (OP-5): don't implement yourself | `pytest -q` in `kaggle/` still red |
 | Supabase COPY rejects a row | Blank/whitespace in numeric SQLite column | Already handled: `make_conv()` -> NULL before COPY | Load completes, row count matches |
-| "MLB games DB doesn't exist" | MLB game data is on homebase only; the PC has `mlb_draft.db` | Query homebase `mlb.db` (OP-8) | Coverage one-liner prints an `mlb` last final date |
+| "MLB games DB doesn't exist" | MLB game data is on homebase only; the PC has `mlb_draft.db` | Query homebase `mlb.db` (OP-8) | Coverage check prints an `mlb` last final date |
 | "soccer DB doesn't exist" | The worktree that held it is gone (§1) | Rebuild with `python -m soccer.scrape` if Eric wants it; `soccer_slim.db` on homebase covers World Cup matches only | `soccer/data/*.db` present |
 | `attempt to write a readonly database` on homebase | WAL-mode DB in a root-owned dir: `ericb` cannot create `-shm` under plain `?mode=ro` | Open `?mode=ro&immutable=1` with the `-wal` guard (CLAUDE.md recipe) | Query returns rows |
 | MCP `sports-data` fails to connect | `.venv` missing, or mcp 2.x installed (`FastMCP` renamed, dies on import) | `uv venv --python 3.12 .venv`, `uv pip install --python .venv/Scripts/python.exe -r requirements.txt "mcp<2"` | `.venv\Scripts\python.exe -c "import sports_mcp"` exits 0 |
@@ -278,7 +278,9 @@ Update this playbook in the SAME change as any operation change.
   the PC). Tested the ssh recipe from Git Bash and PowerShell; plain `mode=ro`
   fails on the WAL-mode files, so it opens `immutable=1` behind a `-wal` guard.
   Replaced the TRIBAL worktree section: all six worktrees are gone and none of
-  their DBs survives (§1). Rebuilt `.venv` for the MCP server with `mcp<2`.
+  their DBs survives (§1). Rebuilt `.venv` for the MCP server with `mcp<2`. Review moved the homebase
+  section of SCHEMA.md into `schema_doc.py` (a static block) so OP-4 keeps it,
+  and both recipes now re-check `-wal` after reading.
 
 - 2026-09-14: NBA scrape now pulls the `PlayIn` season type (2020-21 on) and
   orients neutral-site games from BoxScoreSummaryV3; nfl/pull.py quotes drifted

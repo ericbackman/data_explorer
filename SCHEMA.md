@@ -33,8 +33,9 @@ scheduled writer. Freshness: `/opt/data/sports/_status/<league>.json`
 reads the PC fork only.
 
 Homebase schemas match the PC tables for NBA and NHL. NFL `player_game` and
-`team_game` carry 35 extra columns on homebase. NFL, NHL and MLB `games` also hold
-scheduled and postponed rows with NULL scores, so filter `home_score IS NOT NULL`.
+`team_game` carry 35 extra columns on homebase. NFL and MLB `games` also hold
+scheduled and postponed rows with NULL scores (NFL 240, MLB 185 on 2026-09-22;
+NHL none), so filter `home_score IS NOT NULL`.
 
 ### MLB games (homebase only): `/opt/data/sports/mlb/data/mlb.db`
 > `status` counts on 2026-09-22: `F` 119,485, `C` 149, `R` 2, `D` 1 (the `D` row is a 2026-09-22 game with no score yet). 35 `F` rows have NULL scores, so a completed-game filter is `status = 'F' AND home_score IS NOT NULL`. Games key on `game_pk`; join players and teams on `player_id` / `team_id`.
@@ -45,9 +46,6 @@ scheduled and postponed rows with NULL scores, so filter `home_score IS NOT NULL
 - **players** (11,287 rows): player_id INTEGER, player_name TEXT
 - **team_game** (239,274 rows): game_pk INTEGER, team_id INTEGER, opponent_team_id INTEGER, is_home INTEGER, season INTEGER, game_date TEXT, game_type TEXT, runs INTEGER, hits INTEGER, errors INTEGER, at_bats INTEGER, doubles INTEGER, triples INTEGER, home_runs INTEGER, rbi INTEGER, base_on_balls INTEGER, strike_outs INTEGER, stolen_bases INTEGER, left_on_base INTEGER, total_bases INTEGER
 - **teams** (30 rows): team_id INTEGER, abbreviation TEXT, name TEXT
-
-_This section is not generated. `schema_doc.py` does not yet emit it, so a
-regeneration drops it until that script carries the same text._
 
 
 ## NBA

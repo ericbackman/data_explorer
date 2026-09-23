@@ -41,13 +41,13 @@ leagues and it has no MLB game data, until a sync from homebase exists.
 so plain `?mode=ro` fails with `attempt to write a readonly database` on NFL, NHL
 and MLB: `ericb` cannot create the `-shm` file. Open with
 `?mode=ro&immutable=1` instead. `immutable` also skips locking, so the recipe
-refuses when a non-empty `-wal` file shows a writer mid-run; avoid 06:10 to
-06:30 local. From Git Bash (tested 2026-09-22):
+refuses when a non-empty `-wal` file shows a writer mid-run, checked before and
+after the query; avoid 06:10 to 06:30 local. From Git Bash (tested 2026-09-22):
 
 ```bash
 ssh homebase python3 - <<'PY'
 import os, sqlite3, sys
-LEAGUE = "nfl"   # nba | nfl | nhl | mlb
+LEAGUE = "nfl"   # NFL example: for nba, nhl or mlb swap the SQL columns (SCHEMA.md)
 DB = f"/opt/data/sports/{LEAGUE}/data/{LEAGUE}.db"
 WAL = DB + "-wal"
 if os.path.exists(WAL) and os.path.getsize(WAL) > 0:
@@ -59,7 +59,11 @@ SELECT gameday, away_team, away_score, home_team, home_score
 FROM games WHERE home_score IS NOT NULL
 ORDER BY gameday DESC LIMIT 5
 """
-for row in con.execute(SQL).fetchmany(200):
+rows = con.execute(SQL).fetchmany(200)
+# immutable=1 skips locking: a writer that started mid-query leaves a -wal
+if os.path.exists(WAL) and os.path.getsize(WAL) > 0:
+    sys.exit(f"{WAL} appeared during the query: results may be inconsistent. Retry after 06:30.")
+for row in rows:
     print(row)
 PY
 ```
@@ -68,18 +72,39 @@ The heredoc is local and quoted, so neither shell expands anything in the
 Python. From PowerShell, pipe the same body in a single-quoted here-string:
 `@'` on its own line, the Python, `'@` at column 0, then `| ssh homebase python3 -`.
 
-Coverage and freshness for all four leagues in one line (same line works in
-PowerShell as `'<python>' | ssh homebase python3 -`):
+Coverage and freshness for all four leagues (from PowerShell, use the same
+here-string form as above). It refuses while any `-wal` file is non-empty, before
+and after reading:
 
 ```bash
-ssh homebase python3 - <<< 'import sqlite3,json,os; P="/opt/data/sports"; D={"nba":("game_date","home_pts"),"nfl":("gameday","home_score"),"nhl":("date","home_score"),"mlb":("game_date","home_score")}; [print(l, "max_final", sqlite3.connect(f"file:{P}/{l}/data/{l}.db?mode=ro&immutable=1", uri=True).execute(f"SELECT MAX({d}) FROM games WHERE {s} IS NOT NULL").fetchone()[0], "wal_bytes", os.path.getsize(f"{P}/{l}/data/{l}.db-wal") if os.path.exists(f"{P}/{l}/data/{l}.db-wal") else 0, {k: json.load(open(f"{P}/_status/{l}.json")).get(k) for k in ("last_success","consecutive_failures","outcome")}) for l,(d,s) in D.items()]'
+ssh homebase python3 - <<'PY'
+import json, os, sqlite3, sys
+P = "/opt/data/sports"
+COLS = {"nba": ("game_date", "home_pts"), "nfl": ("gameday", "home_score"),
+        "nhl": ("date", "home_score"), "mlb": ("game_date", "home_score")}
+def wal(l):
+    w = f"{P}/{l}/data/{l}.db-wal"
+    return os.path.getsize(w) if os.path.exists(w) else 0
+if any(wal(l) for l in COLS):
+    sys.exit("a -wal file is non-empty: sports-crons is mid-write. Retry after 06:30.")
+out = []
+for l, (d, s) in COLS.items():
+    con = sqlite3.connect(f"file:{P}/{l}/data/{l}.db?mode=ro&immutable=1", uri=True)
+    last = con.execute(f"SELECT MAX({d}) FROM games WHERE {s} IS NOT NULL").fetchone()[0]
+    st = json.load(open(f"{P}/_status/{l}.json"))
+    out.append((l, "last_final", last, {k: st.get(k) for k in ("last_success", "consecutive_failures", "outcome")}))
+if any(wal(l) for l in COLS):
+    sys.exit("a -wal file appeared during the check: results may be inconsistent. Retry.")
+for row in out:
+    print(*row)
+PY
 ```
 
-Filter on a non-NULL score: NFL, NHL and MLB `games` also hold scheduled and
-postponed rows (NFL 2026 lists games through 2027-01-10). Homebase schemas match
-the PC tables for NBA and NHL; NFL `player_game` and `team_game` carry 35 extra
-columns on homebase. The MLB game schema exists only on homebase and is listed in
-[`SCHEMA.md`](SCHEMA.md).
+Filter on a non-NULL score: NFL and MLB `games` also hold scheduled and
+postponed rows (NFL 2026 lists games through 2027-01-10; NHL has none).
+Homebase schemas match the PC tables for NBA and NHL; NFL `player_game` and
+`team_game` carry 35 extra columns on homebase. The MLB game schema exists only
+on homebase and is listed in [`SCHEMA.md`](SCHEMA.md).
 
 ## Answering a sports question: ALWAYS do this when asked one
 
@@ -108,12 +133,13 @@ columns on homebase. The MLB game schema exists only on homebase and is listed i
   `sg` (strokes-gained), `tier2` (deep majors). See `pga/README.md`.
 - **NBA (`nba/`).** Box scores from 1946 (nba_api). See `nba/README.md`.
 - **NFL (`nfl/`).** Nflverse box scores + play-by-play from 1999.
-- **NHL (`nhl/`).** Free NHL API (`api-web.nhle.com`). Game index from 1997;
-  skater/goalie box scores (RTSS era 1997+); resumable `--team-id` backfill.
+- **NHL (`nhl/`).** Free NHL API (`api-web.nhle.com`). Game index from 1917-18;
+  skater/goalie box scores from 1997 (RTSS era); resumable `--team-id` backfill.
   `playoff_series` is derived (round + Game-7 + blown-lead flags). Built for the
   Leafs "Plan the Parade" video essay. See `nhl/README.md`.
 - **Sumo (`sumo/`).** Free community API (`sumo-api.com`, mirrors SumoDB). Every
-  sekitori bout from 1960 (the PC copy ends at the July 2026 basho) (Makuuchi + Juryo) plus wrestler bios, **measurement
+  sekitori bout from 1960 (Makuuchi + Juryo; the PC copy ends at the July 2026
+  basho) plus wrestler bios, **measurement
   change-points, full rank history, and awards. Query `bout_wrestler`**, the
   derived table: two rows per bout (one per wrestler's view) with physicals
   resolved **as-of** that tournament: never join a bout to a career-latest
@@ -163,4 +189,4 @@ columns on homebase. The MLB game schema exists only on homebase and is listed i
   It reads the PC copies only, so for NBA, NFL, NHL and MLB it serves the stale
   fork (see "Which copy is canonical"). It needs `mcp<2`: mcp 2.x renamed
   `FastMCP`, and the server dies on import under it. The venv rebuilt on
-  2026-09-22 holds mcp 1.30.0, but `requirements.txt` still says bare `mcp`.
+  2026-09-22 holds mcp 1.30.0, and `requirements.txt` pins `mcp<2`.
