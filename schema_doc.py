@@ -50,8 +50,9 @@ opened `?mode=ro&immutable=1`. Measured 2026-09-22:
 
 PGA, sumo, MLB draft, NBA comebacks and podcasts exist only on the PC and have no
 scheduled writer. Freshness: `/opt/data/sports/_status/<league>.json`
-(`last_success`, `consecutive_failures`, `outcome`). The `sports-data` MCP server
-reads the PC fork only.
+(`last_success`, `consecutive_failures`, `outcome`). The `sports-data` MCP
+server read the PC fork only and was removed from `.mcp.json` 2026-09-23; use
+the `sports-analyst` agent, which reads homebase directly.
 
 Homebase schemas match the PC tables for NBA and NHL. NFL `player_game` and
 `team_game` carry 35 extra columns on homebase. NFL and MLB `games` also hold

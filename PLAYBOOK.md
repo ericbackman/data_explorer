@@ -18,9 +18,12 @@ AUTOMATION.md row exists for this repo.
 - **Schema map:** [`SCHEMA.md`](SCHEMA.md), auto-generated, never hand-edit.
 - **Query-time behavior:** [`CLAUDE.md`](CLAUDE.md) (SCHEMA.md -> read-only SQL ->
   validate vs known fact): don't duplicate that logic here.
-- **Live query surface:** `sports_mcp.py`, registered as `sports-data` in the
-  workspace `.mcp.json` (`command`=`data_explorer/.venv/Scripts/python.exe`,
-  `cwd`=`data_explorer/`): read-only `list_databases`/`describe_schema`/`run_sql`.
+- **Live query surface:** none registered. `sports_mcp.py` (read-only
+  `list_databases`/`describe_schema`/`run_sql`) was registered as `sports-data`
+  in the workspace `.mcp.json` but removed 2026-09-23 after it failed to
+  connect from the Claude Code harness at every session start; see §4. The
+  `sports-analyst` agent is the query surface now — it reads homebase
+  directly, not this repo's stale fork.
 - **DB inventory:** `python db_dashboard.py --widget` or `/db-dashboard` skill.
 - **Main-checkout DBs** (`db_dashboard.py` MANIFEST): `nba/data/nba.db`,
   `nfl/data/nfl.db`, `nhl/data/nhl.db`, `mlb/data/mlb_draft.db`,
@@ -36,9 +39,11 @@ AUTOMATION.md row exists for this repo.
   October. PGA, sumo, MLB draft, NBA comebacks and podcasts exist only on the PC
   with no scheduled writer. Full table and the tested ssh recipe:
   [`CLAUDE.md`](CLAUDE.md) "Which copy is canonical".
-- **The MCP server reads the fork.** `sports_mcp.py` resolves paths through the
-  MANIFEST, so for NBA, NFL, NHL and MLB it serves stale data until a sync from
-  homebase exists. No sync job exists; adding one is Eric's call (§6).
+- **`sports_mcp.py` still reads the fork.** If ever re-registered, it resolves
+  paths through the MANIFEST, so for NBA, NFL, NHL and MLB it would serve
+  stale data until a sync from homebase exists. No sync job exists; adding one
+  is Eric's call (§6). `sports-analyst` sidesteps this by reading homebase
+  directly.
 - **Branch state:** checkout is on `main`. The betting / sharp-edge / polymarket
   subtrees were split out to the private `betting-lab` repo on 2026-08-09 so this
   repo could be published; they are not here and should not come back.
@@ -224,7 +229,7 @@ known-fact validation step, on any surface.
 | "MLB games DB doesn't exist" | MLB game data is on homebase only; the PC has `mlb_draft.db` | Query homebase `mlb.db` (OP-8) | Coverage check prints an `mlb` last final date |
 | "soccer DB doesn't exist" | The worktree that held it is gone (§1) | Rebuild with `python -m soccer.scrape` if Eric wants it; `soccer_slim.db` on homebase covers World Cup matches only | `soccer/data/*.db` present |
 | `attempt to write a readonly database` on homebase | WAL-mode DB in a root-owned dir: `ericb` cannot create `-shm` under plain `?mode=ro` | Open `?mode=ro&immutable=1` with the `-wal` guard (CLAUDE.md recipe) | Query returns rows |
-| MCP `sports-data` fails to connect | `.venv` missing, or mcp 2.x installed (`FastMCP` renamed, dies on import) | `uv venv --python 3.12 .venv`, `uv pip install --python .venv/Scripts/python.exe -r requirements.txt "mcp<2"` | `.venv\Scripts\python.exe -c "import sports_mcp"` exits 0 |
+| MCP `sports-data` won't connect | Not a config bug: removed from `.mcp.json` 2026-09-23 after it failed at every session start even with a correct `mcp<2` venv (the script handshakes fine standalone — the failure was harness-spawn-specific and wasn't reproduced outside it) | Use the `sports-analyst` agent instead (reads homebase, not this repo's fork). To re-enable `sports_mcp.py`: re-add the `sports-data` block to `.mcp.json`, and first confirm `.venv\Scripts\python.exe -c "import sports_mcp"` exits 0 (needs `mcp<2`; mcp 2.x renames `FastMCP` and the import dies) | `sports-analyst` answers the question |
 | Site 403s the scraper | Site rejects non-browser clients | `scrapekit` now identifies honestly by DEFAULT. Presenting as a browser is opt-in via `SCRAPEKIT_USER_AGENT`: check the target's robots.txt/terms FIRST; some sites prohibit automated access outright and a spoofed UA does not change that | Fetch succeeds, cached to disk |
 
 ## 5. Tuning knobs
