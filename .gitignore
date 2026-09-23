@@ -2,6 +2,10 @@
 .env
 *.env
 .eric.env
+.dev.vars
+credentials.json
+token.json
+client_secret*.json
 
 # Python
 __pycache__/
