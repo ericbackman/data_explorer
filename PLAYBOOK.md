@@ -47,9 +47,9 @@ AUTOMATION.md row exists for this repo.
   Verified 2026-09-22: `git worktree list` shows only the main checkout,
   `.claude/worktrees/` does not exist, the migration staging copy
   `~/from-old-pc/stage-ignored/data_explorer` holds none of them, and a
-  full-depth search of the PC profile and of homebase `/opt`, `/home/ericb` and
-  `/tmp` (re-run in review, 2026-09-22) finds no soccer, drafts or NHL
-  play-by-play database. What that costs:
+  full-depth search of the PC profile (AppData and the iCloud folders excluded)
+  and of homebase `/opt`, `/home/ericb` and `/tmp` (re-run in review,
+  2026-09-22) finds no soccer, drafts or NHL play-by-play database. What that costs:
   - Soccer: the code is in `soccer/` on `main` and the DB rebuilds from ESPN
     (`python -m soccer.scrape`, see `soccer/README.md`). The only surviving data
     is `/opt/sleep-sports/vendor/soccer_slim.db` on homebase (548 KB,
@@ -278,9 +278,9 @@ Update this playbook in the SAME change as any operation change.
   the PC). Tested the ssh recipe from Git Bash and PowerShell; plain `mode=ro`
   fails on the WAL-mode files, so it opens `immutable=1` behind a `-wal` guard.
   Replaced the TRIBAL worktree section: all six worktrees are gone and none of
-  their DBs survives (§1). Rebuilt `.venv` for the MCP server with `mcp<2`. Review moved the homebase
-  section of SCHEMA.md into `schema_doc.py` (a static block) so OP-4 keeps it,
-  and both recipes now re-check `-wal` after reading.
+  their DBs survives (§1). Rebuilt `.venv` for the MCP server with `mcp<2`.
+  Review moved the homebase section of SCHEMA.md into `schema_doc.py` (a static
+  block) so OP-4 keeps it, and both recipes now re-check `-wal` after reading.
 
 - 2026-09-14: NBA scrape now pulls the `PlayIn` season type (2020-21 on) and
   orients neutral-site games from BoxScoreSummaryV3; nfl/pull.py quotes drifted
