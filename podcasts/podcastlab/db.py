@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS episodes (
 
 CREATE TABLE IF NOT EXISTS transcripts (
     episode_id     INTEGER PRIMARY KEY REFERENCES episodes(episode_id),
-    source         TEXT NOT NULL,   -- 'rss' | 'youtube' | 'whisper'
+    source         TEXT NOT NULL,   -- 'rss' | 'whisper'
     text           TEXT NOT NULL,
     word_count     INTEGER NOT NULL,
     transcribed_at TEXT NOT NULL DEFAULT (datetime('now'))

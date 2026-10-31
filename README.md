@@ -37,13 +37,13 @@ named here.
 Python 3.10+.
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt pytest
 python nba_dashboard.py "Nikola Jokic" 2024-25
 python -m pytest nba/tests trades/tests
 ```
 
 `nba_dashboard.py` also imports as a module and backs a Claude Code command:
-`/nba-dashboard Nikola Jokic 2024-25`.
+`/nba-dashboard Nikola Jokic`.
 
 The trade-rule engine runs on an invented sample league:
 

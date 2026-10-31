@@ -12,6 +12,8 @@ data when you run it, and using a source is subject to that source's own terms.
 | `nba_site/investigations/canada-fiscal/data.js` | Tables derived from Statistics Canada 36-10-0450, 10-10-0005 and 17-10-0009, and Canada Revenue Agency statistics | [Statistics Canada Open Licence](https://www.statcan.gc.ca/en/reference/licence); [Open Government Licence - Canada](https://open.canada.ca/en/open-government-licence-canada). Sources are listed on the page. Adapted; no endorsement by either body |
 | `pga/seeds/major_history_seed.json` | Facts about major championships, each row with its Wikipedia `source_url` | Facts only. Wikipedia text is [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and none is copied here |
 | `reports/playoff_health_2019_2025.*`, `nba_site/investigations/mitchell-top10/data.js` | Figures computed from NBA.com statistics via `nba_api` | Attribution to NBA.com; not relicensed. See [NBA.com terms](https://www.nba.com/termsofuse) |
+| `nba_site/investigations/health-curse/` | Figures computed from NBA.com statistics via `nba_api` | As above |
+| `cba/semantic/apron-transaction-restrictions.json`, `cba/explainers/` | A rewritten summary of one CBA table, and short attributed quotes | The agreements belong to the NBA and the NBPA |
 | `osrs/` test fixtures | Sample Old School RuneScape Hiscores responses | Unofficial; not affiliated with or endorsed by Jagex |
 
 ## Data the code downloads
@@ -28,6 +30,11 @@ These are not committed. They are listed so you can check each source before run
 | `sumo/` | [sumo-api.com](https://sumo-api.com) | Asks for responsible use |
 | `nba/hof_scrape.py`, `pga/tier2*.py` | Wikipedia | CC BY-SA 4.0 for text |
 | `nba_site/investigations/canada-fiscal/build_data.py` | Statistics Canada, Canada Revenue Agency | As above |
+| `nfl/historical.py` | Spreadspoke scores, via a third-party repo named in that file | No licence stated |
+| `osrs/client.py` | Old School RuneScape Hiscores | [Jagex terms](https://legal.jagex.com/docs/terms/terms-and-conditions) |
+| `cba/tools/fetch_cba.py` | The NBA collective bargaining agreements, as PDFs | Owned by the NBA and the NBPA; kept local and git-ignored |
+| `podcasts/podcastlab/feeds.py` | Public podcast RSS feeds | Each show's own terms; transcripts stay local |
+| `pga/`, `soccer/`, `nba/injuries.py` | ESPN JSON feeds | [Disney terms of use](https://disneytermsofuse.com/english/) |
 
 ## Names and marks
 

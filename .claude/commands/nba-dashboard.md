@@ -8,11 +8,11 @@ Run the following command using the Bash tool:
 python nba_dashboard.py "$ARGUMENTS"
 ```
 
-If a season is not specified in `$ARGUMENTS`, the script defaults to the current season.
-You can also pass a season explicitly, e.g. `/nba-dashboard LeBron James 2024-25`.
+The script defaults to the current season. For another season, run it directly:
+`python nba_dashboard.py "LeBron James" 2024-25`.
 
-After running, present the output to the user. If any section fails (e.g. injury data
-unavailable, player not found), explain the issue clearly and suggest fixes such as:
+After running, present the output to the user. If any section fails (e.g. player not
+found), explain the issue clearly and suggest fixes such as:
 - Checking the spelling of the player name
 - Trying a partial name match (e.g. "Jokic" instead of "Nikola Jokic")
 - Verifying the season string format is `YYYY-YY`
