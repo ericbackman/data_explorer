@@ -1,121 +1,60 @@
-# NBA Data Explorer
+# Sports Data Explorer
 
-A collection of NBA data tools and Claude Code skills built on top of the
-[nba_api](https://github.com/swar/nba_api) library.
+A personal multi-sport data platform. Each sport gets a cached, resumable scraper, a
+normalized SQLite schema and analysis modules. A generated schema map, [`SCHEMA.md`](SCHEMA.md),
+lets an agent such as Claude Code turn a plain-English question into read-only SQL, then check
+the answer against a known fact before reporting it.
 
-## Contents
+The databases are not in this repo. They are gitignored and rebuilt from the scrapers. Start
+with [`OVERVIEW.md`](OVERVIEW.md) for the architecture and [`CLAUDE.md`](CLAUDE.md) for how a
+question gets answered.
 
-| File | Description |
+Unofficial. Not affiliated with or endorsed by any league, team, tour, player or data source
+named here.
+
+## What's here
+
+| Path | What it is |
 |---|---|
-| `nba_dashboard.py` | Standalone NBA player dashboard script (CLI + importable module) |
-| `nba_player_dashboard.ipynb` | Jupyter notebook version of the player dashboard |
-| `sportsrc_importer.ipynb` | Jupyter notebook for the SportSRC public sports API |
-| `.claude/commands/nba-dashboard.md` | Claude Code skill: `/nba-dashboard` |
+| [`pga/`](pga/README.md) | Golf: events, rounds, 7M hole scores, player bios, and strokes-gained derived from the holes |
+| [`nba/`](nba/README.md) | Box scores, play-by-play and advanced stats via `nba_api` |
+| `nfl/` | Box scores and play-by-play via nflverse |
+| [`nhl/`](nhl/README.md) | Game index, box scores and derived playoff series |
+| `mlb/`, [`draft/`](draft/README.md) | MLB draft and careers; draft history across four leagues |
+| [`sumo/`](sumo/README.md), [`soccer/`](soccer/README.md), [`osrs/`](osrs/README.md) | Smaller domains built the same way |
+| [`podcasts/`](podcasts/README.md) | RSS to transcripts to SQLite full-text search |
+| [`cba/`](cba/README.md) | A navigation layer and explainers over the NBA collective bargaining agreement, plus a tested trade-rule engine |
+| [`trades/`](trades/README.md) | Draft-pick protections rendered as flowcharts and slot maps |
+| [`nba_site/`](nba_site/README.md) | Source of the [Data Lab](https://datalab.ericbackman.com) site |
+| [`analysis/`](analysis/README.md) | DuckDB and marimo notebooks over the SQLite files, read-only |
+| `scrapekit/` | Credit-free web extraction, with a local-model fallback |
+| `sports_mcp.py` | Read-only MCP server over the databases: `list_databases`, `describe_schema`, `run_sql` |
+| `bigquery/`, `neon/`, `tidb/`, `kaggle/` | Experiments loading a subset to hosted warehouses |
+| `schema_doc.py`, `db_dashboard.py` | Generate the schema map and a visual inventory of every database |
 
----
+## Try it
 
-## Requirements
-
-```
-pip install nba_api requests pandas
-```
-
-Python 3.10+ is required.
-
----
-
-## Claude Code Skill: `/nba-dashboard`
-
-This repo ships a [project-scoped Claude Code skill](https://docs.anthropic.com/en/docs/claude-code/slash-commands)
-that lets you pull up a full NBA player dashboard inside Claude Code.
-
-### Setup
-
-Clone the repo and open it as your Claude Code working directory. The skill is
-automatically available as `/nba-dashboard` because it lives in
-`.claude/commands/nba-dashboard.md`.
-
-### Usage
-
-```
-/nba-dashboard LeBron James
-/nba-dashboard Nikola Jokic 2024-25
-/nba-dashboard Jayson Tatum
-```
-
-The skill runs `nba_dashboard.py` and presents a formatted summary covering:
-
-1. **Season averages.** PPG, RPG, APG, SPG, BPG, FG%, 3P%, FT%
-2. **Last 5 & Last 10 game averages.** Rolling per-game stats
-3. **Quarter-by-quarter breakdown.** PTS per quarter with hot/cold pattern detection
-4. **Recent game log.** Last 5 games with box score stats
-5. **Team injury report.** Current injuries via the ESPN public API
-
----
-
-## CLI Usage
+Python 3.10+.
 
 ```bash
-python nba_dashboard.py "LeBron James"
+pip install -r requirements.txt
 python nba_dashboard.py "Nikola Jokic" 2024-25
-python nba_dashboard.py "Jayson Tatum" 2025-26
+python -m pytest nba/tests trades/tests
 ```
 
-If no season is provided, it defaults to `2025-26`.
+`nba_dashboard.py` also imports as a module and backs a Claude Code command:
+`/nba-dashboard Nikola Jokic 2024-25`.
 
-### Example Output
+The trade-rule engine runs on an invented sample league:
 
-```
-==============================================================
-  NBA PLAYER DASHBOARD
-  NIKOLA JOKIC
-  Denver Nuggets  |  Season: 2025-26
-==============================================================
-
-[ PER-GAME AVERAGES ]
-──────────────────────────────────────────────────────────────
-  Span            GP     MPG     PPG     RPG     APG     SPG ...
-  ────────────────────────────────────────────────────────────
-  Last 5          5     34.2    29.4    13.2     9.8     1.6 ...
-  Last 10        10     33.8    28.1    12.9     9.4     1.4 ...
-  Season         52     33.6    27.2    12.5     9.1     1.4 ...
-...
+```bash
+cd cba/trade-machine
+npm ci
+npm test
+npm run dev
 ```
 
----
+## Licence
 
-## Module Usage
-
-`nba_dashboard.py` is also fully importable:
-
-```python
-from nba_dashboard import get_player_dashboard, print_dashboard
-
-# Get structured data
-data = get_player_dashboard("Nikola Jokic", season="2025-26")
-print(data["season_avgs"])
-print(data["last5"])
-print(data["qbq_last5"])
-
-# Or print the full dashboard
-print_dashboard("LeBron James")
-```
-
----
-
-## Notebooks
-
-### `nba_player_dashboard.ipynb`
-Interactive version of the player dashboard. Run cells top-to-bottom, setting
-the `PLAYER_NAME` and `SEASON` variables at the top.
-
-### `sportsrc_importer.ipynb`
-Explores the free [SportSRC public API](https://api.sportsrc.org/), sports
-categories, match schedules, league standings, and historical scores. No API
-key required.
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+The code is under the [MIT licence](LICENSE). It does not cover third-party data, names or
+marks: see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
