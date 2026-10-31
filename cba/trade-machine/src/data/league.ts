@@ -1,8 +1,13 @@
+/// <reference types="vite/client" />
 import type { League, PlayerContract, Team } from "../engine/types";
 import { classifyMaxLevel } from "../engine/constants";
-import raw from "./league.json";
+import sample from "./league.json";
 
-/** The scrape writes snake_case contract flags; the engine uses camelCase. Normalize here so the
+/** A machine's own league file, if it has one, replaces the committed sample. Gitignored. */
+const local = Object.values(import.meta.glob("./league.local.json", { eager: true, import: "default" }))[0];
+const raw = local ?? sample;
+
+/** League files use snake_case contract flags; the engine uses camelCase. Normalize here so the
  *  data format and the engine stay decoupled. */
 interface RawPlayer {
   name: string;
@@ -25,7 +30,7 @@ function normalizePlayer(p: RawPlayer, teamAbbr: string): PlayerContract {
     teamOption: p.team_option,
     noTrade: p.no_trade,
     tradeBonusPct: p.trade_bonus_pct,
-    // The scrape names waived/stretched money "… (dead cap)". It counts toward Team Salary but
+    // League files name waived/stretched money "… (dead cap)". It counts toward Team Salary but
     // can't be traded, so flag it here and exclude it from outgoing packages in the engine.
     deadCap: /\(dead cap\)/i.test(p.name),
   };

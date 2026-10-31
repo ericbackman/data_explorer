@@ -29,7 +29,7 @@ export default function App() {
       <header className="masthead">
         <h1>The Trade Universe</h1>
         <p className="tagline">
-          Which of the other 29 teams can <em>legally</em> trade for every max &amp; supermax
+          Which of the other {league.teams.length - 1} teams can <em>legally</em> trade for every max &amp; supermax
           player — and why not — under the 2023 CBA's apron system.
         </p>
         <p className="dataline">
@@ -38,7 +38,7 @@ export default function App() {
         </p>
         {isPlaceholder && (
           <p className="warn">
-            ⚠ Showing placeholder data — real league salaries are still loading.
+            Showing a sample: every team, player and salary here is invented.
           </p>
         )}
       </header>
