@@ -34,7 +34,7 @@ DEFAULT_MAX_RETRIES = 4
 BACKOFF_BASE_S = 1.5
 # A descriptive User-Agent is courteous (the OSRS Wiki API explicitly asks for
 # one); identify the project, not a browser.
-USER_AGENT = "osrs-clan-companion/0.1 (personal clan stats project)"
+USER_AGENT = "osrs-stats/0.1 (personal stats project)"
 
 # Statuses worth retrying — transient server/throttle conditions only.
 RETRY_STATUS = {429, 500, 502, 503, 504}
