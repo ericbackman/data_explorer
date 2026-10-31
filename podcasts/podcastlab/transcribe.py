@@ -3,16 +3,14 @@
 For each episode we try, cheapest first, and stop at the first tier that works:
 
   1. RSS transcript URL   (episodes.transcript_url)          free, instant
-  2. YouTube captions     (episodes.yt_video_id)             free, instant
-  3. faster-whisper       (transcribe the audio enclosure)   free, CPU-bound
+  2. faster-whisper       (transcribe the audio enclosure)   free, CPU-bound
 
-The heavy dependencies (youtube-transcript-api, faster-whisper) are imported
-lazily, so ingestion and analysis keep working even if they are not installed —
-you only pay for the tiers you actually reach.
+The heavy dependency (faster-whisper) is imported lazily, so ingestion and analysis
+keep working even if it is not installed.
 
 Usage:
     python -m podcastlab.transcribe lonely-island --limit 1        # newest ep
-    python -m podcastlab.transcribe lonely-island --tiers rss,youtube
+    python -m podcastlab.transcribe lonely-island --tiers rss
 """
 from __future__ import annotations
 
@@ -29,7 +27,7 @@ from podcastlab.feeds import http_get
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TIERS = ("rss", "youtube", "whisper")
+DEFAULT_TIERS = ("rss", "whisper")
 WHISPER_MODEL = "base.en"  # good speed/quality on CPU; bump to small.en for accuracy
 
 
@@ -51,16 +49,6 @@ def from_rss(transcript_url: str) -> Optional[str]:
     if "-->" in text or text.lstrip().startswith("WEBVTT"):
         text = _clean_captions(text)
     return text.strip() or None
-
-
-def from_youtube(video_id: str) -> Optional[str]:
-    try:
-        from youtube_transcript_api import YouTubeTranscriptApi
-    except ImportError:
-        logger.warning("youtube-transcript-api not installed; skipping YouTube tier")
-        return None
-    segments = YouTubeTranscriptApi.get_transcript(video_id)
-    return " ".join(seg["text"] for seg in segments).strip() or None
 
 
 def from_whisper(audio_url: str) -> Optional[str]:
@@ -85,10 +73,6 @@ def acquire(episode: "db.sqlite3.Row", tiers) -> Optional[tuple[str, str]]:
         text = from_rss(episode["transcript_url"])
         if text:
             return "rss", text
-    if "youtube" in tiers and episode["yt_video_id"]:
-        text = from_youtube(episode["yt_video_id"])
-        if text:
-            return "youtube", text
     if "whisper" in tiers and episode["audio_url"]:
         text = from_whisper(episode["audio_url"])
         if text:
@@ -138,7 +122,7 @@ def main(argv=None) -> int:
     ap.add_argument("slug", help="show slug (see podcastlab/shows.py)")
     ap.add_argument("--limit", type=int, default=None, help="only the N newest untranscribed eps")
     ap.add_argument("--tiers", default=",".join(DEFAULT_TIERS),
-                    help="comma-separated subset of: rss,youtube,whisper")
+                    help="comma-separated subset of: rss,whisper")
     args = ap.parse_args(argv)
     tiers = tuple(t.strip() for t in args.tiers.split(",") if t.strip())
     transcribe_show(args.slug, tiers=tiers, limit=args.limit)

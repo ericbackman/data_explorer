@@ -1,4 +1,3 @@
 feedparser              # RSS ingestion: podcast namespace, enclosures, itunes tags
 requests                # feed/transcript/audio fetch with timeout + retry
-youtube-transcript-api  # tier-2 transcript source (free YouTube captions)
-faster-whisper          # tier-3 fallback: local CPU transcription (CTranslate2)
+faster-whisper          # fallback tier: local CPU transcription (CTranslate2)

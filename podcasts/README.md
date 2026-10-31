@@ -20,8 +20,7 @@ RSS feed ──► episodes (title, pubDate, audio_url, transcript_url?)   ← t
    │                                    pubDate = the year-by-year key
    └─ per episode, acquire text via a free-first waterfall:
         1. <podcast:transcript> URL from the feed   free, instant
-        2. YouTube captions (youtube-transcript-api)  free, instant
-        3. faster-whisper on the audio enclosure     free, CPU-bound (fallback)
+        2. faster-whisper on the audio enclosure     free, CPU-bound (fallback)
                     │
                     ▼
         SQLite  data/podcasts.db  (+ FTS5 index)

@@ -20,11 +20,11 @@ SHOWS: dict[str, dict] = {
     "bill-simmons": {
         "title": "The Bill Simmons Podcast",
         "rss_url": None,
-        "yt_channel": None,  # The Ringer posts recent eps to YouTube (caption tier)
+        "yt_channel": None,
     },
     "steve-dangle": {
         "title": "The Steve Dangle Podcast",
         "rss_url": None,
-        "yt_channel": None,  # SDPN is on YouTube (caption tier)
+        "yt_channel": None,
     },
 }
