@@ -8,7 +8,7 @@ Run the following command using the Bash tool:
 python nba_dashboard.py "$ARGUMENTS"
 ```
 
-The script defaults to the current season. For another season, run it directly:
+The script defaults to 2025-26. For another season, run it directly:
 `python nba_dashboard.py "LeBron James" 2024-25`.
 
 After running, present the output to the user. If any section fails (e.g. player not

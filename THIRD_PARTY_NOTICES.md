@@ -32,7 +32,7 @@ These are not committed. They are listed so you can check each source before run
 | `nba_site/investigations/canada-fiscal/build_data.py` | Statistics Canada, Canada Revenue Agency | As above |
 | `nfl/historical.py` | Spreadspoke scores, via a third-party repo named in that file | No licence stated |
 | `osrs/client.py` | Old School RuneScape Hiscores | [Jagex terms](https://legal.jagex.com/docs/terms/terms-and-conditions) |
-| `cba/tools/fetch_cba.py` | The NBA collective bargaining agreements, as PDFs | Owned by the NBA and the NBPA; kept local and git-ignored |
+| `cba/tools/fetch_cba.py` | The NBA collective bargaining agreements, as PDFs | Owned by the NBA and the NBPA |
 | `podcasts/podcastlab/feeds.py` | Public podcast RSS feeds | Each show's own terms; transcripts stay local |
 | `pga/`, `soccer/`, `nba/injuries.py` | ESPN JSON feeds | [Disney terms of use](https://disneytermsofuse.com/english/) |
 
