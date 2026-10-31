@@ -125,6 +125,9 @@ def main(argv=None) -> int:
                     help="comma-separated subset of: rss,whisper")
     args = ap.parse_args(argv)
     tiers = tuple(t.strip() for t in args.tiers.split(",") if t.strip())
+    unknown = set(tiers) - set(DEFAULT_TIERS)
+    if unknown:
+        ap.error(f"unknown tiers: {', '.join(sorted(unknown))} (choose from {', '.join(DEFAULT_TIERS)})")
     transcribe_show(args.slug, tiers=tiers, limit=args.limit)
     return 0
 
