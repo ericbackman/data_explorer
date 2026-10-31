@@ -1,11 +1,11 @@
 # Sports Data Explorer
 
-A personal multi-sport data platform. Each sport gets a cached, resumable scraper, a
-normalized SQLite schema and analysis modules. A generated schema map, [`SCHEMA.md`](SCHEMA.md),
+A personal multi-sport data platform. Each sport gets a normalized SQLite schema, analysis
+modules and a cached, resumable scraper; the golf and soccer fetchers are kept in a private repo. A generated schema map, [`SCHEMA.md`](SCHEMA.md),
 lets an agent such as Claude Code turn a plain-English question into read-only SQL, then check
 the answer against a known fact before reporting it.
 
-The databases are not in this repo. They are gitignored and rebuilt from the scrapers. Start
+The databases are not in this repo. They are gitignored and rebuilt by those scrapers. Start
 with [`OVERVIEW.md`](OVERVIEW.md) for the architecture and [`CLAUDE.md`](CLAUDE.md) for how a
 question gets answered.
 

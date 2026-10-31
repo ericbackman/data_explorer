@@ -22,4 +22,3 @@ The dashboard covers:
 2. **Last 5 & Last 10 game averages.** Rolling per-game stats
 3. **Quarter-by-quarter breakdown.** PTS per quarter for last 5 games, with hot/cold pattern detection
 4. **Recent game log.** Last 5 games with box score stats
-5. **Team injury report.** Current injuries going into the next game

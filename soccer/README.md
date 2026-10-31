@@ -7,7 +7,8 @@ overperformed their xG at a tournament?"*
 
 A `data_explorer` sub-project (mirrors `pga/` structurally, soccer's
 *competition → match → events* nests like golf's *tournament → round → hole*). Run
-all commands **from the `data_explorer` repo root** (e.g. `python -m soccer.scrape`).
+all commands **from the `data_explorer` repo root** (e.g. `python -m pytest soccer/`). The
+fetcher that fills the database lives in a private repo; this package holds the parser, schema and tests.
 
 ## What's in it
 
@@ -42,14 +43,6 @@ so definitions can change without re-scraping.
 
 ```bash
 pip install -r requirements.txt
-
-# Backfill all World Cups (resumable; caches raw JSON under data/cache/)
-python -m soccer.scrape                          # default competition = fifa.world
-python -m soccer.scrape --dry-run                # show the plan, fetch nothing
-
-# Extend to other competitions (schema already supports them)
-python -m soccer.scrape --competition uefa.euro --years 1960-2024
-python -m soccer.scrape --competition eng.1      --years 2001-2026
 
 # Tests (from the data_explorer root)
 python -m pytest soccer/
