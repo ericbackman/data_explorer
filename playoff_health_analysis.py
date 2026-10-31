@@ -23,8 +23,8 @@ Methodology (all numbers are computed from nba_api box scores):
   - rounds_reached  : distinct opponents faced (1=R1 ... 4=Finals)
   - result          : champion / runner-up / eliminated-RN
 
-Cause-of-injury labels are NOT invented here; they are layered in the report
-from documented public record, kept separate from these computed counts.
+Cause-of-injury labels are not derived here; the Health Curse page carries them
+separately from these computed counts.
 """
 
 import json

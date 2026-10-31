@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-new_investigation.py — Scaffold a new NBA Data Lab investigation.
+new_investigation.py — Scaffold a new Data Lab investigation.
 
 Creates investigations/<slug>/index.html from a starter template and prints
 a manifest entry to paste into investigations.js.
@@ -19,7 +19,7 @@ STARTER_HTML = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{title} — NBA Data Lab</title>
+  <title>{title} — Data Lab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -47,7 +47,7 @@ STARTER_HTML = """<!DOCTYPE html>
   </style>
 </head>
 <body>
-<a class="backlink" href="../../">← NBA Data Lab</a>
+<a class="backlink" href="../../">← Data Lab</a>
 
 <section class="hero">
   <p class="hero__eyebrow">NBA Analytics Brief</p>
@@ -64,7 +64,7 @@ STARTER_HTML = """<!DOCTYPE html>
   </div>
 </div>
 
-<footer>NBA Data Lab · data sourced from NBA.com via nba_api</footer>
+<footer>Data Lab · data sourced from NBA.com via nba_api</footer>
 
 <script>
 /* Render from window.{const_name}_DATA once data.js exists.

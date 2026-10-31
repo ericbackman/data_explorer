@@ -8,7 +8,7 @@ datasets live (folded in from the standalone `public-data-lab` repo, 2026-08-07)
 
 **Live:** https://datalab.ericbackman.com
 
-Source lives here in the private `data_explorer` repo: **this folder is the
+Source lives here in the `data_explorer` repo: **this folder is the
 source of truth; never edit the `nba-data-lab` clone directly** (a deploy wipes
 and re-mirrors it). `deploy.py` publishes just this folder to the
 `nba-data-lab` repo, whose own workflow deploys to Cloudflare Pages.
@@ -81,8 +81,8 @@ Push the current `nba_site/` to the live public site:
 python nba_site/deploy.py -m "add clutch-kings investigation"
 ```
 
-This mirrors the folder into the public `nba-data-lab` repo and pushes; GitHub
-Pages rebuilds in ~1 minute. Cache files (`.cache.json`) are never published.
+This mirrors the folder into the `nba-data-lab` repo and pushes; Cloudflare Pages
+rebuilds in ~1 minute. Cache files (`.cache.json`) are never published.
 Typical full workflow for a new investigation:
 
 ```powershell
