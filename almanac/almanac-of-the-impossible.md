@@ -85,6 +85,8 @@ Mined live, read-only, from five local databases:
 | `nhl/data/nhl.db` | 332 MB | 2.43M skater-games · 264K goalie-games · since 1917-18 |
 | `mlb/data/mlb_draft.db` | 35 MB | 128K batting seasons · 57K pitching seasons · since 1871 |
 
+NFL data from nflverse (CC-BY 4.0). Baseball identifiers from the Chadwick Bureau register (ODC-BY).
+
 Every number above is traceable to a specific source row (`game_id` / `player_id` /
 `event_id`), carried on each card in the interactive version. Nothing was written to
 any database; all queries were read-only.
