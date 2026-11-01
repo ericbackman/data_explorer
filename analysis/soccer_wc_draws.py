@@ -70,7 +70,7 @@ def _(mo):
         - In the **group stage** ~**24–25%**; in **knockout** games the rate level
           after 90 minutes is ~**17%**.
         - The draw rate does **not** vary detectably with the pre-match strength gap.
-          This is reported as a **null result**, not a betting edge — see the
+          This is reported as a **null result** — see the
           mismatch section.
         """
     )
@@ -116,7 +116,7 @@ def _(matches, mo, pd, wilson):
             "draw_rate": round(_k / _n, 4),
             "ci_low": round(_lo, 4),
             "ci_high": round(_hi, 4),
-            "fair_odds": round(_n / _k, 2) if _k else None,
+            "one_in_n": round(_n / _k, 2) if _k else None,
         }
 
     _grp = matches[matches["is_group"]]
@@ -209,8 +209,8 @@ def _(bucket_rows, mo, pd, wilson):
                 "draw_rate": round(_k / _n, 4),
                 "ci_low": round(_lo, 4),
                 "ci_high": round(_hi, 4),
-                "fair_odds": round(_n / _k, 2),
-                "fair_odds_ci": f"{1/_hi:.2f}–{1/_lo:.2f}",
+                "one_in_n": round(_n / _k, 2),
+                "one_in_n_ci": f"{1/_hi:.2f}–{1/_lo:.2f}",
             }
         )
     mismatch = pd.DataFrame(_rows)
@@ -221,9 +221,8 @@ def _(bucket_rows, mo, pd, wilson):
                 "Group games bucketed by pre-match Elo gap. The draw rate is "
                 "**flat across buckets and the CIs overlap heavily** — large "
                 "mismatches draw at statistically the same rate as even games. "
-                "The `large` bucket's fair price (3.92) sits on a 95% CI of roughly "
-                "**3.1–5.6**, so it cannot distinguish a 4.48 fair price from a 4.5 "
-                "book line. There is **no actionable betting angle** here, and the "
+                "The `large` bucket draws one game in 3.92, on a 95% CI of roughly one "
+                "in **3.1–5.6**, so it cannot be told apart from one in 4.48, and the "
                 "sign of any gap effect flips with the Elo K constant (20/30/40)."
             ),
             mismatch,

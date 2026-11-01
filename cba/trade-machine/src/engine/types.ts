@@ -1,5 +1,5 @@
 /**
- * Domain types for the NBA Trade Universe engine.
+ * Domain types for the Trade Universe engine.
  *
  * The engine answers one question — "which teams can legally acquire player X?" — under the
  * 2023 CBA's apron system. It is deliberately a *simplified* model of a very intricate document;

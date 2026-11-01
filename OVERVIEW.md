@@ -18,13 +18,13 @@ a time, each one deep enough to be genuinely useful.
 Five layers, left to right: raw data becomes an answer:
 
 ```
-free sources  →  cached scrapers  →  SQLite DBs  →  analysis modules  →  query layer
+sources       →  cached scrapers  →  SQLite DBs  →  analysis modules  →  query layer
 (ESPN, nflverse,   (resumable,        (per sport,    (leader conversion,   (CLAUDE.md +
  Wikipedia)         disk-cached)       normalized)    SG, course stats…)    SCHEMA.md +
                                                                             MCP server)
 ```
 
-1. **Sources.** Free JSON feeds (ESPN, for golf and soccer), open datasets (nflverse),
+1. **Sources.** JSON feeds (ESPN, for golf and soccer), open datasets (nflverse),
    and structured web pages (Wikipedia, parsed credit-free via `scrapekit`).
 2. **Scrapers.** One per sport, that cache every response to disk and load with
    idempotent upserts. So a re-run re-fetches nothing and never double-counts;

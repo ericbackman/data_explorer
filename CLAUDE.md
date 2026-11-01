@@ -181,7 +181,7 @@ on homebase and is listed in [`SCHEMA.md`](SCHEMA.md).
 ## Conventions
 
 - DBs live in `<sport>/data/` and are gitignored (regenerable from scrapers; golf and
-  soccer from the private `sports-crons` repo).
+  soccer from a private repo).
   Curated, costly-to-regen seeds (e.g. `pga/seeds/`) are committed.
 - Queries are read-only: never mutate a DB during analysis.
 - Free sources only by default; paid extraction is a deliberate exception

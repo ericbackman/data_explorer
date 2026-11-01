@@ -14,9 +14,9 @@ fetcher that fills the database lives in a private repo; this package holds the 
 
 | Tier | Coverage | Granularity | Source |
 |------|----------|-------------|--------|
-| **1** | Every FIFA World Cup **1930–2026** (incl. the live 2026 tournament) | Match list: scores, penalty shootouts, venue, attendance, round | ESPN public JSON API |
+| **1** | Every FIFA World Cup **1930–2026** (incl. the live 2026 tournament) | Match list: scores, penalty shootouts, venue, attendance, round | ESPN JSON feeds |
 | **1.5** | Same matches | **Events**: goals, penalties, own goals, cards: minute-stamped, with scorer name | embedded in the same scoreboard responses |
-| **1L** *(planned)* | Recent matches | **Lineups**: starting XI + bench, positions | ESPN `summary` endpoint |
+| **1L** *(planned)* | Recent matches | **Lineups**: starting XI + bench, positions | ESPN JSON feeds |
 | **2** *(planned)* | WC 2018, 2022 + 6 historical; Messi-era La Liga; CL seasons | **Event-level**: every pass & shot with **xG** | StatsBomb open data (free) |
 
 The schema is competition-agnostic: the World Cup, the Euros, the Champions
@@ -25,7 +25,7 @@ new ESPN league-code in `parse.COMPETITIONS`, never a new table.
 
 ESPN's soccer scoreboard returns match *results* back to **1930** (verified: 18
 matches in 1930, 64 in 2010: historically exact). Per-match lineup depth only
-exists for recent decades; the scraper degrades gracefully when it's absent.
+exists for recent decades; the parser degrades gracefully when it's absent.
 
 ## Schema
 
@@ -48,9 +48,7 @@ pip install -r requirements.txt
 python -m pytest soccer/
 ```
 
-The scraper is resumable: every API response is cached to disk and every load
-is an idempotent upsert. A completed tournament is fetched once; the live 2026
-edition is re-fetched each run for updated scores.
+Every load is an idempotent upsert, so a rebuild converges to the same DB.
 
 ## Data quirks handled
 

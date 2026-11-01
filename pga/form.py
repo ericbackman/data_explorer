@@ -1,10 +1,10 @@
 """Derived tournament reads -- especially for majors.
 
 Everything here is computed from the Tier-1 tables; there are no extra data
-sources. The four angles that matter most before a tournament:
+sources. Four reads:
 
   * course_history  -- how players have fared at THIS venue (Augusta is the same
-                       course every year, so this is the single best major signal)
+                       course every year)
   * player_form     -- recent finishes and scoring
   * major_record    -- career major track record
   * closers         -- who converts the 54-hole lead vs who wilts
