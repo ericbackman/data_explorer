@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""
+deploy.py — Publish nba_site/ to the nba-data-lab repo (the deploy mirror).
+
+Mirrors this folder's contents into ericbackman/nba-data-lab and pushes; the
+mirror repo's own workflow then deploys to Cloudflare Pages. Only nba_site/
+content is published here. Treat anything committed anywhere in this repo as
+already published.
+
+THIS FOLDER (data_explorer/nba_site/) IS THE SOURCE OF TRUTH — never edit the
+nba-data-lab clone directly; a deploy wipes and re-mirrors it. (That drift
+happened once: two investigations were added mirror-side and had
+to be back-ported 2026-08-07.)
+
+Usage:
+    python nba_site/deploy.py
+    python nba_site/deploy.py -m "add clutch-kings investigation"
+
+Live site: https://datalab.ericbackman.com
+"""
+
+import os, sys, shutil, subprocess, tempfile, datetime
+
+HERE        = os.path.dirname(os.path.abspath(__file__))
+REPO_URL    = "https://github.com/ericbackman/nba-data-lab.git"
+# Never publish these. `.cache` is a DIRECTORY -- canada-fiscal caches 21 MB of
+# raw StatCan/CRA CSVs in one. The older `.cache.json` was a single file, and
+# matching only that name mirrored the whole directory into the public site
+# repo: measured at 28.2 MB and 121 cache files before this line was fixed.
+EXCLUDE     = {".cache", ".cache.json", ".git", "__pycache__"}
+
+
+def run(cmd, cwd=None):
+    """Run a command, streaming output; raise on failure."""
+    print(f"  $ {' '.join(cmd)}")
+    subprocess.run(cmd, cwd=cwd, check=True)
+
+
+def mirror_into(dest):
+    """Copy nba_site/ contents into dest, skipping EXCLUDE and cache files."""
+    # Clear dest's tracked files (keep .git, and .github — the mirror repo
+    # carries its own Cloudflare Pages deploy workflow that does not exist in
+    # the source tree; clearing it would silently kill deploy-on-push)
+    for entry in os.listdir(dest):
+        if entry in (".git", ".github"):
+            continue
+        path = os.path.join(dest, entry)
+        shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+
+    # Copy fresh from nba_site/
+    def _ignore(_dir, names):
+        return [n for n in names if n in EXCLUDE or n.endswith(".cache.json")]
+
+    for entry in os.listdir(HERE):
+        if entry in EXCLUDE:
+            continue
+        src = os.path.join(HERE, entry)
+        dst = os.path.join(dest, entry)
+        if os.path.isdir(src):
+            shutil.copytree(src, dst, ignore=_ignore)
+        else:
+            shutil.copy2(src, dst)
+
+    # Always ship a .gitignore so cache files can never be published by hand
+    with open(os.path.join(dest, ".gitignore"), "w", encoding="utf-8") as f:
+        f.write(".cache/\n.cache.json\n*.cache.json\n.DS_Store\nThumbs.db\n")
+
+
+def main():
+    msg = "deploy: update Data Lab"
+    if "-m" in sys.argv:
+        i = sys.argv.index("-m")
+        if i + 1 < len(sys.argv):
+            msg = sys.argv[i + 1]
+    msg += f" ({datetime.date.today().isoformat()})"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        clone = os.path.join(tmp, "site")
+        print("\nDeploying nba_site/ -> nba-data-lab ...\n")
+        run(["git", "clone", "--depth", "1", REPO_URL, clone])
+
+        mirror_into(clone)
+
+        run(["git", "add", "-A"], cwd=clone)
+
+        # Skip the commit if nothing changed
+        status = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=clone,
+            capture_output=True, text=True,
+        ).stdout.strip()
+        if not status:
+            print("\n  No changes to deploy — site already up to date.\n")
+            return
+
+        run(["git", "commit", "-m", msg], cwd=clone)
+        run(["git", "push", "origin", "main"], cwd=clone)
+
+    print("\n  Deployed. Cloudflare Pages will rebuild in ~1 min:")
+    print("  https://datalab.ericbackman.com\n")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,23 @@
+# ── Source documents: built locally, not committed ─────────────────────────
+# The CBA PDFs and their extracted text are large and re-downloadable (see
+# tools/fetch_cba.py). Commit only derived analysis. Same nested-.gitignore
+# pattern as podcasts/.
+corpus/
+corpus/pdf/
+corpus/text/
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ── OS / editor ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# The Article I glossary (88 terms, ~20 KB per agreement) holds the agreement's
+# full wording, so it stays local with the corpus. Regenerate with
+#   python cba/tools/fetch_cba.py && python cba/tools/build_index.py
+# which writes it back into semantic/ (build_index.py:249).
+semantic/*.definitions.json

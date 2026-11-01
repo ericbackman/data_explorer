@@ -1,0 +1,482 @@
+{
+  "season": "PLACEHOLDER sample",
+  "as_of": "n/a",
+  "source": "Invented teams, players and salaries, for demonstrating the trade engine. Put a league file at src/data/league.local.json to use your own data.",
+  "constants": {
+    "salaryCap": 164961000,
+    "taxLevel": 200428000,
+    "firstApron": 209015000,
+    "secondApron": 221686000,
+    "minTeamSalary": 148465000
+  },
+  "teams": [
+    {
+      "abbr": "HAR",
+      "name": "Harbor City Herons",
+      "players": [
+        {
+          "name": "HAR Player 1",
+          "salary": 60000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "HAR Player 2",
+          "salary": 45000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "HAR Player 3",
+          "salary": 30000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "HAR Player 4",
+          "salary": 22000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "HAR Player 5",
+          "salary": 14000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "HAR Player 6",
+          "salary": 9000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "HAR Player 7",
+          "salary": 6000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "HAR Player 8",
+          "salary": 3000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        }
+      ]
+    },
+    {
+      "abbr": "MES",
+      "name": "Mesa Grove Miners",
+      "players": [
+        {
+          "name": "MES Player 1",
+          "salary": 48000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "MES Player 2",
+          "salary": 42000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "MES Player 3",
+          "salary": 28000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "MES Player 4",
+          "salary": 20000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "MES Player 5",
+          "salary": 12000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "MES Player 6",
+          "salary": 8000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "MES Player 7",
+          "salary": 5000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "MES Player 8",
+          "salary": 3000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        }
+      ]
+    },
+    {
+      "abbr": "NOR",
+      "name": "Northgate Lynx",
+      "players": [
+        {
+          "name": "NOR Player 1",
+          "salary": 44000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "NOR Player 2",
+          "salary": 26000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "NOR Player 3",
+          "salary": 24000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "NOR Player 4",
+          "salary": 18000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "NOR Player 5",
+          "salary": 12000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "NOR Player 6",
+          "salary": 7000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "NOR Player 7",
+          "salary": 4000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "NOR Player 8",
+          "salary": 2000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        }
+      ]
+    },
+    {
+      "abbr": "PIN",
+      "name": "Pine Valley Owls",
+      "players": [
+        {
+          "name": "PIN Player 1",
+          "salary": 42000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "PIN Player 2",
+          "salary": 38000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "PIN Player 3",
+          "salary": 34000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "PIN Player 4",
+          "salary": 30000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "PIN Player 5",
+          "salary": 22000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "PIN Player 6",
+          "salary": 16000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "PIN Player 7",
+          "salary": 10000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "PIN Player 8",
+          "salary": 6000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        }
+      ]
+    },
+    {
+      "abbr": "QUA",
+      "name": "Quarry Bay Otters",
+      "players": [
+        {
+          "name": "QUA Player 1",
+          "salary": 58000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "QUA Player 2",
+          "salary": 44000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "QUA Player 3",
+          "salary": 40000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "QUA Player 4",
+          "salary": 32000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "QUA Player 5",
+          "salary": 22000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "QUA Player 6",
+          "salary": 14000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "QUA Player 7",
+          "salary": 8000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "QUA Player 8",
+          "salary": 5000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        }
+      ]
+    },
+    {
+      "abbr": "RID",
+      "name": "Ridgeline Bison",
+      "players": [
+        {
+          "name": "RID Player 1",
+          "salary": 62000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": true,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "RID Player 2",
+          "salary": 56000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "RID Player 3",
+          "salary": 41500000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "RID Player 4",
+          "salary": 30000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "RID Player 5",
+          "salary": 18000000,
+          "years_left": 2,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "RID Player 6",
+          "salary": 12000000,
+          "years_left": 3,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "RID Player 7",
+          "salary": 9000000,
+          "years_left": 4,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        },
+        {
+          "name": "RID Player 8",
+          "salary": 4000000,
+          "years_left": 1,
+          "player_option": false,
+          "team_option": false,
+          "no_trade": false,
+          "trade_bonus_pct": 0
+        }
+      ]
+    }
+  ]
+}
