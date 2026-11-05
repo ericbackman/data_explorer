@@ -20,6 +20,17 @@
 
 const INVESTIGATIONS = [
   {
+    slug:        "injury-era",
+    title:       "The Injury Era",
+    subtitle:    "Games Missed, Where It Hurts, and What Doesn't Explain It",
+    description: "Rotation players now miss about twice the games per team-game they did in 1996-97, measured from the league's own box scores back to 1976. Where the injuries are by era (ankle and knee lead everywhere, the below-the-knee share is flat), then pace, minutes, back-to-backs, cross-league minutes and the high-top to low-top transition each lined up against that curve, with the controlled studies that test them.",
+    date:        "2026-11-05",
+    tags:        ["Injuries", "League Trends", "Era Comparison"],
+    accent:      "#9EB4DB",
+    headline:    { stat: "2×", label: "Rotation Games Missed vs 1996-97" },
+    status:      "draft",
+  },
+  {
     slug:        "canada-fiscal",
     title:       "The Canadian Ledger",
     subtitle:    "Every Tax Dollar In, Every Dollar Out",
