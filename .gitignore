@@ -101,3 +101,14 @@ soccer/data/
 
 # Draft source cache (regenerable)
 draft/data/
+
+# injuries/: third-party raw mirrors and a per-leg venv stay local
+injuries/raw/
+injuries/.venv/
+# injuries/: five NBA-published report PDFs (test fixtures) and the row-level
+# per-player files stay local; the repo carries aggregates (legal review 2026-11-05)
+injuries/tests/fixtures/*.pdf
+injuries/data/injury_reports.csv
+injuries/data/injury_reports_classified.csv
+injuries/data/box_absences.csv
+injuries/data/pst_events.csv
