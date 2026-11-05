@@ -40,6 +40,7 @@ FULL_ROSTER_LAST_SEASON = "2002-03"  # box scores list the whole roster through 
 NAMED_BODY_PART_LAST_SEASON = "2016-17"  # box scores name the body part through this season
 EPISODE_GAP_DAYS = 10  # a player off the report this long starts a new injury episode
 SEASON_START_GRACE_DAYS = 14  # a repair or rehab listed this early in a season's reports predates the season
+OFFSEASON_GAP_DAYS = 30  # a gap this long between report dates separates one season's run of reports from the next
 RECOVERY_WORDS = re.compile(r"(?<![a-z])(rehab|rehabilitation|repair|surgery|surgical|recovery|reconditioning)(?![a-z])", re.IGNORECASE)
 LOCATION_ORDER = (
     "ankle",
@@ -273,6 +274,23 @@ def build_report_locations(report_rows: list[dict]) -> dict:
     return {"seasons": seasons, "all": location_table(allc), "episodes": len(eps), "first_report": min(r["report_date"] for r in report_rows), "last_report": max(r["report_date"] for r in report_rows)}
 
 
+def season_anchor(days: list[dt.date], gap_days: int = OFFSEASON_GAP_DAYS) -> dt.date:
+    """Pure: the first report date of a season's own run of reports.
+
+    A season label starts in August, so the 2020 bubble's last reports (August
+    to October 2020) carry the 2020-21 label although the 2020-21 season's own
+    reports begin in December 2020. The anchor is the first date that follows a
+    gap of `gap_days` or more, or the first date when there is no such gap.
+    """
+    if not days:
+        raise ValueError("a season with no report dates")
+    anchor = days[0]
+    for prev, cur in zip(days, days[1:]):
+        if (cur - prev).days >= gap_days:
+            anchor = cur
+    return anchor
+
+
 def display_name(raw: str) -> str:
     """'Durant, Kevin' -> 'Kevin Durant'; a name already in first-last order is kept as the source wrote it."""
     raw = raw.strip()
@@ -331,11 +349,10 @@ def build_achilles(box_rows: list[dict], report_rows: list[dict], pst_rows: list
     for r in pst_rows:
         if r["event_type"] == "out" and r["location"] == "achilles" and r["nature"] == "rupture":
             found[r["season"]]["pst"].add(remember(r["player"]))
-    season_first_report: dict[str, dt.date] = {}
+    dates_by_season: dict[str, set[dt.date]] = defaultdict(set)
     for r in report_rows:
-        day = dt.date.fromisoformat(r["report_date"][:10])
-        if r["season"] not in season_first_report or day < season_first_report[r["season"]]:
-            season_first_report[r["season"]] = day
+        dates_by_season[r["season"]].add(dt.date.fromisoformat(r["report_date"][:10]))
+    season_first_report = {season: season_anchor(sorted(days)) for season, days in dates_by_season.items()}
     first_listed: dict[str, tuple[str, dt.date, bool]] = {}
     for r in sorted(report_rows, key=lambda r: r["report_date"]):
         if r["location"] == "achilles" and r["nature"] in ("rupture", "surgery") and r["status"].lower().startswith("out"):

@@ -1,5 +1,5 @@
 ## Question
-Best openly downloadable historical NBA injury datasets (player, date, team, injury/body part, games or days missed), as far back as possible, for a public-site investigation; plus what the source sites allow. As-of 2026-11-05. Excluded: ESPN current feed (snapshot, off limits). No Kaggle login, so Kaggle items are graded by metadata only.
+Best openly downloadable historical NBA injury datasets (player, date, team, injury/body part, games or days missed), as far back as possible, for a public-site investigation; plus what the source sites allow. As-of 2026-11-05. Excluded: live injury feeds (out of scope). No Kaggle login, so Kaggle items are graded by metadata only.
 
 ## Ranking (top of brief)
 1. **loganlauton "NBA Injury Stats (1951 - 2023)"**: PST IL moves 1951 to 2023-04, CC0 on Kaggle. Use as the BACKBONE: longest span, free licence, ~2.5 MB single CSV, with a Notes column carrying the injury text. Needs a Kaggle login to download (Eric fetches it). Caveat: PST content is the underlying source (see terms gap).

@@ -34,6 +34,17 @@ def test_episodes_split_on_gap():
     assert knee["out_days"] == 0
 
 
+def test_season_anchor_skips_the_previous_seasons_tail():
+    import datetime as dt
+
+    bubble_tail = [dt.date(2020, 10, 1), dt.date(2020, 10, 3), dt.date(2020, 10, 11)]
+    own_run = [dt.date(2020, 12, 11), dt.date(2020, 12, 12), dt.date(2021, 1, 5)]
+    assert bd.season_anchor(bubble_tail + own_run) == dt.date(2020, 12, 11)
+    assert bd.season_anchor(own_run) == dt.date(2020, 12, 11)
+    with pytest.raises(ValueError):
+        bd.season_anchor([])
+
+
 def test_location_table_shares_and_below_knee():
     from collections import Counter
 
