@@ -50,7 +50,7 @@ STARTER_HTML = """<!DOCTYPE html>
 <a class="backlink" href="../../">← Data Lab</a>
 
 <section class="hero">
-  <p class="hero__eyebrow">NBA Analytics Brief</p>
+  <p class="hero__eyebrow">Analytics Brief</p>
   <h1 class="hero__title">{title}</h1>
 </section>
 
@@ -64,7 +64,7 @@ STARTER_HTML = """<!DOCTYPE html>
   </div>
 </div>
 
-<footer>Data Lab · data sourced from NBA.com via nba_api</footer>
+<footer>Data Lab · data sourced from NBA.com via nba_api · not affiliated with or endorsed by the NBA or its teams</footer>
 
 <script>
 /* Render from window.{const_name}_DATA once data.js exists.

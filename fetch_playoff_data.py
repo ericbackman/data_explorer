@@ -40,7 +40,7 @@ SEASONS = [
 ]
 SEASON_TYPE = "Playoffs"
 SLEEP = 0.7
-CACHE_DIR = pathlib.Path(".cache/playoff_backtest")
+CACHE_DIR = pathlib.Path(".cache/playoff_deficits")
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUT_CSV = pathlib.Path("playoff_max_deficit_situations.csv")
 

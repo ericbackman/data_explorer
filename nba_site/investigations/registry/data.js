@@ -32,7 +32,6 @@ const REGISTRY_DATA = {
     ocean:    { label: "Ocean & Marine",      color: "#22d3ee", blurb: "Marine biodiversity, oceanography, fisheries, reefs, and bathymetry." },
     gov:      { label: "Government & Economy", color: "#34d399", blurb: "Official statistics portals — macro, demographic, and fiscal data." },
     world:    { label: "World, Society & Climate", color: "#f59e0b", blurb: "Global indicators, news-event streams, maps, and climate records." },
-    finance:  { label: "Finance & Markets",   color: "#f472b6", blurb: "Filings, prices, and on-chain crypto data." },
   },
 
   // Order within a domain ≈ how often it's the right first stop.
@@ -193,7 +192,7 @@ const REGISTRY_DATA = {
     },
     {
       name: "IMF Data", url: "https://www.imf.org/en/Data", domain: "gov",
-      blurb: "Cross-country macro and financial statistics — balance of payments, government finance, IFS — served via an SDMX API.",
+      blurb: "Cross-country macro statistics — balance of payments, government accounts, IFS — served via an SDMX API.",
       scale: "Global macro", cadence: "periodic", access: ["API", "Bulk"], format: "SDMX, CSV",
     },
     {
@@ -260,34 +259,6 @@ const REGISTRY_DATA = {
       name: "Humanitarian Data Exchange", url: "https://data.humdata.org/", domain: "world",
       blurb: "OCHA's open platform for crisis and humanitarian data — population, displacement, food security, and conflict, standardized for rapid response.",
       scale: "20k+ datasets", cadence: "live", access: ["API", "Bulk"], format: "CSV, GeoJSON",
-    },
-
-    // ── Finance & Markets ───────────────────────────────────────────────────
-    {
-      name: "SEC EDGAR", url: "https://www.sec.gov/edgar/searchedgar/companysearch", domain: "finance",
-      blurb: "Every US public-company filing — 10-Ks, 8-Ks, insider trades — as full text and structured XBRL financials, with bulk archives and a JSON API.",
-      scale: "Millions of filings", cadence: "live", access: ["API", "Bulk"], format: "XBRL, HTML, JSON",
-      note: "`companyfacts` JSON gives every reported financial concept per company.",
-    },
-    {
-      name: "Nasdaq Data Link", url: "https://data.nasdaq.com/", domain: "finance",
-      blurb: "The former Quandl — a unified API over many financial and economic datasets, mixing free and premium feeds behind one client.",
-      scale: "Thousands of datasets", cadence: "daily", access: ["API", "Bulk"], format: "CSV, JSON",
-    },
-    {
-      name: "Crypto on-chain (BigQuery)", url: "https://console.cloud.google.com/marketplace/product/bigquery-public-data/crypto-bitcoin", domain: "finance",
-      blurb: "Full Bitcoin and Ethereum ledgers as Google BigQuery public datasets — every block, transaction, and trace, queryable in SQL.",
-      scale: "Full chain history", cadence: "daily", access: ["Query", "Cloud"], format: "BigQuery",
-    },
-    {
-      name: "Dune Analytics", url: "https://dune.com/", domain: "finance",
-      blurb: "Decoded on-chain crypto data across dozens of blockchains, queryable in SQL with a public API — the standard for DeFi and NFT analytics.",
-      scale: "Multi-chain", cadence: "live", access: ["API", "Query"], format: "SQL, CSV",
-    },
-    {
-      name: "CFTC Commitments of Traders", url: "https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm", domain: "finance",
-      blurb: "Weekly positioning of large traders across futures markets — the classic dataset for gauging speculative vs. commercial sentiment.",
-      scale: "Weekly, all futures", cadence: "periodic", access: ["Bulk", "API"], format: "CSV",
     },
   ],
 };

@@ -13,13 +13,13 @@ schema, analysis and tests, so the commands below that read a database need a bu
 
 | Tier | Coverage | Granularity | Source |
 |------|----------|-------------|--------|
-| **1** | 2005–present, every PGA Tour stroke-play event | Full field, round-by-round (front/back nine), positions, earnings, venue | ESPN public JSON API |
+| **1** | 2005–present, every PGA Tour stroke-play event | Full field, round-by-round (front/back nine), positions, earnings, venue | ESPN JSON feeds |
 | **1h** | 2005–present | **Hole-by-hole** (7M+ rows): every player, round, hole, strokes + derived par | re-parsed from the same cached scoreboards |
-| **1b** | player dimension | **Bios**: age, turned-pro, birthplace, citizenship, hand, college, ht/wt | ESPN athlete endpoint |
+| **1b** | player dimension | **Bios**: age, turned-pro, birthplace, citizenship, hand, college, ht/wt | ESPN JSON feeds |
 | **1s** | derived | **Strokes-gained vs field**: SG-Total per hole/round/event, par-3/4/5 splits | computed from the hole data |
 | **2** | Majors 1960–2004 | Winner + 36/54-hole leaders | Wikipedia (scrapekit) |
 
-ESPN's free golf API only returns events back to **2005** (verified empirically),
+ESPN's golf feed only returns events back to **2005** (verified empirically),
 so 2005+ is the realistic ceiling for full-field round-by-round data. Pre-2005
 major history is a separate, shallower tier.
 
@@ -56,9 +56,7 @@ python -m pga.sg event "Masters" --year 2024     # SG leaderboard
 python -m pytest pga/
 ```
 
-The scraper is **resumable**: every API response is cached to disk and every load
-is an idempotent upsert, so re-running re-fetches nothing and converges to the
-same DB.
+Every load is an idempotent upsert, so a rebuild converges to the same DB.
 
 ### Tier 2: majors 1960–2004 (Wikipedia)
 

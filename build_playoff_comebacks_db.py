@@ -99,7 +99,7 @@ def create_schema(conn: sqlite3.Connection):
         COUNT(*) as situations,
         SUM(won) as comebacks,
         ROUND(CAST(SUM(won) AS REAL) / COUNT(*) * 100, 1) as comeback_pct,
-        ROUND(1.0 / (CAST(SUM(won) AS REAL) / COUNT(*)), 1) as breakeven_odds
+        ROUND(1.0 / (CAST(SUM(won) AS REAL) / COUNT(*)), 1) as one_in_n
     FROM team_game_deficits,
          (SELECT 10 as threshold UNION SELECT 12 UNION SELECT 15
           UNION SELECT 18 UNION SELECT 20 UNION SELECT 25) thresholds
@@ -282,7 +282,7 @@ def verify(conn: sqlite3.Connection):
     print("\n-- League-wide playoff comeback rates --")
     for row in cur.execute("SELECT * FROM v_league_rates"):
         print(f"  {row[0]}+ pts: {row[1]} situations, {row[2]} comebacks, "
-              f"{row[3]}%, breakeven {row[4]}:1")
+              f"{row[3]}%, one in {row[4]}")
 
     print("\n-- Comeback rates by playoff round (15+) --")
     for row in cur.execute("SELECT * FROM v_round_rates"):

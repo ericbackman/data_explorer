@@ -53,8 +53,8 @@ AUTOMATION.md row exists for this repo.
   full-depth search of the PC profile (AppData and the iCloud folders excluded)
   and of homebase `/opt`, `/home/ericb` and `/tmp` (re-run in review,
   2026-09-22) finds no soccer, drafts or NHL play-by-play database. What that costs:
-  - Soccer: the parser and schema are in `soccer/`; the fetcher is in the private
-    `sports-crons` repo (its README says where). The only surviving data
+  - Soccer: the parser and schema are in `soccer/`; the fetcher is in a
+    private repo. The only surviving data
     is `/opt/sleep-sports/vendor/soccer_slim.db` on homebase (548 KB,
     2026-07-20): FIFA World Cup 1930-2026, 1,068 matches, a sleep-sports extract.
   - MLB: superseded by homebase `mlb.db` (119,637 games from 1974).
@@ -128,10 +128,9 @@ any league in season (`skipped_out_of_season` explains an older one).
   1920-1965 requested -> no free source; stop and tell Eric.
 
 ### OP-3: PGA DB refresh (tiered)
-- **Trigger:** Eric asks / after a major.
+- **Trigger:** Eric asks.
 - **Steps** (repo root, per `pga/README.md`):
   ```powershell
-  # Tier 1, 1h and 1b: run from the private sports-crons repo (its README says where)
   python -m pga.sg build                          # Tier 1s: strokes-gained
   python -m pga.tier2_scrapekit collect --start 1960 --end 2004   # Tier 2: majors, free
   python -m pga.tier2 load seeds/major_history_seed.json
@@ -222,7 +221,7 @@ known-fact validation step, on any surface.
 | Kaggle push re-uploads full ~6GB every time | `fingerprint()` unimplemented | Pending Eric (OP-5): don't implement yourself | `pytest -q` in `kaggle/` still red |
 | Supabase COPY rejects a row | Blank/whitespace in numeric SQLite column | Already handled: `make_conv()` -> NULL before COPY | Load completes, row count matches |
 | "MLB games DB doesn't exist" | MLB game data is on homebase only; the PC has `mlb_draft.db` | Query homebase `mlb.db` (OP-8) | Coverage check prints an `mlb` last final date |
-| "soccer DB doesn't exist" | The worktree that held it is gone (§1) | Rebuild from the private `sports-crons` repo if Eric wants it; `soccer_slim.db` on homebase covers World Cup matches only | `soccer/data/*.db` present |
+| "soccer DB doesn't exist" | The worktree that held it is gone (§1) | Rebuild from the private fetcher repo if Eric wants it; `soccer_slim.db` on homebase covers World Cup matches only | `soccer/data/*.db` present |
 | `attempt to write a readonly database` on homebase | WAL-mode DB in a root-owned dir: `ericb` cannot create `-shm` under plain `?mode=ro` | Open `?mode=ro&immutable=1` with the `-wal` guard (CLAUDE.md recipe) | Query returns rows |
 | MCP `sports-data` won't connect | Not a config bug: removed from `.mcp.json` 2026-09-23 after it failed at every session start even with a correct `mcp<2` venv (the script handshakes fine standalone — the failure was harness-spawn-specific and wasn't reproduced outside it) | Use the `sports-analyst` agent instead (reads homebase, not this repo's fork). To re-enable `sports_mcp.py`: re-add the `sports-data` block to `.mcp.json`, and first confirm `.venv\Scripts\python.exe -c "import sports_mcp"` exits 0 (needs `mcp<2`; mcp 2.x renames `FastMCP` and the import dies) | `sports-analyst` answers the question |
 | Site 403s the scraper | Site rejects the client | Stop and tell Eric; `scrapekit` always identifies itself by project | No retry loop running |
